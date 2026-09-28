@@ -25,6 +25,36 @@ const content = {
 
 const sharedPublications = [
   {
+    id: 19,
+    type: 'paper' as const,
+    title: 'Mamba-SfP: Toward open-scene 3D shape from polarization via selective state space models',
+    authors: 'Wang PY, Yu KM, He HY, Huang F, Wu XY, Chen YT',
+    venue: 'Optics & Laser Technology',
+    year: '2026',
+    abstract: 'Mamba-SfP explores selective state space models for open-scene 3D shape reconstruction from polarization.',
+    link: 'https://doi.org/10.1016/j.optlastec.2026.116380',
+  },
+  {
+    id: 20,
+    type: 'paper' as const,
+    title: 'UD-SfPNet: An underwater descattering shape-from-polarization network for 3D normal reconstruction',
+    authors: 'Wang PY, Yu KM, He HY, Huang F, Wu XY, Chen YT',
+    venue: 'Pattern Recognition',
+    year: '2026',
+    abstract: 'UD-SfPNet jointly optimizes polarization-based underwater descattering and surface normal estimation, using color embedding and detail-enhanced convolutions to improve geometric consistency and preserve fine details.',
+    link: 'https://doi.org/10.1016/j.patcog.2026.114827',
+  },
+  {
+    id: 21,
+    type: 'paper' as const,
+    title: 'Physics-Guided Deep Learning for Multiview Infrared Polarization-Based Subsurface Material Classification',
+    authors: 'Lin JW, Yu KM, Liu HH, Huang F, He HY, Wu XY',
+    venue: 'IEEE Transactions on Instrumentation and Measurement',
+    year: '2026',
+    abstract: 'This work studies physics-guided deep learning for subsurface material classification using multiview infrared polarization imaging.',
+    link: 'https://doi.org/10.1109/TIM.2026.3711303',
+  },
+  {
     id: 1,
     type: 'paper' as const,
     title: 'Structure-Aware Consistency Priors for Shape from Polarization in Complex Media',
@@ -32,7 +62,7 @@ const sharedPublications = [
     venue: 'International Conference on Machine Learning (ICML 2026)',
     year: '2026',
     abstract: 'This paper addresses SfP in ice and other complex media by proposing a structure-aware polarization consistency prior and a dual-branch IceSfP network, enabling high-precision single-view surface normal estimation and constructing the first real-world ice SfP dataset.',
-    link: '',
+    link: 'https://arxiv.org/abs/2606.00509',
   },
   {
     id: 4,
@@ -72,7 +102,7 @@ const sharedPublications = [
     venue: 'IEEE Sensors Journal',
     year: '2024',
     abstract: 'The performance of infrared polarization remote sensing systems is limited by sensor resolution.',
-    link: 'https://webofscience.clarivate.cn/wos/woscc/full-record/WOS%3A001136951300048',
+    link: 'https://doi.org/10.1109/JSEN.2023.3331578',
   },
   {
     id: 11,
@@ -82,7 +112,7 @@ const sharedPublications = [
     venue: 'Optics and Lasers in Engineering',
     year: '2025',
     abstract: 'Video frame interpolation has been extensively explored and demonstrated, yet its application to polarization remains largely unexplored.',
-    link: 'https://webofscience.clarivate.cn/wos/woscc/full-record/WOS%3A001493374500001',
+    link: 'https://doi.org/10.1016/j.optlaseng.2025.109046',
   },
   {
     id: 12,
@@ -92,7 +122,7 @@ const sharedPublications = [
     venue: 'Optics Express',
     year: '2025',
     abstract: 'The significant absorption and scattering of light during its propagation in water severely degrade the quality of underwater imaging.',
-    link: 'https://webofscience.clarivate.cn/wos/woscc/full-record/WOS%3A001420800500011',
+    link: 'https://doi.org/10.1364/OE.541298',
   },
   {
     id: 13,
@@ -102,7 +132,7 @@ const sharedPublications = [
     venue: 'Infrared Physics & Technology',
     year: '2024',
     abstract: 'The fusion of multi-modal images to create an image that preserves the unique features of each modality.',
-    link: 'https://webofscience.clarivate.cn/wos/woscc/full-record/WOS%3A001298305600001',
+    link: 'https://doi.org/10.1016/j.infrared.2024.105493',
   },
   {
     id: 14,
@@ -112,7 +142,7 @@ const sharedPublications = [
     venue: 'Optics Express',
     year: '2024',
     abstract: 'Infrared polarization division-of-focal-plane imaging technology has gained attention.',
-    link: 'https://webofscience.clarivate.cn/wos/woscc/full-record/WOS%3A001300255200007',
+    link: 'https://doi.org/10.1364/OE.529402',
   },
   {
     id: 15,
@@ -122,7 +152,7 @@ const sharedPublications = [
     venue: 'Optics Express',
     year: '2024',
     abstract: 'Most existing super-resolution imaging systems utilize image registration and reconstruction algorithms.',
-    link: 'https://webofscience.clarivate.cn/wos/woscc/full-record/WOS%3A001239610200002',
+    link: 'https://doi.org/10.1364/OE.524154',
   },
   {
     id: 16,
@@ -132,7 +162,7 @@ const sharedPublications = [
     venue: 'Sensors',
     year: '2023',
     abstract: 'Deep-learning-based polarization 3D imaging techniques for estimating surface normal distribution.',
-    link: 'https://webofscience.clarivate.cn/wos/woscc/full-record/WOS%3A000997213600001',
+    link: 'https://doi.org/10.3390/s23104592',
   },
   {
     id: 17,
@@ -142,7 +172,7 @@ const sharedPublications = [
     venue: 'IEEE Transactions on Instrumentation and Measurement',
     year: '2023',
     abstract: 'Incident light captured by optical imaging systems engenders multidimensional high-level optical information.',
-    link: 'https://webofscience.clarivate.cn/wos/woscc/full-record/WOS%3A001102358800027',
+    link: 'https://doi.org/10.1109/TIM.2023.3328697',
   },
   {
     id: 18,
@@ -152,7 +182,7 @@ const sharedPublications = [
     venue: 'arXiv preprint arXiv:2512.21513',
     year: '2025',
     abstract: 'Polarization-based underwater 3D imaging exploits polarization cues to suppress background scattering, exhibiting distinct advantages in turbid water.',
-    link: 'https://arxiv.org/pdf/2512.21513',
+    link: 'https://arxiv.org/abs/2512.21513',
   },
 ]
 
