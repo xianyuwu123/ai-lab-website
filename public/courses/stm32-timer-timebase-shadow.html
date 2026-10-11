@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STM32 时基单元与影子寄存器 · 动态课堂</title>
+<style>
+:root{--ink:#17354d;--muted:#597082;--blue:#146fa6;--green:#12806b;--orange:#a96313;--line:#ccdee9;--bg:#f2f7fa;--purple:#76559e}
+*{box-sizing:border-box}body{margin:0;font:16px/1.65 "Microsoft YaHei",sans-serif;color:var(--ink);background:var(--bg)}main{max-width:1440px;padding:26px;margin:auto}h1,h2,h3,p{margin:0}h1{font-size:30px}h2{font-size:21px}h3{font-size:17px}a{color:var(--blue)}small,.muted{color:var(--muted)}code{font-family:Consolas,monospace}button,input,select{font:inherit;color:inherit}button,select{padding:8px 13px;border:1px solid var(--line);border-radius:7px;background:#fff}button{cursor:pointer}button:hover:not(:disabled){background:#e8f3fa}button:disabled{opacity:.45;cursor:default}button:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #80bce1;outline-offset:3px}.primary,.tabs button[aria-selected=true]{background:var(--blue);color:white;border-color:var(--blue)}header{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:18px}header small{color:var(--blue)}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}.tabs button{text-align:left;padding:13px 16px}.tabs b,.tabs span{display:block}.tabs span{font-size:13px}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;padding:12px 15px;background:white;border:1px solid var(--line);border-radius:10px}.toolbar label{display:flex;gap:6px;align-items:center}.spacer{flex:1}.panel{background:white;border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-top:16px}.heading{padding:16px 20px;border-bottom:1px solid var(--line)}.lead{padding:14px 20px;background:#eaf4fb}.lead b{color:var(--blue)}.content{padding:18px 20px}.actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 20px}.actions label{display:flex;gap:7px;align-items:center}
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:18px 20px}.role{padding:14px;border-top:4px solid var(--blue);background:#f1f7fb;border-radius:5px}.role:nth-child(2){border-color:var(--green)}.role:nth-child(3){border-color:var(--purple)}.role strong{display:block;font-size:20px}.role p{margin-top:5px}.hardware{display:grid;grid-template-columns:1fr 38px 1.55fr 38px 1.25fr;gap:0;align-items:center;padding:20px}.hwbox{padding:17px 14px;border:1px solid var(--line);border-radius:9px;background:#f8fbfd;min-height:150px}.hwbox b{display:block}.hwbox strong{font:700 30px/1.5 Consolas,monospace;display:block}.hwbox.hot{border-color:var(--green);background:#e2f5ef}.hw-arrow{text-align:center;color:var(--blue);font-size:26px}.beats{display:flex;flex-wrap:wrap;gap:5px;margin:9px 0}.beat{width:24px;height:24px;border:1px solid #b9cfdc;border-radius:5px;background:white}.beat.on{background:var(--blue);border-color:var(--blue)}.runway{padding:0 20px 18px}.rungs{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.rung{border:1px solid var(--line);padding:8px 14px;min-width:44px;text-align:center;border-radius:7px;background:#f6f9fc;font:700 22px Consolas,monospace}.rung.past{background:#e5f0f7}.rung.now{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 0 0 3px #d4eee4}.arrow{color:#7394a9}.return{color:var(--orange);font-size:14px}.statebar{display:flex;gap:14px;flex-wrap:wrap;padding:14px 20px;background:#f6f9fc;border-top:1px solid var(--line)}.badge{border:1px solid var(--line);border-radius:20px;padding:4px 12px;background:#fff}.badge.flag-on{background:#fff0c9;border-color:#ce9d2d}.badge.event-on{color:#985413;border-color:#cda271;animation:flash .9s ease-out}.status{margin:16px 0;padding:15px 20px;border-left:5px solid var(--blue);background:#e9f3fa;border-radius:6px;min-height:90px}.status strong{font-size:18px}.status p{margin-top:4px}.status.event{border-color:var(--orange);background:#fff4e2}.formula{padding:14px 20px;border-top:1px solid var(--line);background:#f7fafc}.formula b{color:var(--green)}.columns{display:grid;grid-template-columns:1fr 1fr;gap:16px}.register-plot{display:block;width:100%;min-width:830px;background:#fcfdff}.scroll{overflow-x:auto}.register-plot text{font-family:"Microsoft YaHei",sans-serif;fill:var(--ink);font-size:16px}.register-plot .small{font-size:13px;fill:var(--muted)}.register-plot .num{font:700 29px Consolas,monospace}.register-plot .label{font-weight:bold}.register-plot .wire{stroke:#91acbd;stroke-width:2;fill:none}.register-plot .transfer{stroke:var(--green);stroke-width:3}.register-plot .cpuwire{stroke:var(--blue);stroke-width:3}.register-plot .token{fill:var(--blue)}.register-plot .token.active{fill:var(--green)}
+.pending-note{padding:11px 20px;border-top:1px solid var(--line);background:#fff7e9;color:#815018}.readback{font:16px/1.8 Consolas,"Microsoft YaHei",monospace;background:#edf4f9;border-radius:6px;padding:12px 16px}.mini-state{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.mini-state div{border:1px solid var(--line);padding:12px;border-radius:8px}.mini-state strong{display:block;font:700 28px Consolas,monospace}.mini-state .active{background:#e8f5ef;border-color:#8fbead}.compare-card .heading{border-top:4px solid var(--blue)}.compare-card.buffered .heading{border-top-color:var(--green)}.compare-card .rung{padding:5px 9px;font-size:18px;min-width:32px}.compare-card .status{margin:12px 20px;min-height:112px}.compare-card .runway{padding-top:6px}.compare-card .content{padding-bottom:0}.compare-title{display:flex;justify-content:space-between;gap:12px;align-items:center}.pill{font:700 14px Consolas,monospace;border-radius:20px;padding:5px 10px;background:#eaf2f8}.eventrow{border-bottom:1px solid var(--line);padding:10px 0}.eventrow b{color:var(--orange)}.log:empty:before{content:"还没有更新事件。先走完一轮，或在例②、③中点击软件 UG。";color:var(--muted)}details{padding:15px 20px}summary{cursor:pointer;font-weight:bold}details p{margin-top:10px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left}th{background:#edf4f9}pre{overflow:auto;white-space:pre-wrap;padding:16px;background:#f0f5f9;font:14px/1.8 Consolas,monospace;border-radius:8px}.foot{margin:18px 0;color:var(--muted);font-size:13px}.hidden,[hidden]{display:none!important}.hint{color:var(--muted);font-size:14px}.key{border:1px solid var(--line);padding:1px 4px;border-radius:4px}.initial{background:#f1f7fb;padding:9px 20px;font-size:14px}
+@keyframes flash{0%{box-shadow:0 0 0 5px #f4c678;background:#ffebb9}100%{box-shadow:none}}
+.toolbar{position:sticky;top:0;z-index:10;box-shadow:0 3px 10px #17354d0d}
+.register-plot{max-width:1050px;margin:auto}
+.compare-card .return{flex-basis:100%}
+.compare-circuit{display:block;width:100%;min-width:560px;background:#fcfdff}
+.compare-circuit text{font-family:"Microsoft YaHei",sans-serif;fill:var(--ink);font-size:15px}
+.compare-circuit .title{font-size:16px;font-weight:700}.compare-circuit .number{font:700 25px Consolas,monospace}
+.compare-circuit .small{font-size:12px;fill:var(--muted)}.compare-circuit .legend{font-size:12px;fill:var(--muted)}
+.circuit-heading{padding:12px 18px 4px;font-size:14px;font-weight:bold;color:var(--muted)}
+.circuit-note{font-size:12px;color:var(--muted);padding:8px 18px 12px;border-bottom:1px solid var(--line);margin-bottom:12px}
+@media(max-width:950px){.columns{grid-template-columns:1fr}.hardware{grid-template-columns:1fr}.hw-arrow{transform:rotate(90deg)}.hwbox{min-height:auto}.roles{grid-template-columns:1fr}.tabs span{font-size:12px}.spacer{display:none}}
+@media(max-width:600px){main{padding:12px}header{display:block}h1{font-size:24px}.tabs{grid-template-columns:1fr;gap:6px}.tabs button{padding:9px 12px}.toolbar button{flex:1 1 auto}.actions button{flex:1 1 auto}.heading,.content{padding:14px}.rung{padding:7px 10px}.statebar{gap:7px}.mini-state{grid-template-columns:1fr 1fr}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important}}
+</style>
+</head>
+<body><main>
+<header><div><small>STM32F1 · TIM2 · 本地离线动态课堂</small><h1>时基单元与影子寄存器</h1><p class="muted">先看三个寄存器怎么配合，再看“写入”和“生效”为什么是两件事。</p></div><a href="stm32-timer-counter-lab.html">返回计数与时钟课堂 →</a></header>
+<nav class="tabs" aria-label="教学案例" id="tabs">
+<button data-tab="base" aria-selected="true"><b>① 三个寄存器怎样配合</b><span>PSC 管节拍 · CNT 在计数 · ARR 管上限</span></button>
+<button data-tab="shadow" aria-selected="false"><b>② 写进去了，为什么还没变？</b><span>预装载值 → 更新事件 → 影子值</span></button>
+<button data-tab="compare" aria-selected="false"><b>③ ARPE 与软件 UG</b><span>立即改变上限，还是等本轮结束？</span></button>
+</nav>
+<div class="toolbar">
+<button id="back">← 上一步</button><button id="step" class="primary">输入一拍 CK_INT →</button><button id="tick">走到下一次 CNT 变化</button><button id="play">自动演示到下一次 UEV</button>
+<label>速度 <select id="speed"><option value="1200">慢 · 1.2 秒/拍</option><option value="2000">讲解 · 2 秒/拍</option><option value="600">中 · 0.6 秒/拍</option></select></label><span class="spacer"></span><button id="reset">重置本例</button>
+<span class="hint">← / → 单步，空格播放。界面慢放，芯片时间按公式计算。</span>
+</div>
+<section id="base-panel">
+<div class="panel"><div class="heading"><h2>一拍一拍地数，数够一轮再更新</h2><p class="muted">默认已初始化：PSC＝3、ARR＝4、CNT＝0，内部时钟 f<sub>TIM</sub>＝1 MHz。</p></div>
+<div class="roles"><div class="role"><strong>PSC · 预分频寄存器</strong><p>规定累计多少个输入边沿，CNT 才走一步。</p><b>分频系数＝PSC＋1</b></div><div class="role"><strong>CNT · 计数器寄存器</strong><p>保存正在变化的计数值，软件可以读取它。</p><b>本例向上计数：0、1、2…</b></div><div class="role"><strong>ARR · 自动重装载寄存器</strong><p>规定计数上限；向上计数越过上限时回到 0。</p><b>不是“每拍都在变化的数”</b></div></div>
+<div class="actions" id="base-presets"><span>换一组已经初始化的参数：</span><button data-psc="0">PSC=0，ARR=4</button><button data-psc="1">PSC=1，ARR=4</button><button data-psc="3">PSC=3，ARR=4</button></div>
+<div id="base-hardware"></div><div id="base-status" class="status" aria-live="polite"></div><div id="base-formula" class="formula"></div></div>
+</section>
+<section id="shadow-panel" hidden>
+<div class="panel"><div class="heading"><h2>CPU 写的是预装载值，计数逻辑使用当前有效值</h2><p class="muted">本例 ARPE＝1。影子寄存器就是内部正在工作的副本；CPU 没有另一个地址可以直接读写这个副本。</p></div>
+<div class="initial">比较起点：PSC 有效值＝1，ARR 有效值＝5；已走到 CNT＝2，预分频器本组已累计 1 个边沿。</div>
+<div class="actions"><label>新 PSC <select id="write-psc"><option>0</option><option>1</option><option selected>3</option><option>7</option></select></label><label>新 ARR <select id="write-arr"><option>3</option><option>5</option><option selected>7</option><option>9</option></select></label><button id="write" class="primary">CPU 写入这两个新值</button><button id="ug">软件 UG：立即装载并从 0 重计</button><button id="clear">软件清 UIF</button></div>
+<div class="scroll"><svg id="register-map" class="register-plot" viewBox="0 0 1050 480" role="img" aria-label="CPU 写入 PSC 和 ARR 预装载寄存器，更新事件将新值传入有效寄存器；CNT 可直接读写"></svg></div>
+<div class="pending-note" id="pending"></div><div class="content"><div class="readback" id="readback"></div></div>
+<div id="shadow-status" class="status" aria-live="polite"></div>
+<div id="shadow-hardware"></div><div id="shadow-formula" class="formula"></div>
+</div>
+<details class="panel"><summary>扩展操作：写 CNT＝0，等不等于软件 UG？</summary><p>写 CNT 直接改变当前计数值；不会因此把待生效的 PSC、ARR 装入影子寄存器，也不会清空预分频器内部累计进度或产生 UEV。可先写入一组待生效的新参数，再点击下面的按钮对照。</p><div class="actions"><button id="cnt-zero">CPU 直接写 TIM2_CNT＝0</button></div><p>若 UIF 原先是 1，写 CNT＝0 后仍然是 1。</p></details>
+</section>
+<section id="compare-panel" hidden>
+<div class="panel"><div class="heading"><h2>同样在 CNT＝2 时写 ARR＝8，会发生什么？</h2><p class="muted">两路初始有效 PSC＝1、ARR＝5，使用相同输入时钟。这里只改变 ARR，便于看清 ARPE 的作用。</p></div>
+<div class="lead"><b>先点“同时写 ARR＝8”，再按右方向键逐拍观察。</b>左侧本轮就改用新上限；右侧先按旧上限完成本轮，再切换。</div>
+<div class="actions"><button id="pair-write" class="primary">两路同时写 ARR＝8</button><button id="pair-ug">两路执行软件 UG</button><button id="pair-clear">两路软件清 UIF</button><span class="hint">本例“下一拍”指一个 CK_CNT 边沿，两路同步前进。</span></div></div>
+<div class="columns">
+<article class="panel compare-card" id="direct-card"><div class="heading compare-title"><h3>不等待更新事件</h3><span class="pill">ARPE = 0</span></div><div id="direct-body"></div></article>
+<article class="panel compare-card buffered" id="buffered-card"><div class="heading compare-title"><h3>等本轮结束再切换</h3><span class="pill">ARPE = 1</span></div><div id="buffered-body"></div></article>
+</div>
+<div class="panel"><div class="content" id="compare-note" aria-live="polite"></div></div>
+</section>
+<details class="panel"><summary>操作记录：每次更新事件装载了什么？</summary><div class="log" id="event-log"></div></details>
+<details class="panel"><summary>三个寄存器与影子寄存器：容易混淆的地方</summary>
+<table><thead><tr><th>软件访问</th><th>当前硬件使用的内容</th><th>写入后何时生效</th></tr></thead><tbody>
+<tr><td>TIM2_CNT<br><code>0x40000024</code></td><td>当前计数值</td><td>直接改写 CNT，不需要等 UEV；不会因此产生 UEV。</td></tr>
+<tr><td>TIM2_PSC<br><code>0x40000028</code></td><td>内部有效 PSC 值决定分频系数</td><td>PSC 始终有缓冲，新值在更新事件时装载。ARPE 不控制 PSC。</td></tr>
+<tr><td>TIM2_ARR<br><code>0x4000002C</code></td><td>内部有效 ARR 值决定计数上限</td><td>ARPE＝1 时等 UEV；ARPE＝0 时不等待 UEV。</td></tr>
+</tbody></table>
+<p><b>读到新值，不代表硬件已经使用新值。</b>软件读 PSC、ARR 可看到刚写入的内容，但内部影子值可能仍旧不同。“预装载”和“影子”是同一个配置参数的两份存储，不是两个都要由程序员写地址的外设寄存器。</p>
+<p><b>ARR 的“重装载”不是把向上计数的 CNT 反复写成 ARR。</b>向上计数由 ARR 决定上限，越过上限时 CNT 回到 0；向下计数在下溢时把 ARR 装入 CNT。本页专讲向上计数。</p>
+<p><b>PSC 寄存器与预分频器内部计数不是同一个东西。</b>PSC 配置值保持不变，内部累计进度才随每个输入边沿变化。</p>
+<p><b>UEV、UIF、CPU 中断是三件事。</b>UEV 是硬件事件，UIF 是保持到软件清除的标志位；进入中断还需要 DIER.UIE、NVIC 等条件。动画的事件高亮只为回看当前一步，不表示 UEV 会持续为高。</p>
+</details>
+<details class="panel"><summary>上板时如何初始化？为什么要写 EGR.UG？</summary>
+<p>下面只展示 TIM2 时基初始化，前提是已开启 TIM2 外设时钟，且 TIM2 当前停止、未被其他功能使用。RCC 时钟树决定 f<sub>TIM</sub>，不能直接把 CPU 主频代入公式。</p>
+<pre><code>// 假设 TIM2 内部时钟为 72 MHz；配置成每 1 ms 更新一次
+TIM2->CR1 = TIM_CR1_ARPE; // 停止、向上计数、ARR 预装载；UDIS=0，URS=0
+TIM2->DIER = 0;          // 初始化期间关闭定时器中断 / DMA 请求
+TIM2->PSC = 71;          // 写入预装载值：72 MHz / (71+1) = 1 MHz
+TIM2->ARR = 999;         // 写入预装载值：1000 个计数节拍 = 1 ms
+TIM2->EGR = TIM_EGR_UG;  // 装载有效 PSC、ARR；CNT 与预分频内部计数归零
+TIM2->SR = 0;           // 初始化阶段清掉 UG 产生的 UIF 等标志
+TIM2->CR1 |= TIM_CR1_CEN;
+
+// 运行中平稳换周期：ARPE=1，下一次自然 UEV 后生效
+TIM2->ARR = 1999;        // 从下一轮起，周期变成 2 ms
+
+// 若要立即换参数并重新起算，可写 EGR.UG；会打断当前计数进程。
+// 若要启用更新中断，还需 DIER.UIE、NVIC 与对应的中断服务函数。</code></pre>
+<p>运行中连续写 PSC 与 ARR 是两次软件写操作。若两次写之间恰好发生 UEV，可能分两次生效；例②把输入时钟暂停以便讲解，不能据此认为真实芯片的两次写入具有原子性。</p>
+</details>
+<details class="panel"><summary>官方依据与演示条件</summary>
+<p>依据 ST《RM0008》Rev 21，第 15.3.1 节 Time-base unit、第 15.3.2 节 Counter modes，以及 TIMx_CR1、TIMx_EGR、TIMx_CNT、TIMx_PSC、TIMx_ARR 寄存器说明。
+<a href="https://www.st.com/resource/en/reference_manual/rm0008-stm32f101xx-stm32f102xx-stm32f103xx-stm32f105xx-and-stm32f107xx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf" target="_blank" rel="noopener">官方参考手册</a>；
+<a href="https://community.st.com/stm32-mcus-products-25/general-purpose-timer-118126" target="_blank" rel="noopener">ST 技术人员对预装载与影子值的说明</a>。链接需联网，页面动画自身可完全离线使用。</p>
+<p>本页采用 STM32F1 TIM2、内部时钟、向上连续计数、CEN＝1、UDIS＝0、URS＝0，无外部触发、DMA 或重复计数器。省略总线写入与硬件同步延迟，ARPE＝0 的“立即”表示不等更新事件，不代表物理上没有传播时间。</p>
+<p>所有例子从已初始化好的教学状态开始；真实复位后的 PSC、ARR 不等于这些示例值。例③用增大 ARR 演示即时更新，避免把运行中的 ARR 改到小于当前 CNT 所引出的额外边界情形。</p>
+</details>
+<p class="foot">单文件离线网页 · 所有波形、数据移动与数值计算均在本地完成 · 建议先手动单步，再自动演示。</p>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const copy=x=>JSON.parse(JSON.stringify(x));
+let tab='base',timer=null;
+function createState(psc,arr,arpe=true,cnt=0,phase=0){
+ return {pscW:psc,pscA:psc,arrW:arr,arrA:arr,arpe,cnt,phase,raw:cnt*(psc+1)+phase,ticks:cnt,uif:false,kind:'init',tick:false,uev:false,transfer:false,wrote:false,events:[],boundaryRaw:0,title:'已初始化，等待输入时钟',detail:'每来一个 CK_INT 边沿，预分频器内部累计一次。'};
+}
+function initial(which){
+ if(which==='base')return createState(3,4);
+ if(which==='shadow'){const s=createState(1,5,true,2,1);s.title='先在 CPU 一侧写入新参数';s.detail='当前 CNT=2，分频进度=1/2。写入后，比较蓝色预装载值与绿色有效值。';return s;}
+ return {direct:createState(1,5,false,2),buffered:createState(1,5,true,2)};
+}
+const models={base:initial('base'),shadow:initial('shadow'),compare:initial('compare')};
+const history={base:[],shadow:[],compare:[]};
+function message(s,kind,title,detail){s.kind=kind;s.title=title;s.detail=detail;s.tick=false;s.uev=false;s.transfer=false;s.wrote=false;}
+function update(s,source){
+ const oldPSC=s.pscA,oldARR=s.arrA;
+ s.pscA=s.pscW;s.arrA=s.arrW;s.phase=0;s.cnt=0;s.uif=true;s.uev=true;s.transfer=true;
+ s.events.unshift({source,raw:s.raw,oldPSC,oldARR,psc:s.pscA,arr:s.arrA,elapsed:s.raw-s.boundaryRaw});
+ s.events=s.events.slice(0,12);s.boundaryRaw=s.raw;
+ return {oldPSC,oldARR};
+}
+function edge(s){
+ const oldCnt=s.cnt,oldPSC=s.pscA;
+ message(s,'edge','输入第 '+(s.raw+1)+' 个 CK_INT 边沿','');
+ s.raw++;s.phase++;
+ if(s.phase<oldPSC+1){s.detail='本组累计 '+s.phase+' / '+(oldPSC+1)+' 个输入边沿；CNT 保持 '+s.cnt+'。PSC 配置值仍为 '+oldPSC+'。';return;}
+ s.phase=0;s.ticks++;s.tick=true;
+ if(s.cnt===s.arrA){
+  const old=update(s,'自然溢出');
+  s.title='CNT：'+oldCnt+' → 0；产生一次 UEV';
+  s.detail='本轮按旧上限 ARR='+old.oldARR+' 结束。更新事件把预装载 PSC='+s.pscW+'、ARR='+s.arrW+' 装入有效副本；下一轮使用新值。UIF 置 1。';
+ }else{
+  s.cnt++;s.title='分频累计满 '+(oldPSC+1)+' 个边沿，CNT：'+oldCnt+' → '+s.cnt;
+  s.detail='预分频器内部累计进度归零。'+(s.cnt===s.arrA?'刚到 ARR 上限，本拍还没有 UEV；再来一个 CK_CNT 边沿才回到 0。':'本拍没有 UEV，硬件仍按有效 PSC='+s.pscA+'、ARR='+s.arrA+' 计数。');
+ }
+}
+function writeConfig(s,psc,arr){
+ message(s,'write','CPU 已写入新值','');s.pscW=psc;s.arrW=arr;s.wrote=true;
+ if(!s.arpe)s.arrA=arr;
+ s.detail=s.arpe?'CPU 读 PSC='+psc+'、ARR='+arr+'，已经是新值；硬件仍用 PSC='+s.pscA+'、ARR='+s.arrA+'。CNT 与分频进度继续原来的位置，等 UEV 才装载。':'ARPE=0，ARR 有效值立即变为 '+arr+'；写入本身不会产生 UEV，CNT 保持 '+s.cnt+'。PSC 若有新值，仍需等待 UEV。';
+}
+function softwareUG(s){
+ const oldCnt=s.cnt,oldPhase=s.phase;
+ message(s,'ug','软件 UG：装载参数并重新起算','');
+ update(s,'软件 UG');
+ s.detail='PSC、ARR 新值立即装入有效副本；CNT 从 '+oldCnt+' 回到 0，预分频内部累计从 '+oldPhase+' 归零。本例 URS=0、UDIS=0，因此 UIF 置 1；当前轮被重新起算。';
+}
+function clearUIF(s){message(s,'clear','软件清除 UIF','只清除标志：CNT、有效 PSC、有效 ARR 与预分频累计进度均不改变。');s.uif=false;}
+function writeCNT(s){message(s,'cnt','CPU 直接把 CNT 写为 0','不产生 UEV；待装载的 PSC、ARR 不变，预分频累计进度仍为 '+s.phase+'。UIF 保持原值。');s.cnt=0;}
+function states(){return tab==='compare'?[models.compare.direct,models.compare.buffered]:[models[tab]];}
+function save(){history[tab].push(copy(models[tab]));if(history[tab].length>160)history[tab].shift();}
+function stop(){if(timer!==null)clearInterval(timer);timer=null;$('play').textContent='自动演示到下一次 UEV';}
+function action(fn){stop();save();fn();render();}
+function advance(){
+ save();
+ if(tab==='compare'){for(const s of states()){do{edge(s);}while(!s.tick);}}
+ else edge(models[tab]);
+ render();
+}
+function next(){stop();advance();}
+function nextTick(){action(()=>{const s=models[tab];do{edge(s);}while(!s.tick);});}
+function undo(){stop();if(history[tab].length){models[tab]=history[tab].pop();render();}}
+function reset(){stop();models[tab]=initial(tab);history[tab]=[];render();}
+function switchTab(name){stop();tab=name;render();}
+function play(){
+ if(timer!==null){stop();return;}
+ $('play').textContent='暂停演示';
+ timer=setInterval(()=>{advance();if(states().some(s=>s.uev))stop();},Number($('speed').value));
+}
+
+function runway(s){
+ let r='';for(let n=0;n<=s.arrA;n++)r+=(n?'<span class="arrow">→</span>':'')+'<span class="rung '+(n===s.cnt?'now':n<s.cnt?'past':'')+'">'+n+'</span>';
+ return '<div class="runway"><p class="hint">ARR 有效值 = '+s.arrA+'；CNT 走到上限后，再来一拍才归零。</p><div class="rungs">'+r+'<span class="return">↩ 下一拍回 0 · UEV</span></div></div>';
+}
+function badges(s){
+ return '<div class="statebar"><span class="badge">CK_INT 已收 '+s.raw+' 拍</span><span class="badge">CK_CNT 已产生 '+s.ticks+' 次</span><span class="badge '+(s.uev?'event-on':'')+'">'+(s.uev?'本步发生 UEV':'本步没有 UEV')+'</span><span class="badge '+(s.uif?'flag-on':'')+'">UIF = '+Number(s.uif)+(s.uif?' · 保持到软件清除':'')+'</span></div>';
+}
+function hardware(s){
+ const completed=s.tick&&!s.uev,filled=completed?s.pscA+1:s.phase;
+ let beats='';for(let n=0;n<=s.pscA;n++)beats+='<span class="beat '+(n<filled?'on':'')+'"></span>';
+ return '<div class="hardware"><div class="hwbox"><b>输入时钟 CK_INT</b><strong>1 MHz</strong><span>每个输入周期 1 μs</span></div><div class="hw-arrow">→</div><div class="hwbox '+(s.tick?'hot':'')+'"><b>预分频器 · 使用有效 PSC='+s.pscA+'</b><div class="beats" aria-label="分频进度">'+beats+'</div><span>'+(completed?'本组已满 '+(s.pscA+1)+' 拍；内部计数归 0':'本组累计 '+s.phase+' / '+(s.pscA+1)+' 拍')+'</span><p class="hint">每满 '+(s.pscA+1)+' 拍，输出一次 CK_CNT 边沿</p></div><div class="hw-arrow">→</div><div class="hwbox '+(s.tick?'hot':'')+'"><b>计数器 TIM2_CNT</b><strong>'+s.cnt+'</strong><span>有效 ARR='+s.arrA+' 决定上限</span></div></div>'+runway(s)+badges(s);
+}
+function statusHTML(s){return '<strong>'+s.title+'</strong><p>'+s.detail+'</p>';}
+function formula(s){
+ return '按当前有效参数稳定运行：<b>一个 CK_CNT = '+(s.pscA+1)+' μs</b>，一轮 '+(s.arrA+1)+' 个 CK_CNT → <b>完整周期 = '+((s.pscA+1)*(s.arrA+1))+' μs</b>。<span class="hint">计算用有效值；动画播放速度仅用于课堂慢放。</span>';
+}
+function paintStatus(id,s){$(id).classList.toggle('event',s.uev);$(id).innerHTML=statusHTML(s);}
+function mapSVG(s){
+ let svg='<title>PSC、ARR 的软件写入值与硬件有效值</title><defs><marker id="arrow-map" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10" fill="#91acbd"/></marker></defs>';
+ svg+='<text x="280" y="35" class="label">① CPU 可以读写这一侧</text><text x="740" y="35" class="label">② 硬件使用这一侧</text>';
+ svg+='<rect x="30" y="75" width="160" height="260" rx="12" fill="#e9f3fc" stroke="#88b6d2"/><text x="60" y="180" class="num">CPU</text><text x="49" y="213">软件读写寄存器</text><text x="49" y="243" class="small">写新值不会让</text><text x="49" y="266" class="small">计数自动暂停</text>';
+ const motion=(value,path,color)=>matchMedia('(prefers-reduced-motion: reduce)').matches?'':'<g><rect x="-18" y="-15" width="36" height="28" rx="7" fill="'+color+'"/><text x="0" y="6" text-anchor="middle" style="fill:white;font-weight:bold">'+value+'</text><animateMotion path="'+path+'" dur="0.85s" fill="freeze"/></g>';
+ for(const [name,y,w,a] of [['PSC',80,s.pscW,s.pscA],['ARR',235,s.arrW,s.arrA]]){
+  const yc=y+45,pending=w!==a;
+  svg+='<path d="M190 '+yc+' H280" class="wire '+(s.wrote?'cpuwire':'')+'" marker-end="url(#arrow-map)"/>';
+  svg+='<rect x="280" y="'+y+'" width="205" height="100" rx="9" fill="#eaf3fb" stroke="#88b6d2"/><text x="293" y="'+(y+27)+'" class="label">TIM2_'+name+' · 预装载</text><text x="301" y="'+(y+68)+'" class="num">'+w+'</text><text x="355" y="'+(y+68)+'" class="small">软件读回的值</text>';
+  svg+='<path d="M485 '+yc+' H740" class="wire '+(s.transfer?'transfer':'')+'" marker-end="url(#arrow-map)"/>';
+  svg+='<text x="610" y="'+(yc-23)+'" text-anchor="middle" class="small">'+(s.transfer?'本步 UEV：装载':name==='PSC'?'PSC 始终等 UEV':'ARPE=1：等 UEV')+'</text>';
+  svg+='<path d="M605 '+(yc+12)+' L'+(s.transfer?'624':'605')+' '+(yc-12)+'" stroke="'+(s.transfer?'#12806b':'#af7636')+'" stroke-width="4"/>';
+  svg+='<text x="610" y="'+(yc+42)+'" text-anchor="middle" class="small">'+(pending?'新值待生效':'两侧数值相同')+'</text>';
+  svg+='<rect x="740" y="'+y+'" width="240" height="100" rx="9" fill="#e7f6ef" stroke="'+(pending?'#ba873e':'#86bca8')+'" stroke-width="'+(s.transfer?'3':'1.5')+'"/><text x="754" y="'+(y+27)+'" class="label">'+name+' 有效值 · 影子副本</text><text x="760" y="'+(y+68)+'" class="num">'+a+'</text><text x="815" y="'+(y+68)+'" class="small">内部使用，无独立地址</text>';
+  if(s.wrote)svg+=motion(w,'M205 '+yc+' H263','#146fa6');
+  if(s.transfer)svg+=motion(w,'M503 '+yc+' H722','#12806b');
+ }
+ svg+='<path d="M110 335 V420 H740" class="wire" marker-end="url(#arrow-map)"/><text x="280" y="404" class="small">直接访问当前 CNT；写 CNT 不会因此产生 UEV</text><rect x="740" y="378" width="240" height="85" rx="9" fill="#f0ecf9" stroke="#b8a1d1"/><text x="756" y="407" class="label">TIM2_CNT · 当前计数值</text><text x="760" y="445" class="num">'+s.cnt+'</text><text x="815" y="445" class="small">无此类待装载副本</text>';
+ $('register-map').innerHTML=svg;
+}
+function compareCircuit(s){
+ const lane=s.arpe?'buffered':'direct',mid='compare-arrow-'+lane,ug=s.kind==='ug',pending=s.arrW!==s.arrA;
+ const blue='#146fa6',green='#12806b',orange='#b87521';
+ const path=(d,color='#8ba7b9',dashed=false)=>'<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="2"'+(dashed?' stroke-dasharray="5 4"':'')+' marker-end="url(#'+mid+')"/>';
+ const text=(x,y,value,kind='')=>'<text x="'+x+'" y="'+y+'" class="'+kind+'">'+value+'</text>';
+ const box=(x,y,w,h,fill,stroke)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="9" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.8"/>';
+ const flow=(value,d,color,delay=0)=>matchMedia('(prefers-reduced-motion: reduce)').matches?'':'<g opacity="0"><rect x="-15" y="-13" width="30" height="26" rx="6" fill="'+color+'"/><text text-anchor="middle" y="5" style="fill:white;font-weight:bold">'+value+'</text><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" begin="'+delay+'s" dur=".8s"/><animateMotion path="'+d+'" begin="'+delay+'s" dur=".8s"/></g>';
+ const feedback='M440 420 H426 V289 Q411 280 426 271 V138 H395 V81';
+ let svg='<svg class="compare-circuit" data-lane="'+lane+'" viewBox="0 0 650 505" role="img" aria-label="ARPE='+Number(s.arpe)+' 的 ARR 写入、时钟计数、更新事件与软件 UG 通路"><title>ARPE='+Number(s.arpe)+'：CPU 写 ARR，经'+(s.arpe?'更新事件控制的装载通路':'直通通路')+'到有效 ARR，再控制 CNT 上限</title><defs><marker id="'+mid+'" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10" fill="context-stroke"/></marker></defs>';
+ // Software data path: CPU -> software-visible ARR -> active ARR.
+ svg+=box(20,28,90,80,'#e9f3fc','#8ab7d1')+text(35,62,'CPU','title')+text(31,88,'软件写入','small');
+ svg+=box(180,28,175,80,'#e9f3fc','#8ab7d1')+text(192,52,'TIM2_ARR','title')+text(192,81,s.arrW,'number')+text(230,82,'软件读回值','small');
+ svg+=box(440,28,175,80,'#e7f6ef',pending?orange:green)+text(452,52,'ARR 有效副本','title')+text(452,81,s.arrA,'number')+text(489,82,'计数实际使用','small');
+ svg+=path('M110 68 H180',s.wrote?blue:undefined)+text(120,53,'写值','small');
+ svg+=path('M355 68 H440',s.wrote&&!s.arpe?blue:s.transfer&&s.arpe?green:undefined);
+ svg+=text(364,44,s.arpe?'等 UEV':'直通','small');
+ if(s.arpe)svg+='<path d="M395 80 L'+(s.transfer?'409':'395')+' 55" stroke="'+(s.transfer?green:orange)+'" stroke-width="4" fill="none"/>';
+ else svg+='<path d="M373 68 H419" stroke="'+green+'" stroke-width="4" fill="none"/>';
+ svg+=text(183,135,s.arpe?(pending?'新值已写入，等待装载':'ARPE=1：由 UEV 控制装载'):'ARPE=0：写入后不等 UEV','small');
+ // Hardware count path: clock -> prescaler -> CNT. Active ARR drives the limit.
+ svg+=path('M527 108 V235',green)+text(538,177,'计数上限','small');
+ svg+=box(20,235,95,90,'#f1f6fa','#adc5d5')+text(31,261,'CK_INT','title')+text(31,289,'1 MHz','title')+text(31,311,'输入时钟','small');
+ svg+=box(180,235,175,90,'#eff7fb',ug?orange:s.tick?green:'#adc5d5')+text(191,262,'PSC 有效 = '+s.pscA,'title')+text(192,290,'÷ '+(s.pscA+1),'number')+text(259,288,'内部 = '+s.phase,'small')+text(191,311,ug?'UG：内部累计已归零':'每满 '+(s.pscA+1)+' 个输入边沿走一步','small');
+ svg+=box(440,235,175,90,ug?'#fff1dc':'#edf7f2',ug?orange:s.tick?green:'#adc5d5')+text(452,262,'TIM2_CNT','title')+text(453,291,s.cnt,'number')+text(495,290,'当前计数','small')+text(452,312,ug?'UG：已从 0 重新起算':'本轮上限 = '+s.arrA,'small');
+ svg+=path('M115 280 H180',s.tick?blue:undefined);
+ svg+=path('M355 280 H440',s.tick?green:undefined)+text(358,260,'CK_CNT','small');
+ // Overflow and software UG are separate sources of the update event.
+ svg+=path('M527 325 V400',s.uev&&!ug?orange:undefined)+text(538,358,'越过上限','small')+text(538,380,'自然溢出','small');
+ svg+=box(440,400,175,80,s.uev?'#fff1dc':'#f6f8fb',s.uev?orange:'#adc5d5')+text(452,426,'UEV · 更新事件','title')+text(452,451,s.uev?(ug?'来源：软件 UG':'来源：自然溢出'):'本步未发生','small')+text(452,472,'UIF = '+Number(s.uif),'small');
+ const ugPath='M20 68 H8 V450 H440';
+ svg+=path(ugPath,ug?orange:'#bacad6',true)+text(32,417,'软件写 EGR.UG = 1','small')+text(32,439,'触发装载，并把 CNT 与分频内部累计归零','small');
+ if(s.arpe){
+  svg+=path(feedback,s.uev?green:'#a6bbca',true);
+  svg+=text(286,370,'UEV 装载信号','small');
+ }
+ svg+=text(20,497,'实线：数据 / 计数路径　虚线：更新控制（弧线跨越处不连接）','legend');
+ if(s.wrote){
+  svg+=flow(s.arrW,'M125 68 H165',blue);
+  if(!s.arpe)svg+=flow(s.arrW,'M368 68 H426',blue,.35);
+ }
+ if(s.transfer&&s.arpe)svg+=flow(s.arrW,'M368 68 H426',green,.15);
+ if(ug)svg+=flow('UG',ugPath,orange);
+ if(s.uev&&!ug)svg+=flow('U','M527 337 V385',orange);
+ if(s.tick)svg+=flow('↑','M368 280 H416',green);
+ svg+='</svg>';
+ return '<div class="circuit-heading">虚拟电路 · 时基单元功能框图</div><div class="scroll">'+svg+'</div><p class="circuit-note">PSC 的预装载通路见例②；这里显示其有效值。图中是功能连接，不是晶体管级电路。</p>';
+}
+
+function compareBody(s){
+ return compareCircuit(s)+runway(s)+'<div class="status '+(s.uev?'event':'')+'">'+statusHTML(s)+'</div>'+badges(s);
+}
+function render(){
+ for(const name of ['base','shadow','compare'])$(name+'-panel').hidden=name!==tab;
+ document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));
+ $('step').textContent=tab==='compare'?'下一拍 CK_CNT →':'输入一拍 CK_INT →';
+ $('tick').hidden=tab==='compare';$('back').disabled=!history[tab].length;
+ if(tab==='base'){
+  const s=models.base;$('base-hardware').innerHTML=hardware(s);paintStatus('base-status',s);$('base-formula').innerHTML=formula(s);
+ }else if(tab==='shadow'){
+  const s=models.shadow;mapSVG(s);$('shadow-hardware').innerHTML=hardware(s);paintStatus('shadow-status',s);$('shadow-formula').innerHTML=formula(s);
+  const pending=s.pscA!==s.pscW||s.arrA!==s.arrW;
+  $('pending').textContent=pending?'有新值正在等待 UEV。当前计数仍按绿色框里的旧值继续。':'两侧当前一致。运行中再次写 PSC 或 ARR 后，可以观察它们暂时不同。';
+  $('readback').textContent='CPU 现在读回：TIM2->PSC = '+s.pscW+'；TIM2->ARR = '+s.arrW+'；TIM2->CNT = '+s.cnt+'。';
+  $('clear').disabled=!s.uif;
+ }else{
+  const {direct:d,buffered:b}=models.compare;
+  $('direct-body').innerHTML=compareBody(d);$('buffered-body').innerHTML=compareBody(b);
+  $('pair-clear').disabled=!d.uif&&!b.uif;
+  $('compare-note').innerHTML=d.kind==='ug'?'<b>UG 会让两路重新对齐起跑。</b><p>两路 CNT 与预分频累计进度都归零，待生效参数被装载。UG 会重新起算当前轮，所以它与“等本轮自然结束”效果不同。</p>':d.arrW===5?'<b>先同时写 ARR＝8。</b><p>两路都从 CNT=2 开始，左侧不缓冲 ARR，右侧缓冲 ARR。ARPE 只控制 ARR 的装载方式；PSC 始终要等更新事件。</p>':'<b>两路 CK_CNT 速度相同，当前周期边界可以不同。</b><p>ARPE=0 的一路把本轮上限从 5 延长到 8；ARPE=1 的一路先完成上限为 5 的旧周期，在 5→0 的 UEV 装载 8。点击 UG 则会让两路立即装载并回到 0。</p>';
+ }
+ const entries=tab==='compare'?[...models.compare.direct.events.map(e=>({...e,lane:'ARPE=0'})),...models.compare.buffered.events.map(e=>({...e,lane:'ARPE=1'}))].sort((a,b)=>b.raw-a.raw):models[tab].events;
+ $('event-log').innerHTML=entries.map(e=>'<div class="eventrow"><b>'+(e.lane?e.lane+' · ':'')+e.source+'</b> · 第 '+e.raw+' 个输入边沿之后<br>有效 PSC：'+e.oldPSC+' → '+e.psc+'；有效 ARR：'+e.oldARR+' → '+e.arr+'；CNT=0，UIF 置 1。<span class="hint">'+(e.source==='软件 UG'?'这是软件操作，不消耗一个模拟输入脉冲。':'')+'</span></div>').join('');
+}
+
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)switchTab(b.dataset.tab);});
+$('step').onclick=next;$('tick').onclick=nextTick;$('back').onclick=undo;$('play').onclick=play;$('reset').onclick=reset;
+$('speed').onchange=()=>{const playing=timer!==null;stop();if(playing)play();};
+$('base-presets').onclick=e=>{const b=e.target.closest('[data-psc]');if(b)action(()=>{models.base=createState(Number(b.dataset.psc),4);});};
+$('write').onclick=()=>action(()=>writeConfig(models.shadow,Number($('write-psc').value),Number($('write-arr').value)));
+$('ug').onclick=()=>action(()=>softwareUG(models.shadow));
+$('clear').onclick=()=>action(()=>clearUIF(models.shadow));
+$('cnt-zero').onclick=()=>action(()=>writeCNT(models.shadow));
+$('pair-write').onclick=()=>action(()=>{for(const s of states())writeConfig(s,s.pscW,8);});
+$('pair-ug').onclick=()=>action(()=>{for(const s of states())softwareUG(s);});
+$('pair-clear').onclick=()=>action(()=>{for(const s of states())clearUIF(s);});
+document.addEventListener('keydown',e=>{
+ if(e.target.closest('input,select,textarea')||e.ctrlKey||e.altKey||e.metaKey)return;
+ if(e.key==='ArrowRight'){e.preventDefault();next();}
+ if(e.key==='ArrowLeft'){e.preventDefault();undo();}
+ if(e.code==='Space'&&!e.target.closest('button,summary,a')){e.preventDefault();play();}
+});
+window.timebaseLab={getState:()=>copy(models),getTab:()=>tab,stop};
+render();
+
+</script>
+
+<footer id="course-credit" style="box-sizing:border-box;position:static;max-width:1480px;margin:24px auto 0;padding:22px 26px 28px;border-top:1px solid #dce4e8;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;font:13px/1.7 -apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif;color:#617785;text-align:left;background:transparent"><a href="./index.html" style="color:#176b58;text-decoration:none">← 返回课程目录</a><span>Designed By Xianyu Wu</span></footer>
+</body></html>

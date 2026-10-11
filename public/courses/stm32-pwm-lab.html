@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>STM32 PWM 动态课堂 · CNT、CCR 与占空比</title><style>
+:root{--ink:#17354d;--muted:#5c7383;--blue:#176fa6;--green:#147e66;--orange:#ac6514;--purple:#7858a3;--line:#cbdde7;--bg:#f2f7fa}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "Microsoft YaHei",sans-serif}main{max-width:1480px;margin:auto;padding:24px}h1,h2,h3,p{margin:0}h1{font-size:30px}h2{font-size:21px}h3{font-size:17px}a{color:var(--blue)}small,.muted{color:var(--muted)}header{display:flex;justify-content:space-between;gap:24px;align-items:center}header small{color:var(--blue)}header nav{display:flex;flex-direction:column;white-space:nowrap}button,select,input{font:inherit;color:inherit}button,select,input[type=number]{padding:7px 11px;background:white;border:1px solid var(--line);border-radius:7px}button{cursor:pointer}button:hover:not(:disabled){background:#e9f4fb}button:disabled{opacity:.45;cursor:default}button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #86bde0;outline-offset:3px}.primary,.tabs [aria-selected=true]{background:var(--blue);color:white;border-color:var(--blue)}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}.tabs button{text-align:left;padding:12px 15px}.tabs b,.tabs span{display:block}.tabs span{font-size:13px}.toolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:12px 15px;background:white;border:1px solid var(--line);border-radius:9px;position:sticky;top:0;z-index:10}.toolbar label{display:flex;align-items:center;gap:6px}.spacer{flex:1}#lesson{scroll-margin-top:85px}.panel{margin-top:16px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:white}.heading{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line)}.lead{background:#eaf4fb;padding:12px 20px}.controls{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:14px 20px}.controls label{display:flex;align-items:center;gap:8px}.controls input[type=range]{width:210px;accent-color:var(--blue)}.controls input[type=number]{width:85px}.presets{display:flex;flex-wrap:wrap;gap:6px}.content{padding:14px 20px}.scroll{overflow-x:auto}.diagram,.plot{display:block;width:100%;min-width:900px;background:#fcfdff}.diagram text,.plot text{font:16px "Microsoft YaHei",sans-serif;fill:var(--ink)}.diagram .title,.plot .title{font-weight:bold}.diagram .small,.plot .small{font-size:13px;fill:var(--muted)}.diagram .value{font:700 23px Consolas,"Microsoft YaHei",monospace}.diagram .wire{stroke:#91adbd;stroke-width:2;fill:none}.diagram .signal{stroke:var(--green);stroke-width:3;fill:none}.diagram .packet{fill:var(--blue)}.diagram .packet text{fill:white;font-size:14px}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:14px 20px}.metric{background:#f0f6fa;border-radius:6px;padding:10px 12px;border-left:3px solid var(--blue)}.metric b{display:block;font:700 23px/1.5 Consolas,"Microsoft YaHei",monospace}.metric small{display:block}.status{padding:13px 20px;background:#eaf4fb;border-top:1px solid var(--line)}.status b{font-size:18px}.status.event{background:#fff2d9}.note{padding:10px 20px;color:var(--muted);font-size:14px}.legend{display:flex;gap:20px;flex-wrap:wrap;padding:10px 20px;font-size:14px}.legend i{display:inline-block;width:18px;height:4px;vertical-align:middle;margin-right:5px;background:var(--blue)}.legend .ccr{background:var(--orange)}.legend .out{background:var(--green)}.formula{padding:12px 20px;background:#f6f9fc;border-top:1px solid var(--line)}.formula code{font-size:17px;color:var(--blue)}code,pre{font-family:Consolas,"Microsoft YaHei",monospace}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 20px}.card{border:1px solid var(--line);border-radius:8px;overflow:hidden}.card h3{background:#eef5f9;padding:10px 15px}.card p{padding:10px 15px}.lamp-row{display:flex;align-items:center;gap:22px;padding:16px 20px}.lamp{flex:0 0 64px;width:64px;height:64px;border-radius:50%;border:3px solid #788a82;background:#334d43;position:relative}.lamp.on{background:#7af27b;border-color:#379d42;box-shadow:0 0 22px #7af27b88}.lamp::after{content:"LED";position:absolute;inset:17px 0;text-align:center;font-size:14px;color:#162d20}.lamp.off::after{color:#d9e4df}.avg-lamp{background:color-mix(in srgb,#7af27b calc(var(--d)*100%),#334d43);box-shadow:0 0 calc(var(--d)*24px) #7af27b77}.bar{height:12px;background:#d9e4e8;border-radius:6px;overflow:hidden;margin:9px 0}.bar span{display:block;height:100%;background:var(--green)}.lamp-info{flex:1}.big{font:700 24px Consolas,"Microsoft YaHei",monospace}details{padding:14px 20px}summary{cursor:pointer;font-weight:bold}details p{margin-top:10px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{padding:9px 11px;border-bottom:1px solid var(--line);text-align:left}th{background:#eef5fa}pre{padding:15px;background:#f1f6fa;font:14px/1.8 Consolas,"Microsoft YaHei",monospace;white-space:pre-wrap;overflow-wrap:anywhere}.warning{padding:12px 15px;margin:12px 20px;background:#fff4e2;border-left:4px solid var(--orange)}.footer{font-size:13px;color:var(--muted);margin:18px 0}.quiz button{margin:8px 6px 0 0}.feedback{font-weight:bold}.pill{display:inline-block;border-radius:6px;padding:4px 9px;background:#e4f3ec;color:#17684d}.preload-values{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:12px 0}.preload-values div{background:#f0f6fa;padding:12px;border-radius:6px}.preload-values b{display:block;font:700 23px Consolas,monospace}[hidden]{display:none!important}
+@media(max-width:1000px){.metrics{grid-template-columns:1fr 1fr}.spacer{display:none}header{display:block}header nav{flex-direction:row;gap:16px;flex-wrap:wrap;margin-top:10px}.twocol{grid-template-columns:1fr}}
+@media(max-width:640px){main{padding:12px}h1{font-size:24px}.tabs{grid-template-columns:1fr}.toolbar{position:static}.heading{display:block}.controls{padding:12px}.controls label{max-width:100%;flex-wrap:wrap}.controls select{max-width:100%}.metrics{padding:12px;gap:8px}.metric b{font-size:19px}.twocol{padding:12px}.preload-values{grid-template-columns:1fr}.diagram,.plot{min-width:850px}.toolbar button{flex:1 1 auto}.note{padding:10px 12px}.lamp-row{padding:12px}#lesson{scroll-margin-top:10px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body><main>
+<header><div><small>第8章 · 定时器与脉宽调制 · STM32F1 / TIM2_CH1</small><h1>PWM：数到哪里，输出就改变</h1><p class="muted">看懂 CNT 与 CCR 的比较，再调频率、占空比与 LED 亮度。</p></div><nav><a href="stm32-timer-counter-lab.html">计数器基础 →</a><a href="stm32-timer-timebase-shadow.html">时基与影子寄存器 →</a></nav></header>
+<nav id="tabs" class="tabs" aria-label="PWM教学案例">
+<button data-tab="basic" aria-selected="true"><b>① 逐拍生成一个 PWM 周期</b><span>CNT → 比较器 → OC1REF → PA0</span></button>
+<button data-tab="tune" aria-selected="false"><b>② 调频率、占空比与 LED</b><span>PSC、ARR、CCR 各自改变什么？</span></button>
+<button data-tab="compare" aria-selected="false"><b>③ 模式、极性与中央对齐</b><span>同一个计数时钟，同屏比较两种波形</span></button>
+</nav>
+<div class="toolbar"><button id="back">← 上一拍</button><button class="primary" id="next">下一拍 →</button><button id="play">慢放一整轮</button><button id="reset">恢复本例默认</button><label>动画速度 <select id="speed"><option value="1000">1秒 / 拍</option><option value="1800">1.8秒 / 拍</option><option value="500">0.5秒 / 拍</option></select></label><span id="progress"></span><span class="spacer"></span><small>← / → 单步；空格播放／暂停</small></div>
+<div id="lesson"></div>
+<details class="panel" id="preload-detail"><summary>进阶实验：运行中把 CCR 从3改成7，为什么要开 OC1PE 预装载？</summary><p>独立的小实验：ARR=9，向上计数，PWM1，高电平有效。当前 CNT=5，旧 CCR=3，输出已经变低。比较“立即生效”和“等下一次更新事件生效”。</p><div id="preload"></div></details>
+<details class="panel"><summary>上板案例：TIM2_CH1 / PA0 输出 1 kHz、25% 占空比 PWM</summary>
+<p>使用 STM32F10x 标准外设库。假定启动代码已配置系统时钟，实际 TIM2 输入时钟为72 MHz，PA0 使用默认映射并且没有被其他外设占用。GPIO 使用复用推挽输出。LED 按 PA0 → 限流电阻 → LED → GND 连接，高电平点亮。</p>
+<pre>#include "stm32f10x.h"
+
+void PWM_PA0_Init(void)
+{
+    GPIO_InitTypeDef gpio;
+    TIM_TimeBaseInitTypeDef base;
+    TIM_OCInitTypeDef oc;
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+
+    GPIO_StructInit(&amp;gpio);
+    gpio.GPIO_Pin   = GPIO_Pin_0;
+    gpio.GPIO_Mode  = GPIO_Mode_AF_PP;
+    gpio.GPIO_Speed = GPIO_Speed_2MHz;
+    GPIO_Init(GPIOA, &amp;gpio);
+
+    TIM_DeInit(TIM2);
+    TIM_TimeBaseStructInit(&amp;base);
+    base.TIM_Prescaler     = 71;     // 72 MHz / 72 = 1 MHz
+    base.TIM_Period        = 999;    // 1000拍一个周期：1 kHz
+    base.TIM_CounterMode   = TIM_CounterMode_Up;
+    base.TIM_ClockDivision = TIM_CKD_DIV1; // 不是PSC分频
+    TIM_TimeBaseInit(TIM2, &amp;base);
+
+    TIM_OCStructInit(&amp;oc);
+    oc.TIM_OCMode      = TIM_OCMode_PWM1;
+    oc.TIM_OutputState = TIM_OutputState_Enable;
+    oc.TIM_Pulse       = 250;        // 高250拍 / 总1000拍 = 25%
+    oc.TIM_OCPolarity  = TIM_OCPolarity_High;
+    TIM_OC1Init(TIM2, &amp;oc);
+
+    TIM_OC1PreloadConfig(TIM2, TIM_OCPreload_Enable);
+    TIM_ARRPreloadConfig(TIM2, ENABLE);
+    TIM_GenerateEvent(TIM2, TIM_EventSource_Update); // UG，装入有效值
+    TIM_ClearFlag(TIM2, TIM_FLAG_Update);
+    TIM_Cmd(TIM2, ENABLE);
+}
+
+// 初始化后，定时器硬件自动输出，无需每个脉冲都进中断。
+// 改成75%：下一个更新事件后生效。
+// TIM_SetCompare1(TIM2, 750);</pre>
+<p>PSC=71、ARR=999 的工程例子比动画里的十格计数有更细的占空比调节步长，原理相同。0% 可设 CCR1=0；本例100%可设 CCR1=1000。若 ARR 已是16位最大值65535，不能再把65536写入16位 CCR，应另选参数或采用合适的强制输出方式。</p>
+<p>TIM2 是通用定时器，不需要 TIM1/TIM8 的 MOE 主输出使能配置。这里也无需配置 NVIC 或编写中断函数。真实 LED 的限流电阻应按供电、正向压降、目标电流和引脚驱动能力选择；网页中的电压和亮度是教学近似。</p>
+</details>
+<details class="panel"><summary>课堂检查：三个容易混淆的问题</summary>
+<div class="quiz" data-answer="b"><p>1. ARR=9、CCR=3，向上计数、PWM1、高电平有效，高电平占几拍？</p><button data-choice="a">4拍，包括CNT=3</button><button data-choice="b">3拍：CNT=0、1、2</button><p class="feedback" aria-live="polite"></p></div>
+<div class="quiz" data-answer="a"><p>2. 只把 PSC 变大，ARR、CCR 都不变，会怎样？</p><button data-choice="a">频率降低，占空比不变</button><button data-choice="b">频率不变，占空比增大</button><p class="feedback" aria-live="polite"></p></div>
+<div class="quiz" data-answer="b"><p>3. 50%占空比时，PA0是否一直输出1.65 V？</p><button data-choice="a">是，电压停在一半</button><button data-choice="b">不是，仍在约0 V与3.3 V之间切换</button><p class="feedback" aria-live="polite"></p></div>
+</details>
+<details class="panel"><summary>课件对应、公式边界与官方依据</summary>
+<p>依据《第8章 定时器与脉宽调制16-9.pptx》：第65～68页的捕获／比较通道与输出链，第85～93页的PWM模式、预装载、极性和计数对齐，第141页的时基计算。本页讲PWM生成；第74～76页的PWM输入测量是另一用途。</p>
+<p>课件第83、88页的波形需要同时说明模式与输出极性，才能判断高低关系。本页明确分开 OC1REF 和最终 PA0 电平。第91页“向下计数PWM1能产生0%”应修正：该模式的比较条件是 CNT≤CCR 时有效，CCR=0仍有CNT=0这一拍，不能直接产生0%的 OC1REF。</p>
+<p>向上计数完整周期含 ARR+1 拍；中央对齐的0→ARR→0完整往返含2×ARR拍，端点不会重复停留。相同计数时钟下，每拍都只改变1，中央对齐不会数得更快。其两端可产生更新事件，但一次更新事件不等于一个完整PWM周期。</p>
+<p>本页假定 TIM2、内部时钟、通道已使能，未启用外部清除、单脉冲、门控或DMA。0%／100%时输出为恒电平，仍可计算计数周期，但不再有周期性输出边沿。PWM1/PWM2改变参考波形，CC1P改变最终极性，两者要分开看。</p>
+<p>f<sub>TIM</sub>应由实际RCC时钟树确定，不要直接把CPU主频代入。STM32F1常见配置中，APB预分频为1时定时器时钟等于对应PCLK，否则通常为2×PCLK，具体以芯片手册为准。</p>
+<p>官方核对：<a href="https://www.st.com/resource/en/reference_manual/cd00171190.pdf" target="_blank" rel="noopener">ST RM0008 Rev 21，15.3.9 PWM mode（第387～390页）</a>，以及时基、计数器和寄存器章节。公式用于本页明确标注的配置，不代表任意计数模式都能套用同一表达式。</p>
+</details>
+<p class="footer">本地单文件，可离线使用；不会上传数据。只有主动点击官方资料链接才会访问网络。课堂慢放与芯片实际频率无关。</p>
+</main><script>
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const defaults={basic:{tick:0,arr:9,ccr:3,psc:7199,ftim:72000000,pwm:1,pol:0},tune:{tick:0,arr:9,ccr:5,psc:7199,ftim:72000000,pwm:1,pol:0},compare:{tick:0,arr:8,ccr:4,psc:7199,ftim:72000000,pwm:1,pol:0}};
+const state=structuredClone(defaults);let current='basic',timer=null,playTarget=0;
+const dec=(n,d=3)=>Number(n.toFixed(d)).toLocaleString('en-US',{maximumFractionDigits:d});
+function hz(n){return n>=1e6?dec(n/1e6)+' MHz':n>=1000?dec(n/1000)+' kHz':dec(n)+' Hz'}
+function time(n){return n>=.001?dec(n*1000)+' ms':dec(n*1e6)+' μs'}
+const percent=n=>dec(n*100,2)+'%';
+function period(s,mode='up'){return mode==='center'?2*s.arr:s.arr+1}
+function sample(s,t=s.tick,mode='up'){
+ const length=period(s,mode),phase=((t%length)+length)%length;
+ const down=mode==='center'&&phase>=s.arr;
+ const cnt=mode==='center'?(phase<=s.arr?phase:2*s.arr-phase):phase;
+ const base=down?cnt<=s.ccr:cnt<s.ccr;
+ const ref=s.pwm===1?base:!base;
+ return {cnt,down,ref:Number(ref),pin:Number(s.pol?!ref:ref),phase,length,uev:t>0&&(mode==='center'?phase===0||phase===s.arr:phase===0)};
+}
+function stats(s,mode='up'){
+ const length=period(s,mode),fcnt=s.ftim/(s.psc+1),base=Math.min(1,Math.max(0,s.ccr/(mode==='center'?s.arr:s.arr+1)));
+ const ref=s.pwm===1?base:1-base,d=s.pol?1-ref:ref;
+ return {length,fcnt,freq:fcnt/length,T:length/fcnt,duty:d,highTicks:Math.round(d*length),highTime:d*length/fcnt};
+}
+function options(items,value){return items.map(([v,t])=>'<option value="'+v+'"'+(String(v)===String(value)?' selected':'')+'>'+t+'</option>').join('')}
+function head(title,lead,pages){return '<section class="panel"><div class="heading"><h2>'+title+'</h2><small>'+pages+'</small></div><p class="lead">'+lead+'</p>'}
+function metric(label,value,detail){return '<div class="metric">'+label+'<b>'+value+'</b><small>'+detail+'</small></div>'}
+function text(x,y,s,cls='',anchor='start'){return '<text x="'+x+'" y="'+y+'" class="'+cls+'" text-anchor="'+anchor+'">'+esc(s)+'</text>'}
+function startSVG(label,h,cls='diagram'){return '<div class="scroll"><svg class="'+cls+'" viewBox="0 0 1200 '+h+'" role="img" aria-label="'+esc(label)+'"><defs><marker id="arrow-'+current+'" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="context-stroke"/></marker></defs>'}
+const endSVG='</svg></div>';
+function node(x,y,w,h,title,value,detail='',hot=false){return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="8" stroke="'+(hot?'#147e66':'#b8cfdd')+'" fill="'+(hot?'#e1f5e9':'#f0f6fa')+'"/>'+text(x+12,y+25,title,'title')+text(x+12,y+57,value,'value')+(detail?text(x+12,y+h-13,detail,'small'):'')}
+function wire(d,hot=false){return '<path d="'+d+'" class="'+(hot?'signal':'wire')+'" marker-end="url(#arrow-'+current+')"/>'}
+function packet(d,label){return matchMedia('(prefers-reduced-motion: reduce)').matches?'':'<g class="packet"><rect x="-24" y="-12" width="48" height="24" rx="6"/><text y="5" text-anchor="middle">'+label+'</text><animateMotion path="'+d+'" dur=".45s" fill="freeze"/><animate attributeName="opacity" values="1;1;0" keyTimes="0;.8;1" dur=".6s" fill="freeze"/></g>'}
+function hardware(s){
+ const q=sample(s),m=stats(s);
+ let d=startSVG('定时器输出通路：时钟经预分频驱动CNT，CNT与CCR比较，OC1REF经极性控制送到PA0',295);
+ d+=text(20,25,'定时器硬件自动运行；CPU 不需要逐拍写 GPIO','title');
+ d+=node(20,58,145,110,'输入时钟',hz(s.ftim),'CK_INT / fTIM');
+ d+=node(205,58,150,110,'PSC 预分频',String(s.psc),'÷ '+(s.psc+1)+' → 1拍');
+ d+=node(402,58,135,110,'CNT 计数器',String(q.cnt),'0 → '+s.arr+' → 0',true);
+ d+=node(585,58,188,110,'比较器 · PWM'+s.pwm,q.cnt+' < '+s.ccr+'：'+(q.cnt<s.ccr?'真':'假'),'OC1REF = '+q.ref,q.ref===1);
+ d+=node(820,58,145,110,'极性 CC1P',String(s.pol),s.pol?'输出反相':'高电平有效');
+ d+=node(1012,58,168,110,'PA0 / CH1',q.pin?'H · 3.3 V':'L · 0 V',q.pin?'LED 亮（慢放）':'LED 灭（慢放）',q.pin===1);
+ d+=node(390,204,160,78,'ARR 周期上限',String(s.arr),'');
+ d+=node(590,204,178,78,'CCR1 比较值',String(s.ccr),'');
+ d+=wire('M165 111 H205')+wire('M355 111 H402',s.tick>0)+wire('M537 111 H585',true)+wire('M773 111 H820',q.ref===1)+wire('M965 111 H1012',q.pin===1);
+ d+=wire('M469 204 V168')+wire('M679 204 V168');
+ d+=text(377,187,'CK_CNT = '+hz(m.fcnt),'small','middle');
+ d+=text(900,230,'输出使能 CC1E=1','small');
+ d+='<circle cx="1070" cy="229" r="23" fill="'+(q.pin?'#79ef74':'#405c4c')+'" stroke="#417447" stroke-width="2"/>'+text(1104,235,q.pin?'亮':'灭','title')+text(1015,280,'输出状态观察灯','small');
+ if(s.tick>0)d+=packet('M355 111 H402','+1');
+ return d+endSVG;
+}
+function status(s){
+ const q=sample(s),m=stats(s);let title,desc;
+ if(q.uev){title='ARR → 0：开始下一周期';desc='上一周期经历 '+(s.arr+1)+' 个计数间隔，产生更新事件 UEV。新周期重新判断 CNT 与 CCR。'}
+ else if(s.ccr===0){title='CCR=0：PWM1 参考信号始终无效';desc='CNT 不可能小于0。当前配置下 PA0 '+(q.pin?'恒高':'恒低')+'，没有周期性输出边沿。'}
+ else if(s.ccr>s.arr){title='CCR > ARR：PWM1 参考信号始终有效';desc='CNT 最大只有 '+s.arr+'，始终小于 '+s.ccr+'。当前配置下 PA0 '+(q.pin?'恒高':'恒低')+'。'}
+ else if(q.cnt===s.ccr){title='到达比较值：CNT = CCR = '+s.ccr;desc='小于关系已经不成立。PWM1 的 OC1REF 由1变0；最终引脚电平还要看 CC1P。';}
+ else {title='CNT='+q.cnt+'，'+(q.cnt<s.ccr?'还没数到 CCR':'已经达到或超过 CCR');desc='PWM1：CNT < CCR 时参考输出为1，否则为0。本例高电平共 '+m.highTicks+' 拍，总共 '+m.length+' 拍。'}
+ return '<div class="status '+(q.uev||q.cnt===s.ccr?'event':'')+'" aria-live="polite"><b>'+title+'</b><p>'+desc+'</p></div>';
+}
+function pathSteps(values,y,left,dx){
+ let p='M'+left+' '+y(values[0]);
+ for(let i=0;i<values.length-1;i++)p+=' H'+(left+(i+1)*dx)+' V'+y(values[i+1]);
+ return p;
+}
+function plotFrame(s,n,h,label){
+ const left=146,right=1180,dx=(right-left)/n,offset=Math.floor(s.tick/n)*n,focus=s.tick-offset;
+ let out=startSVG(label,h,'plot');
+ out+='<rect x="'+(left+focus*dx)+'" y="14" width="'+dx+'" height="'+(h-48)+'" fill="#daeaf6" opacity=".65"/>';
+ for(let i=0;i<=n;i++)out+='<line x1="'+(left+i*dx)+'" x2="'+(left+i*dx)+'" y1="14" y2="'+(h-40)+'" stroke="#dfe9ef"/>';
+ return {out,left,right,dx,offset,focus,n,h};
+}
+function counterTrack(frame,s,mode,top,bottom){
+ const {left,right,dx,n,offset}=frame,a=Array.from({length:n+1},(_,i)=>sample(s,offset+i,mode)),scale=(bottom-top)/(s.arr+1),y=v=>bottom-v*scale;
+ let out=text(12,top+18,mode==='center'?'CNT 中央':'CNT 向上','title')+text(12,top+40,'每拍只改变1','small');
+ out+='<line x1="'+left+'" x2="'+right+'" y1="'+y(s.ccr)+'" y2="'+y(s.ccr)+'" stroke="#ac6514" stroke-width="2" stroke-dasharray="6 4"/>'+text(12,top+61,'CCR='+s.ccr,'small');
+ out+='<path d="'+pathSteps(a.map(q=>q.cnt),y,left,dx)+'" fill="none" stroke="#176fa6" stroke-width="2.4"/>';
+ for(let i=0;i<n;i++)out+=text(left+(i+.5)*dx,bottom+18,a[i].cnt,'small','middle');
+ return out;
+}
+function digitalTrack(frame,values,top,bottom,label,volts=false){
+ const {left,dx,n}=frame;let out=text(12,(top+bottom)/2+5,label,'title');
+ if(volts)out+=text(96,top+5,'3.3V','small','end')+text(96,bottom+5,'0V','small','end');
+ else out+=text(108,top+5,'1','small')+text(108,bottom+5,'0','small');
+ for(let i=0;i<n;i++)if(values[i])out+='<rect x="'+(left+i*dx)+'" y="'+top+'" width="'+dx+'" height="'+(bottom-top)+'" fill="#daf0e4"/>';
+ out+='<path d="'+pathSteps(values,v=>v?top:bottom,left,dx)+'" fill="none" stroke="#147e66" stroke-width="2.8"/>';
+ return out;
+}
+function finishPlot(f,s){
+ const {left,right,dx,n,offset,focus,h}=f;let out='';
+ out+='<line x1="'+(left+focus*dx)+'" x2="'+(left+focus*dx)+'" y1="12" y2="'+(h-40)+'" stroke="#176fa6" stroke-width="2" stroke-dasharray="3 3"/>';
+ const every=n<=24?2:4;
+ for(let i=0;i<=n;i+=every)out+=text(left+i*dx,h-18,offset+i,'small',i===n?'end':'middle');
+ out+=text(12,h-18,'计数节拍 t','small');
+ return out+endSVG;
+}
+function basicChart(s){
+ const f=plotFrame(s,2*(s.arr+1),375,'同步时序图：计数时钟、CNT阶梯、OC1REF和PA0在同一时间轴上'),a=Array.from({length:f.n+1},(_,i)=>sample(s,f.offset+i));
+ let d=f.out+text(12,39,'CK_CNT','title');
+ let clock='';
+ for(let i=0;i<f.n;i++){const x=f.left+i*f.dx;clock+=(i?' L':'M')+x+' 42 V25 H'+(x+.28*f.dx)+' V42 H'+(x+f.dx)}
+ d+='<path d="'+clock+'" fill="none" stroke="#99adb9" stroke-width="1.5"/>';
+ d+=counterTrack(f,s,'up',77,158);
+ d+=digitalTrack(f,a.map(q=>q.ref),213,241,'OC1REF');
+ d+=digitalTrack(f,a.map(q=>q.pin),287,315,'PA0',true);
+ for(let i=0;i<=f.n;i++)if((f.offset+i)%(s.arr+1)===0)d+='<line x1="'+(f.left+i*f.dx)+'" x2="'+(f.left+i*f.dx)+'" y1="50" y2="335" stroke="#b78442" stroke-dasharray="3 5"/>';
+ return d+finishPlot(f,s);
+}
+function compareChart(s){
+ const f=plotFrame(s,4*s.arr,470,'向上计数与中央对齐使用相同计数节拍，各自的CNT和PA0波形同轴对比');
+ let d=f.out;
+ d+=counterTrack(f,s,'up',33,112);
+ d+=digitalTrack(f,Array.from({length:f.n+1},(_,i)=>sample(s,f.offset+i,'up').pin),160,188,'PA0 向上');
+ d+=counterTrack(f,s,'center',251,330);
+ d+=digitalTrack(f,Array.from({length:f.n+1},(_,i)=>sample(s,f.offset+i,'center').pin),379,407,'PA0 中央');
+ return d+finishPlot(f,s);
+}
+function formulas(s,mode='up'){
+ const m=stats(s,mode),den=mode==='center'?'2 × ARR':'ARR + 1';
+ return '<div class="formula"><code>f<sub>CNT</sub> = f<sub>TIM</sub> / (PSC + 1) = '+hz(m.fcnt)+'</code><br><code>f<sub>PWM</sub> = f<sub>CNT</sub> / ('+den+') = '+hz(m.freq)+'</code>'
+ +(mode==='up'&&s.pwm===1&&s.pol===0?'<br><code>D = CCR / (ARR + 1) = '+s.ccr+' / '+(s.arr+1)+' = '+percent(m.duty)+'</code>':'')
+ +'<br><small>此处 f<sub>PWM</sub> 指设定载频。D=0%或100%时引脚恒定，没有输出翻转。每拍真实时间为 '+time(1/m.fcnt)+'。</small></div>';
+}
+function commonMetrics(s){
+ const m=stats(s),q=sample(s);
+ return '<div class="metrics">'+metric('当前 CNT',q.cnt,'本拍 PA0='+q.pin+'，'+(q.pin?'高电平':'低电平'))+metric('周期 / 设定载频',time(m.T),hz(m.freq))+metric('高电平时间',time(m.highTime),m.highTicks+'拍 / '+m.length+'拍')+metric('高电平占空比',percent(m.duty),'D = tH / T')+'</div>';
+}
+function basicView(){
+ const s=state.basic;
+ return head('① 数0、1、2时亮；数到3以后灭','默认 ARR=9、CCR1=3。一个周期是0～9这10拍，PWM1在 CNT < CCR1 时有效。先点击“下一拍”，看比较器和引脚一起变化。','课件第65～68、85、89～90页')
+ +hardware(s)+commonMetrics(s)+status(s)
+ +'<div class="heading"><h3>同一时间轴：每个计数间隔对应一个 CNT 值</h3><small>蓝色竖线与浅蓝格表示当前拍</small></div>'+basicChart(s)
+ +'<p class="note">图中展示两个完整周期的预览；蓝色游标表示当前运行位置，不把未来波形伪装成已采集数据。一步代表一个 CK_CNT 节拍，真实长度100 μs，课堂慢放为0.5～1.8秒。</p>'
+ +formulas(s)+'<div class="warning">PA0 的电压仍在约0 V和3.3 V之间切换。30%占空比的周期平均电压约0.99 V，不能把它画成持续输出0.99 V。</div></section>';
+}
+function tuneView(){
+ const s=state.tune,m=stats(s),q=sample(s);
+ return head('② 改 CCR 调高电平时长，改 PSC 调计数节奏','先只改一个参数。调整后从 CNT=0 重新预览；运行中写CCR的效果，请看下方“预装载”实验。','课件第85、89、141页')
+ +'<div class="controls"><label>定时器输入 fTIM <select id="ftim">'+options([[72000000,'72 MHz'],[36000000,'36 MHz']],s.ftim)+'</select></label><label>PSC <select id="psc">'+options([[3599,'3599（除以3600）'],[7199,'7199（除以7200）'],[14399,'14399（除以14400）']],s.psc)+'</select></label><label>ARR <select id="arr">'+options([[3,'3 · 每轮4拍'],[7,'7 · 每轮8拍'],[9,'9 · 每轮10拍'],[15,'15 · 每轮16拍'],[19,'19 · 每轮20拍']],s.arr)+'</select></label></div>'
+ +'<div class="controls"><label>CCR1 <input id="ccr" type="range" min="0" max="'+(s.arr+1)+'" step="1" value="'+s.ccr+'"><output id="ccr-output">'+s.ccr+'</output></label><small>松手应用</small><div class="presets">'+[0,25,50,75,100].map(v=>'<button data-duty="'+v+'">'+v+'%</button>').join('')+'</div></div>'
+ +'<p class="note">占空比只能按整拍调整；快捷键会选取最接近的整数 CCR。例如10拍一轮时无法精确表示25%，请改为4、8、16或20拍一轮。改 ARR 时保留原CCR；若原值超过新范围，本教学控件会将其限制为 ARR+1。</p>'
+ +hardware(s)+commonMetrics(s)+status(s)+basicChart(s)+formulas(s)
+ +'<div class="twocol"><article class="card"><h3>LED 此刻亮灭 · 与慢放游标同步</h3><div class="lamp-row"><div class="lamp '+(q.pin?'on':'off')+'" role="img" aria-label="'+(q.pin?'LED亮':'LED灭')+'"></div><div class="lamp-info"><b class="big">'+(q.pin?'亮 · H':'灭 · L')+'</b><div>PA0 → 限流电阻 → LED → GND</div><small>这里只把电平切换放慢给学生观察。</small></div></div></article>'
+ +'<article class="card"><h3>一个周期的平均效果 · 调光示意</h3><div class="lamp-row"><div class="lamp avg-lamp '+(m.duty===0?'off':'')+'" style="--d:'+m.duty+'" role="img" aria-label="占空比'+percent(m.duty)+'的平均亮度示意"></div><div class="lamp-info"><b class="big">'+percent(m.duty)+'</b><div class="bar"><span style="width:'+m.duty*100+'%"></span></div><small>理想周期平均电压 ≈ '+dec(3.3*m.duty,3)+' V</small></div></div><p class="muted">亮度仅作定性示意，并非光度标定。人眼感受受频率、电流和视觉响应影响；平均电压不是引脚瞬时电压。</p></article></div>'
+ +'<details><summary>每个参数到底改了什么？</summary><table><tr><th>操作</th><th>保持其余参数不变时</th></tr><tr><td>增大 PSC</td><td>每一拍变长，周期变长、频率降低；占空比不变。</td></tr><tr><td>增大 ARR</td><td>每周期拍数变多，频率降低。CCR不变时，占空比也会降低。</td></tr><tr><td>增大 CCR</td><td>周期不变，高电平拍数增多，占空比增大。</td></tr></table><p>上述占空比关系限定为向上计数、PWM1、高电平有效。本页的20拍以内参数方便观察离散计数；实际工程可用更大的 ARR 提高调节分辨率。</p></details></section>';
+}
+function compareView(){
+ const s=state.compare,u=sample(s,s.tick,'up'),c=sample(s,s.tick,'center'),mu=stats(s,'up'),mc=stats(s,'center');
+ const baseU=u.cnt<s.ccr;
+ return head('③ 同一个计数时钟：边沿对齐与中央对齐','两条轨道同时接收同一拍 CK_CNT，每拍都推进一次计数，回绕规律不同。PWM1／PWM2决定参考信号，CC1P再决定引脚是否反相。','课件第87～93页')
+ +'<div class="controls"><label>PWM模式 <select id="pwm">'+options([[1,'PWM1 · OC1M=110'],[2,'PWM2 · OC1M=111']],s.pwm)+'</select></label><label>输出极性 <select id="pol">'+options([[0,'CC1P=0 · 高电平有效'],[1,'CC1P=1 · 低电平有效']],s.pol)+'</select></label><label>CCR1 <select id="compare-ccr">'+options([[0,'0'],[4,'4'],[7,'7'],[8,'8（等于ARR）'],[9,'9（大于ARR）']],s.ccr)+'</select></label></div>'
+ +'<div class="twocol"><article class="card"><h3>向上计数 · 边沿对齐</h3><div class="content"><span class="big" id="up-count">CNT '+u.cnt+' ↑</span><p>OC1REF='+u.ref+' → CC1P='+s.pol+' → PA0='+u.pin+'</p><p>ARR=8，完整周期 <b>9拍</b><br>'+time(mu.T)+' · '+hz(mu.freq)+' · 高电平 '+percent(mu.duty)+'</p></div></article><article class="card"><h3>向上／向下 · 中央对齐</h3><div class="content"><span class="big" id="center-count">CNT '+c.cnt+' '+(c.down?'↓':'↑')+'</span><p>OC1REF='+c.ref+' → CC1P='+s.pol+' → PA0='+c.pin+'</p><p>ARR=8，完整往返 <b>16拍</b><br>'+time(mc.T)+' · '+hz(mc.freq)+' · 高电平 '+percent(mc.duty)+'</p></div></article></div>'
+ +'<div class="status '+(c.uev?'event':'')+'" aria-live="polite"><b>当前同一拍：向上 CNT='+u.cnt+'；中央 CNT='+c.cnt+(c.down?'，正在下降':'，正在上升')+'</b><p>中央对齐完整序列：0、1、…、7、8、7、…、1，再回到0。'+(c.uev?'现在到达端点，可产生更新事件 UEV。':'两种模式的端点时刻不同，游标使用相同时间轴，不人为拉伸波形。')+'</p></div>'
+ +compareChart(s)
+ +'<div class="legend"><span><i></i>CNT 是离散阶梯</span><span><i class="ccr"></i>CCR 比较阈值</span><span><i class="out"></i>PA0 最终输出</span></div>'
+ +'<div class="formula"><code>同一个 fCNT = '+hz(mu.fcnt)+'</code><br><code>向上：T = (ARR+1)/fCNT = 9/fCNT</code><br><code>中央：T = 2×ARR/fCNT = 16/fCNT</code><p>保持同一个ARR时，中央／向上的频率之比为9/16，不是精确的1/2。PWM1、高电平有效时，向上 D=CCR/(ARR+1)，中央 D=CCR/ARR；达到或超过各自100%阈值后取100%，不会继续增大。</p></div>'
+ +'<details><summary>当前 CNT 下，PWM 模式和极性分别做了什么？</summary><p>以下用上方“向上计数”的当前 CNT='+u.cnt+'、CCR='+s.ccr+' 作对照，CC1E始终为1。</p><table><tr><th>模式</th><th>OC1REF</th><th>CC1P=0时PA0</th><th>CC1P=1时PA0</th></tr>'+[1,2].map(p=>{const r=Number(p===1?baseU:!baseU);return '<tr><td>PWM'+p+'</td><td>'+r+'</td><td>'+r+'</td><td>'+(1-r)+'</td></tr>'}).join('')+'</table><p>PWM1向上时 CNT&lt;CCR 有效，向下时 CNT≤CCR 有效。PWM2的参考波形与PWM1相反。注意相等时的规则与计数方向有关，不应给中央对齐两半程都套用 CNT&lt;CCR。</p><p>CMS=01/10/11主要区别之一是比较标志在哪个计数方向置位，不会让计数速度改变。本页不模拟CC1IF、中断、外部清除或高级定时器的重复计数器。CC1E关闭后引脚行为还与GPIO配置有关，不能简单画成逻辑0。</p></details></section>';
+}
+let preload;
+function resetPreload(){preload={tick:5,write:3,active:3,direct:3,wrote:false,applied:false,history:Array.from({length:6},(_,i)=>({direct:Number(i<3),buffered:Number(i<3)}))}}
+function writePreload(){if(preload.wrote||preload.tick!==5)return;preload.write=7;preload.direct=7;preload.wrote=true;preload.history[5]={direct:1,buffered:0};renderPreload()}
+function stepPreload(){if(!preload.wrote||preload.tick>=20)return;preload.tick++;const cnt=preload.tick%10;if(cnt===0){preload.active=preload.write;preload.applied=true}preload.history.push({direct:Number(cnt<preload.direct),buffered:Number(cnt<preload.active)});renderPreload()}
+function preloadChart(){
+ const n=20,left=146,dx=1034/n,t=preload.tick;
+ const f={left,right:1180,dx,n,offset:0,focus:t,h:220};let d=startSVG('同一时刻写CCR：不预装载的当前周期出现第二段高电平，预装载在周期边界更新',220,'plot');
+ for(let i=0;i<=n;i++)d+='<line x1="'+(left+i*dx)+'" x2="'+(left+i*dx)+'" y1="25" y2="188" stroke="#e1eaf0"/>';
+ const count=Math.min(preload.history.length,n);
+ for(const [lane,key,top,bottom] of [['OC1PE=0','direct',54,84],['OC1PE=1','buffered',136,166]]){
+  const values=preload.history.slice(0,count).map(v=>v[key]);values.push(values[values.length-1]);
+  d+=digitalTrack({...f,n:count},values,top,bottom,lane);
+ }
+ if(preload.wrote)d+='<line x1="'+(left+5*dx)+'" x2="'+(left+5*dx)+'" y1="26" y2="185" stroke="#ac6514" stroke-width="2" stroke-dasharray="4 3"/>'+text(left+5*dx+5,18,'写CCR=7','small');
+ d+='<line x1="'+(left+10*dx)+'" x2="'+(left+10*dx)+'" y1="26" y2="185" stroke="#176fa6" stroke-width="2" stroke-dasharray="4 3"/>'+text(left+10*dx+5,18,'UEV / 周期边界','small');
+ return d+finishPlot(f,{});
+}
+function renderPreload(){
+ const p=preload,cnt=p.tick%10,pending=p.write!==p.active;
+ $('preload').innerHTML='<div class="controls"><button id="pre-write" class="primary" '+(p.wrote?'disabled':'')+'>CPU 写 CCR1=7</button><button id="pre-step" '+(!p.wrote||p.tick>=20?'disabled':'')+'>下一拍</button><button id="pre-reset">重置小实验</button><span>当前 CNT=<b>'+cnt+'</b>，ARR=9</span></div>'
+ +'<div class="preload-values"><div>CPU 写入值<b>'+p.write+'</b><small>同一个值送给左右两种配置</small></div><div>OC1PE=0 · 立即参与比较<b>有效 CCR='+p.direct+'</b><small>当前输出 '+Number(cnt<p.direct)+'</small></div><div>OC1PE=1 · 等待更新事件<b>有效 CCR='+p.active+'</b><small>预装载值 '+p.write+'；'+(pending?'等待下次UEV':'无待生效值')+'</small></div></div>'
+ +preloadChart()+'<div class="status '+(pending?'event':'')+'" aria-live="polite"><b>'+(pending?'未开预装载的一路已改；开预装载的一路等待UEV':p.applied?'到达周期边界，新的CCR已经生效':'从一个已经结束高电平的半途中开始')+'</b><p>'+(pending?'CNT=5时写入7：立即生效的一路重新满足 CNT<7，当前周期可能多出一段高电平；开预装载的一路保持当前周期的旧比较值3。':p.applied?'自然更新事件把预装载的7转入有效比较值，后续完整周期按7/10输出。输出硬件仍然无需逐拍中断。':'先点“CPU写CCR1=7”，再逐拍走到9→0。这里只比较CCR预装载，UDIS=0，未使用软件UG打断周期。')+'</p></div>';
+}
+function stop(){if(timer!==null)clearInterval(timer);timer=null;$('play').textContent='慢放一整轮'}
+function render(){
+ const open=[...$('lesson').querySelectorAll('details[open]')].map((d,i)=>i);
+ $('lesson').innerHTML=({basic:basicView,tune:tuneView,compare:compareView})[current]();
+ $('lesson').querySelectorAll('details').forEach((d,i)=>{if(open.includes(i))d.open=true});
+ document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===current)));
+ $('progress').textContent='已走 '+state[current].tick+' 拍';
+ $('back').disabled=state[current].tick===0;
+ $('play').textContent=timer===null?'慢放一整轮':'暂停';
+}
+function step(delta){const s=state[current];s.tick=Math.max(0,s.tick+delta);if(timer!==null&&s.tick>=playTarget)stop();render()}
+function play(){if(timer!==null){stop();return}const s=state[current],len=period(s,current==='compare'?'center':'up');playTarget=(Math.floor(s.tick/len)+1)*len;timer=setInterval(()=>step(1),Number($('speed').value));render()}
+$('back').addEventListener('click',()=>{stop();step(-1)});
+$('next').addEventListener('click',()=>{stop();step(1)});
+$('play').addEventListener('click',play);
+$('reset').addEventListener('click',()=>{stop();state[current]=structuredClone(defaults[current]);render()});
+$('speed').addEventListener('change',()=>{if(timer!==null){stop();play()}});
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;stop();current=b.dataset.tab;render()});
+$('lesson').addEventListener('input',e=>{if(e.target.id==='ccr'){stop();$('ccr-output').textContent=e.target.value}});
+$('lesson').addEventListener('change',e=>{
+ const s=state[current],v=Number(e.target.value);
+ if(['ftim','psc','arr','ccr','pwm','pol'].includes(e.target.id))s[e.target.id]=v;
+ else if(e.target.id==='compare-ccr')s.ccr=v;
+ else return;
+ s.ccr=Math.min(s.ccr,s.arr+1);s.tick=0;stop();render();
+});
+$('lesson').addEventListener('click',e=>{const b=e.target.closest('[data-duty]');if(!b)return;const s=state.tune;s.ccr=Math.round(Number(b.dataset.duty)/100*(s.arr+1));s.tick=0;stop();render()});
+$('preload').addEventListener('click',e=>{if(e.target.id==='pre-write')writePreload();if(e.target.id==='pre-step')stepPreload();if(e.target.id==='pre-reset'){resetPreload();renderPreload()}});
+document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey||e.target.closest('input,select,textarea,summary,[contenteditable=true]'))return;if(e.key==='ArrowRight'){e.preventDefault();stop();step(1)}else if(e.key==='ArrowLeft'){e.preventDefault();stop();step(-1)}else if(e.code==='Space'&&!e.target.closest('button,a')){e.preventDefault();play()}});
+document.querySelectorAll('.quiz').forEach(q=>q.addEventListener('click',e=>{const b=e.target.closest('[data-choice]');if(!b)return;const ok=b.dataset.choice===q.dataset.answer;q.querySelector('.feedback').textContent=ok?'正确。可以回到动画，逐拍验证。':'再看条件 CNT<CCR、完整周期的拍数，以及瞬时电平与平均值的区别。';q.querySelector('.feedback').style.color=ok?'#147e66':'#ac6514'}));
+window.pwmLab={getState:()=>structuredClone(state),getPreload:()=>structuredClone(preload),getTab:()=>current,sample,stats,stop};
+resetPreload();render();renderPreload();
+</script>
+<footer id="course-credit" style="box-sizing:border-box;position:static;max-width:1480px;margin:24px auto 0;padding:22px 26px 28px;border-top:1px solid #dce4e8;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;font:13px/1.7 -apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif;color:#617785;text-align:left;background:transparent"><a href="./index.html" style="color:#176b58;text-decoration:none">← 返回课程目录</a><span>Designed By Xianyu Wu</span></footer>
+</body></html>

@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>STM32F103 · EXTI 与中断优先级课堂</title>
+<style>
+:root{--ink:#19364d;--muted:#59758a;--line:#ccdce7;--blue:#166eaa;--green:#117b5d;--amber:#a56315;--red:#b63c3e;--purple:#7754a0}*{box-sizing:border-box}body{margin:0;background:#f2f6fa;color:var(--ink);font:15px/1.65 "Microsoft YaHei",sans-serif}main{max-width:1500px;margin:auto;padding:24px}h1,h2,h3,p{margin:0}h1{font-size:28px}h2{font-size:18px}h3{font-size:16px}header{display:flex;justify-content:space-between;gap:20px;margin-bottom:18px}header small{display:block;color:var(--blue)}a{color:var(--blue)}button,select,input{font:inherit;color:inherit}button{cursor:pointer;background:white;border:1px solid var(--line);border-radius:6px;padding:8px 12px}button:hover:not(:disabled){background:#eaf3fa}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #71acd3;outline-offset:2px}button:disabled{opacity:.4;cursor:default}.primary,button[aria-selected=true]{background:var(--blue);border-color:var(--blue);color:white}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0}.tabs button{text-align:left}.tabs b,.tabs span{display:block}.tabs span{font-size:12px}.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:11px 14px;border:1px solid var(--line);background:white;border-radius:9px;margin-bottom:14px}.toolbar select,select,input{padding:5px 8px;border:1px solid var(--line);border-radius:5px;background:white}.toolbar small,.muted{color:var(--muted)}.spacer{flex:1}.layout{display:grid;grid-template-columns:305px minmax(0,1fr);gap:16px;align-items:start}.panel{background:white;border:1px solid var(--line);border-radius:9px;overflow:hidden}.heading{padding:12px 15px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;justify-content:space-between}.steps{list-style:none;margin:0;padding:8px;max-height:460px;overflow:auto}.steps button{display:block;text-align:left;width:100%;border-color:transparent;margin:3px 0;font-size:13px}.steps button.current{background:#e4f1fa;border-color:#95bfdc}.steps code{display:block;font:12px/1.55 Consolas,monospace;overflow-wrap:anywhere}.explanation{padding:13px 15px;border-top:1px solid var(--line);font-size:14px}.question{padding:13px 15px;background:#fff5e5;border-top:1px solid #eddbb8;font-size:14px}.question b{color:var(--amber)}.instruction{background:#19364d;color:#f1f7fd;padding:12px 16px}.instruction small{display:block;color:#b9d9ee}.instruction code{font:15px/1.8 Consolas,monospace;overflow-wrap:anywhere}.group-note{padding:10px 15px;background:#edf5fb;font-size:13px}.mask-strip{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}.mask-cell{padding:10px 15px;border-right:1px solid var(--line)}.mask-cell:last-child{border:0}.mask-cell b{display:block}.mask-cell code{font:700 20px Consolas,monospace}.mask-cell small{display:block;color:var(--muted);font-size:12px}.mask-cell.blocking{background:#fff0db}.scroll{overflow-x:auto}.diagram{display:block;width:100%;min-width:970px;background:#fcfdff}.diagram text{font-family:"Microsoft YaHei",sans-serif;fill:var(--ink);font-size:15px}.diagram .title{font-weight:bold;font-size:18px}.diagram .small{font-size:13px;fill:var(--muted)}.diagram .mono{font:15px Consolas,monospace}.diagram rect{fill:white;stroke:#afc6d7;stroke-width:1.7;rx:7}.diagram .path{stroke:#bfd0dc;stroke-width:2.5;fill:none}.diagram .node.hot rect{fill:#e1f3eb;stroke:var(--green);stroke-width:3}.diagram .node.pending rect{fill:#fff0d7;stroke:#b78439}.diagram .node.active rect{fill:#def0fb;stroke:var(--blue);stroke-width:3}.diagram .node.dim{opacity:.35}.diagram .path.hot{stroke:var(--green);stroke-width:4}.diagram .pulse{animation:pulse 1.5s ease-out}.diagram .node.blocked rect{fill:#fff0e5;stroke:#b56836}.diagram .led-on{fill:#ff554b;stroke:#be332f;filter:drop-shadow(0 0 7px #ff9f76)}.diagram .led-off{fill:#778ba0;stroke:#425d74}.decision{padding:11px 15px;background:#eef6fc;border-top:1px solid var(--line);font-size:14px;min-height:68px}.decision b{display:block;color:var(--blue)}.execution{padding:12px 15px;border-top:1px solid var(--line)}.frames{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}.frame{padding:8px 14px;border:1px solid var(--line);border-radius:6px;background:#f4f7fa}.frame.current{background:#dff3ea;border-color:#75b59e}.frame.paused{background:#fff1d8;border-color:#d0aa66}.frame small{display:block;font-size:12px}.timeline{padding:12px 15px;border-top:1px solid var(--line)}.timeline-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.tick{font-size:12px;padding:4px 8px;border-bottom:3px solid #8eb8d3;background:#f0f6fa}.tick b{font-weight:400;color:var(--muted)}.tick.switch{border-color:#198965;background:#e7f4ee}.lower{margin-top:16px}.table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{padding:9px 11px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}.table th{background:#f0f6fb;white-space:nowrap}.table tbody tr.active-row{background:#e8f5ef}.table tbody tr.pending-row{background:#fff7e9}.table code{font:14px Consolas,monospace}.table .tag{display:inline-block;padding:1px 7px;border-radius:4px;background:#edf1f5}.table .running{background:#d2eddf;color:#116247}.table .waiting{background:#ffe7bd;color:#875414}.table .off{color:var(--muted)}.priority-table{min-width:1000px}.notes{padding:10px 15px;font-size:12px;color:var(--muted)}details{padding:13px 16px;margin-top:15px}details summary{cursor:pointer;font-weight:bold;font-size:16px}details p{margin:12px 0}details pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f1f6fb;border-radius:5px;padding:14px;font:13px/1.8 Consolas,monospace}.free-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:24px;margin-top:14px}.controls{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:9px 0}.controls label{display:flex;gap:6px;align-items:center}.free-grid h3{margin-top:8px}.mask-matrix{min-width:650px}.pass{color:#147356;font-weight:bold}.deny{color:#a65021;font-weight:bold}.reference-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}.reference-grid h3{margin:15px 0 8px}.bit-row{display:flex;gap:4px;flex-wrap:wrap;margin:7px 0}.bit-row span{padding:3px 7px;border:1px solid var(--line);font:14px Consolas,monospace}.bit-row .pre{background:#def0fb}.bit-row .sub{background:#eee4f7}.bit-row .unused{background:#f1f3f6;color:#8397a7}.footer{color:var(--muted);font-size:12px;margin-top:18px}.quiz-reveal{font-size:14px;margin:12px 0}.source-button{padding:6px 9px}.footer a{white-space:normal}.legend{font-size:12px;color:var(--muted);padding:0 15px 10px}.callout{padding:12px;background:#edf5fb;border-left:3px solid var(--blue);margin:12px 0}.compact-select{max-width:100%}[hidden]{display:none!important}@keyframes pulse{0%{stroke-width:6;stroke:#3fa684}100%{}}@media(max-width:1080px){.layout{grid-template-columns:1fr}.steps{max-height:205px}.free-grid,.reference-grid{grid-template-columns:1fr}.heading{flex-wrap:wrap}}@media(max-width:650px){main{padding:12px}h1{font-size:23px}header{display:block}.tabs{grid-template-columns:1fr;gap:6px}.tabs button{padding:8px 12px}.tabs span{display:inline}.mask-strip{grid-template-columns:1fr}.mask-cell{border-right:0;border-bottom:1px solid var(--line)}.mask-cell b,.mask-cell small{display:inline}.mask-cell code{margin:0 10px}.toolbar .spacer{display:none}.heading{padding:10px 12px}.priority-table{min-width:980px}}@media(prefers-reduced-motion:reduce){.diagram .pulse{animation:none}}
+.diagram .path.hot{stroke-dasharray:9 6;animation:signal-flow 1.2s linear 3}.diagram circle{transition:fill .3s,filter .3s}@keyframes signal-flow{to{stroke-dashoffset:-30}}@media(prefers-reduced-motion:reduce){.diagram .path.hot{animation:none}.diagram circle{transition:none}}
+</style></head><body><main>
+<header><div><small>第七章 · STM32F103 / Cortex-M3 · 本地离线课堂</small><h1>EXTI、中断优先级与屏蔽寄存器</h1><p class="muted">从按键发出请求，到 NVIC 判断谁先执行，再到 CPU 进入中断服务程序。</p></div><div><a href="stm32-gpio-register-map.html">GPIO 寄存器课堂</a><br><a href="stm32-interrupt-lab.html">中断进栈 / 出栈动画</a></div></header>
+<nav class="tabs" id="cases" aria-label="由易到难的三个案例"></nav>
+<div class="toolbar"><button id="prev">← 上一步</button><button id="next" class="primary">下一步 →</button><button id="play">自动演示</button><label>间隔 <select id="pace"><option value="6000">6 秒</option><option value="9000">9 秒</option><option value="4000">4 秒</option></select></label><span id="progress"></span><span class="spacer"></span><button id="restart">重播本例</button><small>← / → 单步；空格播放 / 暂停</small></div>
+<div class="layout"><aside class="panel"><div class="heading"><h2 id="lesson-title"></h2></div><ol class="steps" id="steps"></ol><div class="explanation" id="explanation" aria-live="polite"></div><div class="question"><b>下一步之前，先预测</b><p id="question"></p></div></aside>
+<section class="panel"><div class="instruction"><small id="step-title"></small><code id="current-code"></code></div><div class="group-note" id="group-note"></div>
+<div class="mask-strip"><div class="mask-cell" id="cell-base"><b>BASEPRI · 阈值屏蔽</b><code id="value-base"></code><small id="base-note"></small></div><div class="mask-cell" id="cell-pri"><b>PRIMASK · 可配置异常屏蔽</b><code id="value-pri"></code><small>1：阻止可配置优先级异常进入</small></div><div class="mask-cell" id="cell-fault"><b>FAULTMASK · 故障屏蔽</b><code id="value-fault"></code><small>1：异常中只允许 NMI 进入</small></div></div>
+<div class="scroll"><svg class="diagram" id="diagram" viewBox="0 0 1080 425" role="img" aria-labelledby="diagram-title"><title id="diagram-title">GPIO、AFIO、EXTI、NVIC与CPU的中断路径</title></svg></div>
+<div class="legend">绿色：本步作用位置；橙色：有请求等待；蓝色：已激活（也可能被抢占后暂停），当前运行者看 CPU 框。流动虚线强调本步信号路径。为便于观察，“产生请求”和“仲裁响应”拆成教学步骤，真实硬件自动完成仲裁。</div>
+<div class="decision" aria-live="polite"><b id="decision-title"></b><span id="decision-detail"></span></div>
+<div class="execution"><h3>CPU 执行层次 <small class="muted">被抢占的 ISR 仍是 Active=1</small></h3><div class="frames" id="frames"></div></div>
+<div class="timeline"><h3>执行轨迹 <small class="muted">每格是一教学步，不代表相同的实际时长</small></h3><div class="timeline-list" id="timeline"></div></div>
+</section></div>
+<section class="panel lower"><div class="heading"><h2>每个中断：优先级、挂起状态与等待原因</h2><small>数值越小，优先级越高</small></div><div class="scroll"><table class="table priority-table"><thead><tr><th>中断源 / IRQn</th><th>抢占优先级</th><th>副优先级</th><th>逻辑值 / IPR 编码</th><th>源标志</th><th>NVIC 使能</th><th>Pending</th><th>Active</th><th>当前判断</th></tr></thead><tbody id="irq-table"></tbody></table></div><p class="notes">EXTI_PR 与 NVIC Pending 是不同层级的状态。进入 ISR 时，NVIC 接受请求并转为 Active；EXTI_PR 仍需软件写 1 清除。PR 用位记录请求，多次触发不等同于排队计数。</p></section>
+<details class="panel" id="free-lab"><summary>自由实验：触发请求、改变屏蔽条件，再让 CPU 作出判断</summary>
+<div class="free-grid"><div><h3>产生请求</h3><div class="controls" id="triggers"></div><p class="notes">EXTI 按钮产生一次所配置的下降沿；TIM2 按钮模拟一次更新请求。按钮只产生请求，随后点击“仲裁一次”观察响应。</p><div class="controls"><button id="arbitrate" class="primary">NVIC 仲裁一次</button><button id="service">清源标志并执行 ISR 动作</button><button id="return">结束当前 ISR</button></div><p class="notes">可先点“结束当前 ISR”而不清源标志，观察请求再次出现。普通 ISR 返回自动清 FAULTMASK，NMI 返回不自动清它。</p></div>
+<div><h3>屏蔽条件</h3><div class="controls"><label>BASEPRI <select id="edit-base" class="compact-select"></select></label></div><div class="controls"><label>PRIMASK <select id="edit-pri"><option value="0">0 · 不屏蔽</option><option value="1">1 · 屏蔽</option></select></label><label>FAULTMASK <select id="edit-fault"><option value="0">0 · 不屏蔽</option><option value="1">1 · 屏蔽</option></select></label><button id="apply-masks">写入屏蔽寄存器</button></div><p class="notes">多个屏蔽条件共同生效。取消其中一个条件，不代表其他条件也取消。BASEPRI 选项按当前抢占分组边界对齐，便于比较。</p>
+<h3>调整优先级 / NVIC 使能</h3><div class="controls"><label>中断 <select id="edit-irq"><option>EXTI0</option><option>EXTI1</option><option>EXTI2</option><option>TIM2</option></select></label><label>抢占 <select id="edit-pre"></select></label><label>副 <select id="edit-sub"></select></label><label><input id="edit-enabled" type="checkbox">使能</label><button id="apply-priority">应用</button></div><p class="notes">请在主程序且无挂起请求时调整优先级，以便从清晰的起点比较；未使能不等于没有 Pending。</p></div></div><p id="free-feedback" role="status"></p>
+</details>
+<details class="panel" id="mask-reference"><summary>屏蔽对照：BASEPRI、PRIMASK、FAULTMASK 分别挡住谁？</summary><p>下表仅比较屏蔽条件，假设请求已经使能、CPU 没有执行同级或更高优先级异常。第 3 例使用 4 位抢占、0 位副优先级。</p><div class="scroll"><table class="table mask-matrix"><thead><tr><th>请求</th><th>全部为 0</th><th>仅 BASEPRI=0x80</th><th>仅 PRIMASK=1</th><th>仅 FAULTMASK=1</th><th>当前实际屏蔽条件</th></tr></thead><tbody id="mask-table"></tbody></table></div><p class="callout">BASEPRI=0x80 对应逻辑阈值 8：允许 0—7，屏蔽 8—15；BASEPRI=0 表示取消阈值屏蔽。写 <code>__set_BASEPRI(8)</code> 与写 <code>__set_BASEPRI(0x80)</code> 不同，STM32F103 使用高四位，前者不会得到阈值 8。</p><p>PRIMASK 不屏蔽 NMI、HardFault。FAULTMASK 可以阻止 HardFault 进入，只留下 NMI；复位另行处理。同步故障的升级和 Lockup 不按普通中断排队模拟，本页只用对照表说明 HardFault 的屏蔽关系。</p></details>
+<details class="panel"><summary>优先级编码与分组：为什么 CMSIS 参数和寄存器值不一样？</summary><div class="reference-grid"><div><h3>先分出抢占位和副优先级位</h3><div class="scroll"><table class="table"><thead><tr><th>库分组名</th><th>抢占位数</th><th>副位数</th><th>AIRCR.PRIGROUP</th></tr></thead><tbody><tr><td>PriorityGroup_0</td><td>0</td><td>4</td><td>7</td></tr><tr><td>PriorityGroup_1</td><td>1</td><td>3</td><td>6</td></tr><tr><td>PriorityGroup_2</td><td>2</td><td>2</td><td>5</td></tr><tr><td>PriorityGroup_3</td><td>3</td><td>1</td><td>4</td></tr><tr><td>PriorityGroup_4</td><td>4</td><td>0</td><td>3</td></tr></tbody></table></div><p>STM32F103 实现 IPR[7:4]，共有 4 个有效优先级位；IPR[3:0] 未实现。库中“第 2 组”与 AIRCR.PRIGROUP=2 不是同一个编号。分组可由特权软件改写，实际工程通常统一在初始化阶段设置。</p></div><div><h3>第 2 例：TIM2 抢占 2、副 3</h3><div class="bit-row"><span class="pre">1</span><span class="pre">0</span><span class="sub">1</span><span class="sub">1</span><span class="unused">0</span><span class="unused">0</span><span class="unused">0</span><span class="unused">0</span></div><p>高两位 <code>10</code> 表示抢占 2，接下来的 <code>11</code> 表示副 3。逻辑值为 <code>(2 &lt;&lt; 2) | 3 = 11</code>，写入 IPR 后为 <code>0xB0</code>。</p><pre>NVIC_SetPriorityGrouping(5); // 2 抢占位 + 2 副位
+uint32_t p = NVIC_EncodePriority(5, 2, 3); // p = 11
+NVIC_SetPriority(TIM2_IRQn, p); // CMSIS 内部左移
+
+// BASEPRI 则直接使用左对齐的寄存器编码
+__set_BASEPRI(0x80);</pre><p>抢占只比较抢占字段；多个可响应请求一起等待时，依次比较抢占字段、副字段、异常号。优先级完全相同的外部 IRQ，IRQn 更小者先响应。</p></div></div></details>
+<details class="panel"><summary>EXTI 配置路线与常见误解</summary><div class="reference-grid"><div><h3>PA0 到 EXTI0 的配置</h3><p>打开 GPIOA、AFIO 时钟，配置 PA0 上拉输入；用 AFIO_EXTICR1 选择 PA0 连接 EXTI0；设置 FTSR0=1、RTSR0=0；清除旧 PR0，设置 IMR0=1；最后配置并使能 NVIC 的 EXTI0 通道。</p><p>PA0、PB0、PC0 等共用 EXTI0 的选择位置，一条 EXTI 线同一时刻只能选择其中一个端口。EXTI0—4 各自有 IRQ，EXTI5—9 与 EXTI10—15 分组共享 IRQ。TIM2 有自己的中断通道，不经过 GPIO 的 EXTI 路径。</p><h3>PR 的“写 1 清除”</h3><pre>if (EXTI->PR &amp; (1u &lt;&lt; 0)) {
+    EXTI->PR = (1u &lt;&lt; 0); // 写 1 清除 PR0
+    // 执行按键响应
+}</pre><p>不要用 <code>EXTI->PR |= mask</code> 清位：读改写可能将读到的其他 1 也写回，从而一并清掉其他挂起位。NVIC_ClearPendingIRQ 清的是 NVIC 层，不能替代清除 EXTI_PR。</p></div><div><h3>中断路径与事件路径</h3><p>IMR 控制中断请求路径，EMR 控制事件脉冲路径。事件可以参与唤醒等硬件机制，不等同于进入 ISR。本页三个案例都使用中断模式（EMR=0），不模拟 WFE / WFI 和事件寄存器。</p><h3>本页的教学约定</h3><p>采用 STM32F103VET6 的 4 位优先级，PA0—PA2 为上拉、下降沿触发；PE0—PE2 的高电平有效 LED 用来显示各 EXTI ISR 的处理动作。引脚接线以教学示意为准。按键已视为消抖后的单次边沿。</p><p>NVIC 仲裁、嵌套和屏蔽使用同一套状态判断。图中步骤不是逐周期仿真；异常进出栈、尾链优化和故障升级可在后续课程展开。所有操作按特权执行条件演示。</p></div></div></details>
+<details class="panel" id="code-detail"><summary>本案例的 C 代码与操作提示</summary><pre id="example-code"></pre></details>
+<p class="footer">依据所给《第7章 EXTI中断模块与基本应用16-9》：第49—60页优先级，第61—71页活动状态与屏蔽，第83—105页EXTI，第118页按键翻转LED。架构与寄存器参考资料：<a href="https://www.st.com/resource/en/programming_manual/cd00228163.pdf">ST PM0056</a>、<a href="https://www.st.com/resource/en/reference_manual/cd00171190.pdf">ST RM0008</a> 与 <a href="https://arm-software.github.io/CMSIS_6/main/Core/group__Core__Register__gr.html">Arm CMSIS 核心寄存器说明</a>。本页 BASEPRI 按 STM32F103 的 [7:4] 有效位表示；FAULTMASK 的自动清零注明 NMI 返回例外。页面离线运行，资料链接仅主动点击后联网。</p>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id),hex=(v,n=2)=>'0x'+(v>>>0).toString(16).toUpperCase().padStart(n,'0'),esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let s,caseIndex=0,stepIndex=0,free=false,timer=null,history=[],manualHistory=[];
+const names=['EXTI0','EXTI1','EXTI2','TIM2','NMI'];
+function current(){return s.stack.at(-1)||'Thread'}
+function subBits(){return 4-s.preBits}
+function logical(q){return q.pre*(1<<subBits())+q.sub}
+function raw(q){return logical(q)<<4}
+function setDecision(title,detail,hot=[]){s.message={title,detail};s.hot=hot}
+function resetModel(index){
+ s={preBits:index===1?2:4,base:0,primask:0,faultmask:0,stack:[],irqs:{},pins:[1,1,1],configured:[index!==0,index!==0,index!==0],imr:index===0?0:7,led:[false,false,false],handled:[0,0,0],timCount:0,hot:[],message:{title:'主程序正在执行',detail:'从第一步开始观察请求、挂起和响应的区别。'}};
+ const presets=index===1?[[2,0],[1,2],[2,1],[2,3]]:[[2,0],[8,0],[0,0],[12,0]];
+ names.forEach((id,k)=>s.irqs[id]={id,irq:[6,7,8,28,-14][k],pre:id==='NMI'?-2:presets[k][0],sub:id==='NMI'?0:presets[k][1],enabled:id==='NMI'||index!==0,pending:false,active:false,flag:false});
+}
+function maskReason(q){
+ if(q.id==='NMI')return '';
+ if(s.faultmask)return 'FAULTMASK=1';
+ if(s.primask)return 'PRIMASK=1';
+ if(s.base&&raw(q)>=s.base)return 'BASEPRI='+hex(s.base)+'，本源编码 '+hex(raw(q))+' ≥ 阈值';
+ return '';
+}
+function reason(q){
+ if(q.active)return q.id===current()?(q.pending?'执行中，另有一次请求挂起':'正在执行'):'被抢占后暂停，Active 仍为 1';
+ if(!q.pending)return q.flag?'源标志保留，尚无可用请求':'无待处理请求';
+ if(!q.enabled)return 'NVIC 通道未使能';
+ const mask=maskReason(q);if(mask)return '等待：'+mask;
+ const active=s.irqs[current()];
+ if(active&&q.pre>=active.pre)return q.pre===active.pre?'同抢占级，不能打断 '+active.id:'抢占级低于 '+active.id+'，继续等待';
+ return '满足响应条件，等待本次教学仲裁';
+}
+function eligible(q){
+ if(!q.pending||q.active||!q.enabled||maskReason(q))return false;
+ const c=s.irqs[current()];return !c||q.pre<c.pre;
+}
+function rank(a,b){return a.pre-b.pre||a.sub-b.sub||a.irq-b.irq}
+function arbitrate(){
+ const next=Object.values(s.irqs).filter(eligible).sort(rank)[0],was=current();
+ if(!next){
+  const queued=Object.values(s.irqs).filter(q=>q.pending).sort(rank);
+  setDecision('CPU 继续执行 '+was,queued.length?queued.map(q=>q.id+'：'+reason(q)).join('；'):'没有待响应的请求。',['nvic','gate','cpu']);return false;
+ }
+ next.pending=false;next.active=true;s.stack.push(next.id);
+ setDecision(was==='Thread'?'响应 '+next.id:next.id+' 抢占 '+was,was==='Thread'?'NVIC Pending 清除，Active 置 1；CPU 进入 '+next.id+'_Handler。':next.id+' 的抢占值 '+next.pre+' 小于 '+s.irqs[was].pre+'；'+was+' 暂停但保持 Active=1。',next.id==='NMI'?['NMI','cpu']:['nvic','gate','cpu',next.id]);return true;
+}
+function edge(line,level){
+ const previous=s.pins[line];s.pins[line]=level;
+ if(!s.configured[line]){setDecision('PA'+line+' 尚未配置 EXTI','先完成 GPIO / AFIO / EXTI 配置。',['pin'+line]);return;}
+ if(previous===1&&level===0){
+  const q=s.irqs['EXTI'+line];q.flag=true;if(s.imr&(1<<line))q.pending=true;
+  setDecision('PA'+line+' 下降沿产生 EXTI'+line+' 请求','EXTI_PR['+line+']=1；'+(q.pending?'NVIC Pending=1。接下来判断是否允许响应。':'IMR 未开放请求。'),['pin'+line,'afio'+line,'exti'+line,'nvic']);
+ }else setDecision(level?'PA'+line+' 松开：出现上升沿':'PA'+line+' 电平保持不变','本例 FTSR=1、RTSR=0；此次变化不产生新的下降沿请求。',['pin'+line,'afio'+line]);
+}
+function request(id){
+ if(id.startsWith('EXTI')){const n=Number(id.at(-1));s.pins[n]=1;edge(n,0);return}
+ const q=s.irqs[id];q.pending=true;if(id==='TIM2')q.flag=true;
+ setDecision(id+' 请求到达',id==='NMI'?'NMI 使用固定优先级，不受这三个屏蔽寄存器阻挡。':'TIM2 更新标志置位，请求直接送 NVIC，不经过 EXTI。',id==='NMI'?['NMI']:[id,'nvic']);
+}
+function service(){
+ const id=current(),q=s.irqs[id];
+ if(!q){setDecision('CPU 正在主程序','当前没有 ISR 可执行。',['cpu']);return}
+ if(id==='NMI'){setDecision('执行 NMI 处理','本例用 NMI 对照屏蔽行为，不修改 LED 或其他请求。',['cpu']);return}
+ q.flag=false;
+ if(id.startsWith('EXTI')){const n=Number(id.at(-1));s.led[n]=!s.led[n];s.handled[n]++;setDecision('清除 '+id+' 源标志并翻转 LED'+(n+1),'EXTI->PR = '+hex(1<<n)+'：向该位写 1 清除。PE'+n+' LED 现在'+(s.led[n]?'亮':'灭')+'。Active 保持 1，直到 ISR 返回。',['exti'+n,'cpu','led'+n]);}
+ else {s.timCount++;setDecision('清 TIM2 更新标志','TIM2->SR 的 UIF 清除；继续执行 TIM2 的工作。',['TIM2','cpu']);}
+}
+function finish(){
+ const id=s.stack.pop();if(!id){setDecision('已经在主程序','当前没有可以返回的 ISR。',['cpu']);return}
+ const q=s.irqs[id];q.active=false;
+ if(id!=='NMI')s.faultmask=0;
+ if(q.flag&&(id==='TIM2'||(s.imr&(1<<Number(id.at(-1))))))q.pending=true;
+ const resumed=current(),entered=arbitrate(),detail=s.message.detail;
+ setDecision(id+' 返回，CPU '+(entered?'转入 '+current():'恢复 '+resumed),(q.flag?'源标志未清，再次产生待处理请求。 ':'')+(id==='NMI'?'NMI 返回不自动清 FAULTMASK。 ':'')+(entered?detail:resumed==='Thread'?'主程序继续执行。'+(Object.values(s.irqs).some(x=>x.pending)?' 仍有被屏蔽的请求等待。':''):'同抢占级的挂起请求不能越过尚未完成的 '+resumed+'。'),['cpu','nvic','gate']);
+}
+function masks(base,pri,fault){s.base=base&0xf0;s.primask=pri?1:0;s.faultmask=fault?1:0;setDecision('屏蔽条件更新','BASEPRI='+hex(s.base)+'，PRIMASK='+s.primask+'，FAULTMASK='+s.faultmask+'。Pending 不会因为设置屏蔽而自动消失。',['gate']);}
+const L=(title,code,note,question,run)=>({title,code,note,question,run});
+const lessons=[
+{name:'① 按键触发 EXTI0',sub:'入门 · 一次请求如何变成 ISR',title:'PA0 按键控制 PE0 LED',pages:'83—105、118',steps:[
+L('主程序等待按键','while (1) { background_task(); }','假设按键未按下，PA0 为高。先配置完整中断路径，再产生一次下降沿。','只打开 GPIO 时钟就能进入中断了吗？',()=>{}),
+L('配置 GPIO、AFIO、EXTI','// PA0 上拉输入 → EXTI0；FTSR0=1，IMR0=1','先使能 GPIOA / GPIOE / AFIO 时钟。选择 PA0 到 EXTI0，使用下降沿；EMR=0。本步把源 PR0 清理为 0。','EXTI 配好了，NVIC 的 EXTI0 通道是否也需要使能？',()=>{s.configured[0]=true;s.imr=1;setDecision('外部中断路径准备好','PA0 经 AFIO 连接 EXTI0；下降沿有效，NVIC 通道还未使能。',['pin0','afio0','exti0']);}),
+L('设置并使能 NVIC','NVIC_SetPriority(EXTI0_IRQn, 2); NVIC_EnableIRQ(EXTI0_IRQn);','本例使用 4 位抢占、0 位副优先级，EXTI0 的逻辑优先级是 2，IPR 编码是 0x20。','按下按钮时，电平从多少变到多少？',()=>{s.irqs.EXTI0.enabled=true;setDecision('NVIC 通道开放','优先级与使能已经准备好，三个屏蔽寄存器都为 0。',['nvic']);}),
+L('按键按下：下降沿','// PA0：1 → 0','边沿检测产生请求，EXTI_PR0 和 NVIC Pending 变为 1。此刻尚未执行 LED 操作。','请求出现后，CPU 是否立刻已经执行完 ISR？',()=>edge(0,0)),
+L('NVIC 仲裁，CPU 进入 ISR','void EXTI0_IRQHandler(void) { ... }','满足使能、屏蔽和优先级条件后才进入 ISR。进入时 NVIC Pending 转为 Active，源 PR0 仍保留。','EXTI_PR0 会因为进入 ISR 自动变成 0 吗？',arbitrate),
+L('清请求标志，翻转 LED','EXTI->PR = 1u; GPIOE->ODR ^= 1u;','PR0 写 1 清除，然后 PE0 输出翻转。图中的 LED 此时才点亮。','退出 ISR 后会从头执行主程序吗？',service),
+L('ISR 返回','// 异常返回，继续原来的主程序','Active 清零，CPU 恢复被中断的主程序。这里只显示执行顺序，自动进出栈可看已有动画。','松开按钮的上升沿会不会触发本例？',finish),
+L('松开：上升沿不触发','// PA0：0 → 1；RTSR0=0','本例只启用下降沿，松开不产生新请求。LED 保持亮。','再按一次按钮，LED 何时熄灭？',()=>edge(0,1)),
+L('再次按下','// PA0：1 → 0','新的下降沿再次使请求挂起。源标志是一个位，不是按键次数计数器。','这时 LED 仍是什么状态？',()=>edge(0,0)),
+L('再次响应 EXTI0','// NVIC 接受 EXTI0','请求进入执行状态，CPU 转入 ISR。','LED 会在哪条语句后改变？',arbitrate),
+L('再次清标志并翻转','EXTI->PR = 1u; GPIOE->ODR ^= 1u;','同一服务动作再次执行，LED 由亮变灭。','若省略清 PR，返回后可能发生什么？',service),
+L('回到主程序','// 异常返回','一次按下对应一次 ISR 动作。自由实验可以故意不清源标志，观察返回后又出现请求。','打开自由实验，试一次“响应后直接返回”。',finish)
+]},
+{name:'② 抢占与副优先级',sub:'进阶 · 谁能打断，谁只能排队',title:'TIM2 与三个 EXTI 的竞争',pages:'49—61',steps:[
+L('设置 2+2 优先级分组','NVIC_SetPriorityGrouping(5); // 2 抢占位 + 2 副位','TIM2=(2,3)，EXTI0=(2,0)，EXTI1=(1,2)，EXTI2=(2,1)。括号顺序是抢占值、副值，数值越小越优先。','EXTI0 副优先级更高，它能打断 TIM2 吗？',()=>{}),
+L('TIM2 更新请求到达','// TIM2 更新事件：UIF=1','定时器请求直接进入 NVIC，不经过 EXTI。','CPU 处于主程序时，会接受这个请求吗？',()=>request('TIM2')),
+L('开始处理 TIM2','void TIM2_IRQHandler(void) { ... }','CPU 从主程序进入 TIM2 ISR。','在服务期间有其他请求到来会怎样？',arbitrate),
+L('TIM2 清自己的源标志','TIM2->SR &= ~TIM_SR_UIF;','清源标志之后，TIM2 ISR 仍在执行，Active 仍为 1。','清标志是否等同于结束 ISR？',service),
+L('EXTI0 请求到达','// PA0 下降沿；EXTI0=(2,0)','EXTI0 的副值 0 比 TIM2 的 3 小，但两者抢占值都是 2。','能不能打断当前 TIM2？',()=>request('EXTI0')),
+L('判断：同抢占级不能嵌套','// 比较抢占值：2 不小于 2','CPU 继续执行 TIM2。EXTI0 保持 Pending=1。副优先级不能用于打断正在执行的同级 ISR。','如果抢占值为 1 的 EXTI1 到达呢？',arbitrate),
+L('EXTI1 请求到达','// PA1 下降沿；EXTI1=(1,2)','EXTI1 的抢占值 1 小于 TIM2 的 2。','TIM2 的 Active 位会变成 0 吗？',()=>request('EXTI1')),
+L('EXTI1 抢占 TIM2','// 1 < 2，允许抢占','执行层次出现主程序、暂停的 TIM2、正在运行的 EXTI1。两路 ISR 的 Active 都是 1。','EXTI0 的挂起请求消失了吗？',arbitrate),
+L('执行 EXTI1 服务','EXTI->PR = 1u << 1; // 翻转 PE1 LED','EXTI1 清 PR1 并翻转 LED2。TIM2 还没有完成。','若此时又来一个抢占值 2 的请求会怎样？',service),
+L('EXTI2 也来等待','// PA2 下降沿；EXTI2=(2,1)','EXTI0 与 EXTI2 都等待。它们抢占值相同，副值分别为 0 和 1。','它们能打断抢占值为 1 的 EXTI1 吗？',()=>request('EXTI2')),
+L('两路请求都不能抢占','// 2 > 1，继续等待','EXTI1 继续执行。等待区同时保留 EXTI0 与 EXTI2。','EXTI1 结束后，先完成 TIM2 还是先执行 EXTI0？',arbitrate),
+L('EXTI1 返回，先恢复 TIM2','// 恢复被抢占的 TIM2','TIM2 尚未完成，仍有抢占值 2 的执行上下文。同级 EXTI0 / EXTI2 即使副值更优，也不能抢占它。','等 TIM2 完成后，副优先级何时发挥作用？',finish),
+L('TIM2 完成，选择 EXTI0','// 返回时，从待处理请求中选择','此时没有未完成的同级 ISR。EXTI0 与 EXTI2 都满足条件，副值 0 的 EXTI0 先执行。','EXTI2 的请求会丢失吗？',finish),
+L('处理 EXTI0','EXTI->PR = 1u << 0; // 翻转 PE0 LED','清 PR0，翻转 LED1。EXTI2 仍在等待。','下一个可以接受的请求是谁？',service),
+L('EXTI0 返回，轮到 EXTI2','// 接受下一路待处理请求','EXTI2 从 Pending 变成 Active。','副优先级体现在哪里？',finish),
+L('处理 EXTI2','EXTI->PR = 1u << 2; // 翻转 PE2 LED','清 PR2，翻转 LED3。三个 EXTI 请求都各处理一次。','最后返回到哪个执行上下文？',service),
+L('所有 ISR 完成','// 恢复 Thread 主程序','抢占值决定是否打断；副值在多个合格请求同时等待时决定先后。','自由实验中把两路优先级都设相同，比较 IRQn。',finish)
+]},
+{name:'③ 三个屏蔽寄存器',sub:'提高 · 请求已发生，为何还没响应',title:'临界区中的中断等待',pages:'62—71',steps:[
+L('先固定为 4+0 分组','NVIC_SetPriorityGrouping(3); // 4 抢占位，0 副位','本例只比较逻辑优先级：EXTI2=0，EXTI0=2，EXTI1=8，TIM2=12。避免把分组和阈值混在一起。','逻辑阈值 8 应写 BASEPRI=8，还是 0x80？',()=>{}),
+L('设置 BASEPRI 阈值','__set_BASEPRI(0x80);','高四位编码对应逻辑阈值 8；8—15 被屏蔽，0—7 仍可响应。BASEPRI=0 才表示不设阈值。','优先级为 8 的 EXTI1 可以进入吗？',()=>masks(0x80,0,0)),
+L('EXTI1 到达，但被屏蔽','// EXTI1，逻辑优先级 8','请求标志与 Pending 都可以置位。屏蔽限制进入 ISR，并没有删除请求。','优先级更高的 EXTI0=2 又会怎样？',()=>request('EXTI1')),
+L('EXTI0 也到达','// EXTI0，逻辑优先级 2','EXTI0 的寄存器编码 0x20 小于 0x80。','仲裁会接受谁？',()=>request('EXTI0')),
+L('只响应 EXTI0','// EXTI0 通过阈值判断','EXTI1 仍保持挂起；CPU 处理允许通过的 EXTI0。','EXTI0 返回后 EXTI1 会自动获准吗？',arbitrate),
+L('完成 EXTI0 的服务动作','EXTI->PR = 1u; // 翻转 PE0 LED','清 PR0 并翻转 LED1，不修改 BASEPRI。','屏蔽状态仍在吗？',service),
+L('返回主程序，EXTI1 继续等待','// 返回 Thread','BASEPRI 仍为 0x80，EXTI1 仍不能进入。','PRIMASK=1 对逻辑优先级 0 也生效吗？',finish),
+L('再设置 PRIMASK=1','__disable_irq(); // PRIMASK=1','PRIMASK 屏蔽所有可配置优先级异常，包括逻辑优先级 0。BASEPRI 原值仍保留。','EXTI2=0 是否还能通过？',()=>masks(s.base,1,s.faultmask)),
+L('最高可配置优先级也等待','// EXTI2，逻辑优先级 0','EXTI2 请求被 PRIMASK 挡住。NMI 和 HardFault 不在 PRIMASK 的屏蔽范围。','FAULTMASK 比 PRIMASK 又多屏蔽谁？',()=>request('EXTI2')),
+L('设置 FAULTMASK=1','__set_FAULTMASK(1);','FAULTMASK 连 HardFault 的激活也能阻止；异常中只留下 NMI。复位另行处理。','NMI 请求会受到三个寄存器影响吗？',()=>masks(s.base,s.primask,1)),
+L('NMI 到达','// 固定优先级的 NMI 请求','NMI 不受这三个屏蔽寄存器阻挡。','仲裁是否仍能让 NMI 进入？',()=>request('NMI')),
+L('响应 NMI','void NMI_Handler(void) { ... }','CPU 转入 NMI。这里只演示它的屏蔽例外，不模拟故障来源。','NMI 返回会自动把 FAULTMASK 清成 0 吗？',arbitrate),
+L('NMI 返回，FAULTMASK 仍为 1','// NMI 异常返回','自动清 FAULTMASK 的规则有例外：NMI 返回不自动清零。其他等待请求仍受屏蔽。','只清 FAULTMASK，PRIMASK 会跟着清吗？',finish),
+L('只解除 FAULTMASK','__set_FAULTMASK(0);','PRIMASK=1 仍挡住 EXTI2 / EXTI1。多个屏蔽条件需要分别检查。','下一步清 PRIMASK 后，谁还受 BASEPRI 限制？',()=>masks(s.base,s.primask,0)),
+L('解除 PRIMASK，保留 BASEPRI','__enable_irq(); // PRIMASK=0','EXTI2=0 现在允许通过，EXTI1=8 仍被 0x80 阈值挡住。','仲裁下一路会选择谁？',()=>masks(s.base,0,0)),
+L('响应 EXTI2','// EXTI2 通过剩余的 BASEPRI 检查','CPU 进入 EXTI2。取消全局屏蔽不等于取消阈值屏蔽。','EXTI1 是否依然 Pending=1？',arbitrate),
+L('服务 EXTI2','EXTI->PR = 1u << 2; // 翻转 PE2 LED','清 PR2 并翻转 LED3。','返回后，阈值会自动归零吗？',service),
+L('再次回到主程序','// BASEPRI 仍为 0x80','BASEPRI 不因普通异常返回自动清零；EXTI1 继续等待。','最后需要恢复哪个寄存器？',finish),
+L('解除阈值屏蔽','__set_BASEPRI(0);','BASEPRI=0 表示不屏蔽任何优先级。之前保存的 Pending 请求现在可以响应。','需要重新制造一个按键边沿吗？',()=>masks(0,0,0)),
+L('处理先前等待的 EXTI1','// 接受早已挂起的 EXTI1','无需新的边沿：原来的请求一直在等待。','屏蔽和清除挂起是不是同一件事？',arbitrate),
+L('服务 EXTI1','EXTI->PR = 1u << 1; // 翻转 PE1 LED','清 PR1，翻转 LED2。','全部返回后有哪些挂起请求？',service),
+L('恢复主程序','// 所有屏蔽已解除，所有请求处理完成','BASEPRI 按阈值筛选，PRIMASK 阻止可配置异常，FAULTMASK 只留下 NMI。每个屏蔽寄存器的值都可在上方直接看到。','打开屏蔽对照表，再用自由实验改变组合。',finish)
+]}
+];
+const clone=v=>JSON.parse(JSON.stringify(v));
+let manualCode='';
+const codes=[
+`// STM32F103VET6；CMSIS 设备头文件；PE0 高电平点亮。
+// PA0 上拉，按钮接地。实际按键需另做消抖。
+// 本例仅有 EXTI0 使用 PE0。
+#include "stm32f1xx.h"
+
+int main(void) {
+    RCC->APB2ENR |= (1u<<0) | (1u<<2) | (1u<<6); // AFIO、GPIOA、GPIOE
+    GPIOA->BSRR = 1u;                // PA0 上拉
+    GPIOA->CRL = (GPIOA->CRL & ~0xFu) | 0x8u;
+    GPIOE->BRR = 1u;                 // LED 初始灭
+    GPIOE->CRL = (GPIOE->CRL & ~0xFu) | 0x2u; // 推挽 2 MHz
+    EXTI->IMR &= ~1u;
+    AFIO->EXTICR[0] &= ~0xFu;        // EXTI0 选择 PA0
+    EXTI->RTSR &= ~1u;
+    EXTI->FTSR |= 1u;
+    EXTI->PR = 1u;                   // 写 1 清旧请求
+    EXTI->IMR |= 1u;
+    NVIC_SetPriorityGrouping(3);     // 4 抢占位、0 副位
+    NVIC_SetPriority(EXTI0_IRQn, 2);  // 逻辑值 2，不是 0x20
+    NVIC_ClearPendingIRQ(EXTI0_IRQn);
+    NVIC_EnableIRQ(EXTI0_IRQn);
+    while (1) { /* 主程序工作 */ }
+}
+void EXTI0_IRQHandler(void) {
+    if (EXTI->PR & 1u) {
+        EXTI->PR = 1u;               // 不能用 |= 清 PR
+        GPIOE->BSRR = (GPIOE->ODR & 1u) ? (1u<<16) : 1u;
+    }
+}`,
+`// 案例 2：优先级配置片段，不是独立完整工程。
+// PA0—PA2 / EXTI0—2、PE0—PE2 初始化参考案例 1。
+// TIM2 时钟、更新周期与 DIER.UIE 需由工程初始化。
+NVIC_SetPriorityGrouping(5); // 2 抢占位 + 2 副位
+NVIC_SetPriority(TIM2_IRQn,  NVIC_EncodePriority(5, 2, 3)); // 11 → 0xB0
+NVIC_SetPriority(EXTI0_IRQn, NVIC_EncodePriority(5, 2, 0)); //  8 → 0x80
+NVIC_SetPriority(EXTI1_IRQn, NVIC_EncodePriority(5, 1, 2)); //  6 → 0x60
+NVIC_SetPriority(EXTI2_IRQn, NVIC_EncodePriority(5, 2, 1)); //  9 → 0x90
+NVIC_EnableIRQ(TIM2_IRQn);
+NVIC_EnableIRQ(EXTI0_IRQn);
+NVIC_EnableIRQ(EXTI1_IRQn);
+NVIC_EnableIRQ(EXTI2_IRQn);
+
+// 本例需要刻意安排请求到达时机：
+// TIM2 执行中 → EXTI0 挂起 → EXTI1 抢占 → EXTI2 挂起。
+// EXTI1 返回 → 恢复 TIM2 → TIM2 完成 → EXTI0 → EXTI2。
+// 仅设置这些优先级，不会自动生成上述时序。
+
+void EXTI1_IRQHandler(void) {
+    if (EXTI->PR & (1u<<1)) {
+        EXTI->PR = 1u<<1;
+        GPIOE->BSRR = (GPIOE->ODR & (1u<<1)) ? (1u<<17) : (1u<<1);
+    }
+}
+// EXTI0/EXTI2 类似，各自清自己的 PR 位。
+// ISR 尽量短；动画的停顿用于教学，不建议在 ISR 中长延时。`,
+`// 案例 3：屏蔽操作示意，按特权模式执行。
+// 使用 4 抢占位、0 副位；EXTI2=0，EXTI0=2，EXTI1=8。
+NVIC_SetPriorityGrouping(3);
+NVIC_SetPriority(EXTI2_IRQn, 0);
+NVIC_SetPriority(EXTI0_IRQn, 2);
+NVIC_SetPriority(EXTI1_IRQn, 8);
+
+// 临界区保存并恢复原状态，不应一律恢复成 0。
+uint32_t old_basepri = __get_BASEPRI();
+__set_BASEPRI_MAX(0x80); // 提升到至少阈值 8，不削弱更严格的既有阈值
+__DSB();
+__ISB();
+/* 临界区：逻辑优先级 8—15 等待，0—7 不被此阈值屏蔽 */
+__set_BASEPRI(old_basepri);
+
+uint32_t old_primask = __get_PRIMASK();
+__disable_irq();         // PRIMASK=1，连可配置优先级 0 也屏蔽
+/* 短临界区；NMI / HardFault 仍可进入 */
+__set_PRIMASK(old_primask);
+
+// 以下仅展示 FAULTMASK 语义，不推荐作为普通应用的临界区方案。
+uint32_t old_faultmask = __get_FAULTMASK();
+__set_FAULTMASK(1);      // 异常中仅 NMI 可激活；故障升级/Lockup 另论
+/* 必须避免在这里制造同步故障 */
+__set_FAULTMASK(old_faultmask);
+
+// 页面为了对照，允许三者同时保留非零值。
+// 清 FAULTMASK 不会顺带清 PRIMASK 或 BASEPRI。
+// 普通异常返回自动清 FAULTMASK；NMI 返回是例外。
+// 屏蔽不等于清 EXTI_PR / NVIC Pending。`
+];
+function renderDiagram(){
+ const hot=id=>s.hot.includes(id),q=id=>s.irqs[id];
+ const text=(x,y,t,cls='')=>'<text x="'+x+'" y="'+y+'" class="'+cls+'">'+esc(t)+'</text>';
+ const node=(id,x,y,w,h,lines,extra='')=>'<g class="node '+(hot(id)?'hot ':'')+extra+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'"/>'+lines.map((t,i)=>text(x+12,y+24+i*22,t,i===0?'title':'small')).join('')+'</g>';
+ const path=(d,id)=>'<path class="path '+(hot(id)?'hot':'')+'" d="'+d+'" marker-end="url(#arrow)"/>';
+ let out='<title id="diagram-title">GPIO 到 EXTI、NVIC、屏蔽判断和 CPU 的固定路径；当前 '+esc(current())+'</title><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#729aae"/></marker></defs>';
+ out+=text(18,25,'① 输入与引脚选择','small')+text(298,25,'② 边沿检测 / 源标志','small')+text(545,25,'③ NVIC 请求状态','small')+text(742,25,'④ 响应条件','small')+text(921,25,'⑤ CPU','small');
+ for(let i=0;i<3;i++){
+  const y=42+i*90,irq=q('EXTI'+i),dim=!s.configured[i]?'dim':'';
+  out+=path('M125 '+(y+34)+' H155','pin'+i)+path('M265 '+(y+34)+' H295','afio'+i)+path('M510 '+(y+34)+' H545','exti'+i);
+  out+=node('pin'+i,15,y,110,70,['PA'+i+' 按键',s.pins[i]?'H · 3.3 V':'L · 0 V'],dim);
+  out+=node('afio'+i,155,y,110,70,['AFIO','PA'+i+' → 线 '+i],dim);
+  out+=node('exti'+i,295,y,215,70,['EXTI'+i,'FTSR='+Number(s.configured[i])+'   IMR='+Number(!!(s.imr&(1<<i))),'PR'+i+'='+Number(irq.flag)],dim||(irq.active?'active':irq.pending?'pending':''));
+ }
+ out+=node('nvic',545,42,170,292,['NVIC','Pending / Active']);
+ names.slice(0,4).forEach((id,i)=>{const a=q(id),y=113+i*46;out+='<rect x="556" y="'+(y-18)+'" width="148" height="35" style="fill:'+(a.active?'#deefeb':a.pending?'#fff0d7':'#f3f7fa')+';stroke:none"/>'+text(563,y,id+'   '+Number(a.pending)+' / '+Number(a.active),'mono');});
+ out+=text(557,320,'已接受 ≠ 源 PR 已清','small');
+ out+=path('M510 325 H528 V303 H545','TIM2')+node('TIM2',295,302,215,65,['TIM2 · 更新事件','UIF='+Number(q('TIM2').flag)+'；不经过 EXTI'],q('TIM2').active?'active':q('TIM2').pending?'pending':'');
+ out+=path('M715 174 H741','nvic');
+ const candidate=Object.values(s.irqs).filter(eligible).sort(rank)[0];
+ out+=node('gate',741,70,160,232,['响应条件','1. 通道使能','2. 屏蔽条件','3. 抢占级比较','可接受：',candidate?candidate.id:'暂无'],s.base||s.primask||s.faultmask?'blocked':'');
+ out+=path('M901 174 H921','gate');
+ out+=node('cpu',921,70,144,135,['CPU',current(),current()==='Thread'?'Thread 主程序':'Handler / ISR','嵌套 '+s.stack.length+' 层'],'active');
+ out+=text(920,231,'ISR 操作后 LED 才变','small');
+ s.led.forEach((on,i)=>{const x=943+i*49;out+='<circle cx="'+x+'" cy="263" r="13" class="'+(on?'led-on':'led-off')+'"/>'+text(x-15,297,'PE'+i,'small')+text(x-7,318,on?'亮':'灭','small');});
+ out+=node('NMI',550,355,165,56,['NMI · 固定 −2'],q('NMI').active?'active':q('NMI').pending?'pending':'');
+ out+=path('M715 383 H1074 V140 H1065','NMI')+text(737,366,'NMI 绕过这三个屏蔽寄存器','small');
+ out+=text(20,391,'固定连线不变，状态随步骤变化。','small');
+ $('diagram').innerHTML=out;
+}
+function syncEditors(){
+ $('edit-base').innerHTML='<option value="0">0x00 · 不屏蔽</option>'+Array.from({length:(1<<s.preBits)-1},(_,i)=>{const v=(i+1)<<(subBits()+4);return '<option value="'+v+'">'+hex(v)+' · 逻辑阈值 '+(v>>4)+'</option>'}).join('');
+ $('edit-base').value=s.base;$('edit-pri').value=s.primask;$('edit-fault').value=s.faultmask;
+ const q=s.irqs[$('edit-irq').value];
+ for(const [id,count,val]of [['edit-pre',1<<s.preBits,q.pre],['edit-sub',1<<subBits(),q.sub]]){$(id).innerHTML=Array.from({length:count},(_,i)=>'<option>'+i+'</option>').join('');$(id).value=val}
+ $('edit-enabled').checked=q.enabled;
+}
+function render(){
+ const lesson=lessons[caseIndex],step=lesson.steps[stepIndex];
+ $('cases').innerHTML=lessons.map((x,i)=>'<button data-case="'+i+'" aria-selected="'+(i===caseIndex)+'"><b>'+x.name+'</b><span>'+x.sub+'</span></button>').join('');
+ $('lesson-title').textContent=lesson.title;
+ $('steps').innerHTML=lesson.steps.map((x,i)=>'<li><button data-step="'+i+'" class="'+(!free&&i===stepIndex?'current':'')+'" '+(!free&&i===stepIndex?'aria-current="step"':'')+'>'+(i+1)+'. '+x.title+'</button></li>').join('');
+ $('explanation').textContent=free?'自由实验：每次产生请求后，点击“NVIC 仲裁一次”；“结束当前 ISR”会自动判断返回后的下一路。上一步可撤销自由操作；下一步返回本例讲解。':step.note;
+ $('question').textContent=free?'观察表格中的等待原因，再改变一个条件，预测 CPU 会不会切换。':step.question;
+ $('step-title').textContent=free?'自由实验 · '+s.message.title:(stepIndex+1)+'. '+step.title;
+ $('current-code').textContent=free?manualCode:step.code;
+ $('group-note').textContent='当前分组：'+s.preBits+' 位抢占 + '+subBits()+' 位副优先级（AIRCR.PRIGROUP='+(7-s.preBits)+'）；IPR[7:4] 共 4 位有效。数值越小越优先。';
+ $('value-base').textContent=hex(s.base);$('value-pri').textContent=s.primask;$('value-fault').textContent=s.faultmask;
+ $('base-note').textContent=s.base?'逻辑阈值 '+(s.base>>4)+'；等于或更低优先级等待':'0：不按优先级阈值屏蔽';
+ for(const [id,val]of [['base',s.base],['pri',s.primask],['fault',s.faultmask]])$('cell-'+id).classList.toggle('blocking',!!val);
+ renderDiagram();
+ $('decision-title').textContent=s.message.title;$('decision-detail').textContent=s.message.detail;
+ const frames=['Thread',...s.stack];
+ $('frames').innerHTML=frames.map((id,i)=>(i?' → ':'')+'<div class="frame '+(i===frames.length-1?'current':'paused')+'"><b>'+id+'</b><small>'+(i===frames.length-1?'正在执行':id==='Thread'?'暂停，等待恢复':'暂停 · Active=1')+'</small></div>').join('');
+ $('timeline').innerHTML=history.map((h,i)=>'<span class="tick '+(i&&history[i-1].cpu!==h.cpu?'switch':'')+'" title="'+esc(h.title)+'"><b>'+(i+1)+'</b> '+h.cpu+'</span>').join('');
+ $('irq-table').innerHTML=names.map(id=>{const q=s.irqs[id],fixed=id==='NMI';return '<tr class="'+(q.active?'active-row':q.pending?'pending-row':'')+'"><td><b>'+id+'</b><br>'+(fixed?'异常号 2':'IRQn='+q.irq)+'</td><td>'+q.pre+(fixed?'（固定）':'')+'</td><td>'+(fixed?'—':q.sub)+'</td><td><code>'+(fixed?'不使用 IPR':logical(q)+' / '+hex(raw(q)))+'</code></td><td>'+(fixed?'—':(id==='TIM2'?'UIF':'PR'+id.at(-1))+'='+Number(q.flag))+'</td><td>'+(fixed?'固定':Number(q.enabled))+'</td><td><span class="tag '+(q.pending?'waiting':'')+'">'+Number(q.pending)+'</span></td><td><span class="tag '+(q.active?'running':'')+'">'+Number(q.active)+'</span></td><td>'+esc(reason(q))+'</td></tr>'}).join('');
+ const maskPass=(p,b,pr,f)=>p===-2||(!f&&(p===-1||(!pr&&(!b||(p<<4)<b))));
+ $('mask-table').innerHTML=[[-2,'NMI'],[-1,'HardFault'],[0,'可配置优先级 0'],[2,'可配置优先级 2'],[8,'可配置优先级 8'],[12,'可配置优先级 12']].map(([p,label])=>'<tr><th>'+label+'</th>'+[[0,0,0],[128,0,0],[0,1,0],[0,0,1],[s.base,s.primask,s.faultmask]].map(v=>{const pass=maskPass(p,...v);return '<td class="'+(pass?'pass':'deny')+'">'+(pass?'允许通过':'屏蔽')+'</td>'}).join('')+'</tr>').join('');
+ $('triggers').innerHTML=(caseIndex===0?['EXTI0','NMI']:names).map(id=>'<button class="source-button" data-trigger="'+id+'">'+(id.startsWith('EXTI')?'按 PA'+id.at(-1)+' → ':'' )+id+'</button>').join('');
+ $('example-code').textContent=codes[caseIndex];
+ $('progress').textContent=free?'自由实验':(stepIndex+1)+' / '+lesson.steps.length;
+ $('prev').disabled=free?manualHistory.length===0:stepIndex===0;
+ $('next').disabled=!free&&stepIndex===lesson.steps.length-1;
+ $('play').textContent=timer?'暂停':'自动演示';
+ syncEditors();
+}
+function stop(){clearTimeout(timer);timer=null;$('play').textContent='自动演示'}
+function record(title){history.push({cpu:current(),title})}
+function go(n){
+ stop();resetModel(caseIndex);free=false;manualHistory=[];history=[];
+ stepIndex=Math.max(0,Math.min(n,lessons[caseIndex].steps.length-1));
+ for(let i=0;i<=stepIndex;i++){lessons[caseIndex].steps[i].run();record(lessons[caseIndex].steps[i].title)}
+ $('free-feedback').textContent='';render();
+ const active=$('steps').querySelector('.current');if(active)$('steps').scrollTop=Math.max(0,active.offsetTop-$('steps').offsetTop-130);
+}
+function choose(i){caseIndex=i;go(0)}
+function next(){if(free)go(stepIndex);else go(stepIndex+1)}
+function prev(){
+ if(!free){go(stepIndex-1);return}
+ const old=manualHistory.pop();if(!old)return;
+ s=old.s;history=old.history;free=old.free;manualCode=old.code;render();
+}
+function manual(fn,code){
+ stop();manualHistory.push({s:clone(s),history:clone(history),free,code:manualCode});free=true;manualCode=code;fn();record(s.message.title);render();
+ $('free-feedback').textContent='已进入自由实验。上一步撤销；下一步返回讲解。';
+}
+function play(){
+ if(timer){stop();return}
+ if(free)go(stepIndex);
+ if(stepIndex===lessons[caseIndex].steps.length-1)go(0);
+ const tick=()=>{go(stepIndex+1);if(stepIndex<lessons[caseIndex].steps.length-1){timer=setTimeout(tick,Number($('pace').value));$('play').textContent='暂停'}};
+ timer=setTimeout(tick,Number($('pace').value));$('play').textContent='暂停';
+}
+$('cases').onclick=e=>{const b=e.target.closest('[data-case]');if(b)choose(Number(b.dataset.case))};
+$('steps').onclick=e=>{const b=e.target.closest('[data-step]');if(b)go(Number(b.dataset.step))};
+$('prev').onclick=prev;$('next').onclick=next;$('play').onclick=play;$('restart').onclick=()=>go(0);
+$('triggers').onclick=e=>{const b=e.target.closest('[data-trigger]');if(b)manual(()=>request(b.dataset.trigger),'// 产生 '+b.dataset.trigger+' 请求')};
+$('arbitrate').onclick=()=>manual(arbitrate,'// NVIC 根据使能、屏蔽、抢占条件进行仲裁');
+$('service').onclick=()=>manual(service,'// 软件清源标志，执行本 ISR 的服务动作');
+$('return').onclick=()=>manual(finish,'// 异常返回，并判断下一路可响应请求');
+$('apply-masks').onclick=()=>{const b=+$('edit-base').value,p=+$('edit-pri').value,f=+$('edit-fault').value;manual(()=>masks(b,p,f),'__set_BASEPRI('+hex(b)+'); __set_PRIMASK('+p+'); __set_FAULTMASK('+f+');')};
+$('edit-irq').onchange=syncEditors;
+$('apply-priority').onclick=()=>{
+ const id=$('edit-irq').value,q=s.irqs[id],pre=+$('edit-pre').value,sub=+$('edit-sub').value,en=$('edit-enabled').checked;
+ if((pre!==q.pre||sub!==q.sub)&&(s.stack.length||Object.values(s.irqs).some(x=>x.pending))){$('free-feedback').textContent='请先重播或处理完所有请求，再改变优先级。仅改变 NVIC 使能则不受此限制。';return}
+ manual(()=>{q.pre=pre;q.sub=sub;q.enabled=en;setDecision(id+' 配置更新','抢占='+pre+'，副='+sub+'，NVIC 使能='+Number(en)+'。已有 Pending 不被删除。',['nvic'])},'// '+id+' 优先级 / NVIC 使能配置');
+};
+document.addEventListener('keydown',e=>{
+ if(e.target.closest('input,select,textarea,[contenteditable=true]')||e.altKey||e.ctrlKey||e.metaKey)return;
+ if(e.key==='ArrowRight'){e.preventDefault();next()}
+ if(e.key==='ArrowLeft'){e.preventDefault();prev()}
+ if(e.code==='Space'&&!e.target.closest('button,summary,a')){e.preventDefault();play()}
+});
+window.extiLab={getState:()=>clone(s),getStep:()=>stepIndex,getCase:()=>caseIndex,chooseCase:choose,go,
+ act:(name,arg)=>{const actions={request:()=>request(arg),arbitrate,service,finish,masks:()=>masks(...arg)};if(actions[name])manual(actions[name],'// 自由实验 '+name)},
+ isEligible:id=>eligible(s.irqs[id]),reason:id=>reason(s.irqs[id])};
+choose(0);
+
+</script>
+<footer id="course-credit" style="box-sizing:border-box;position:static;max-width:1480px;margin:24px auto 0;padding:22px 26px 28px;border-top:1px solid #dce4e8;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;font:13px/1.7 -apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif;color:#617785;text-align:left;background:transparent"><a href="./index.html" style="color:#176b58;text-decoration:none">← 返回课程目录</a><span>Designed By Xianyu Wu</span></footer>
+</body></html>

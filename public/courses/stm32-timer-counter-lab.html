@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STM32 定时器计数与时钟动态课堂</title>
+<style>
+:root{--ink:#17354d;--muted:#5b7487;--line:#c9dbe7;--blue:#1378b8;--green:#168263;--amber:#b36a16;--red:#c44243;--purple:#7755a5;--paper:#fff;--bg:#f2f7fa}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 "Microsoft YaHei",sans-serif}main{max-width:1480px;margin:auto;padding:24px}h1,h2,h3,p{margin:0}h1{font-size:29px}h2{font-size:19px}h3{font-size:16px}small,.muted{color:var(--muted)}code{font-family:Consolas,monospace}button,select,input{font:inherit;color:inherit}button{padding:8px 13px;border:1px solid var(--line);border-radius:7px;background:#fff;cursor:pointer}button:hover:not(:disabled){background:#eaf4fa}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #77b5da;outline-offset:2px}button:disabled{opacity:.4}.primary,.tabs button[aria-selected=true]{color:#fff;background:var(--blue);border-color:var(--blue)}header{display:flex;justify-content:space-between;gap:22px;margin-bottom:16px}header small{display:block;color:var(--blue)}header a{color:var(--blue)}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}.tabs button{text-align:left}.tabs b,.tabs span{display:block}.tabs span{font-size:12px}.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:11px 14px;border:1px solid var(--line);border-radius:9px;background:#fff}.toolbar label{display:flex;align-items:center;gap:6px}.toolbar select,.toolbar input{padding:5px 8px;border:1px solid var(--line);border-radius:5px;background:#fff}.spacer{flex:1}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}.stat{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 14px}.stat b{display:block;font:700 23px Consolas,monospace}.stat small{display:block}.panel{background:#fff;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-top:14px}.heading{display:flex;justify-content:space-between;gap:15px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}.heading div:last-child{text-align:right}.plot-wrap{overflow-x:auto}.plot{display:block;width:100%;min-width:960px;background:#fcfdff}.plot text{font-family:"Microsoft YaHei",sans-serif;fill:var(--ink);font-size:14px}.plot .small{font-size:12px;fill:var(--muted)}.plot .title{font-size:18px;font-weight:bold}.plot .mono{font:14px Consolas,monospace}.plot .axis{stroke:#7893a7;stroke-width:1.5}.plot .grid{stroke:#dce7ee;stroke-width:1}.plot .path{stroke:#a9c0cf;stroke-width:3;fill:none}.plot .path.hot{stroke:var(--green);stroke-width:5;stroke-dasharray:10 7;animation:flow 1s linear 2}.plot .node rect{fill:#fff;stroke:#afc8d8;stroke-width:1.7;rx:8}.plot .node.hot rect{fill:#e3f4ed;stroke:var(--green);stroke-width:3}.plot .node.event rect{fill:#fff0da;stroke:var(--amber);stroke-width:3}.plot .up{stroke:var(--blue);fill:none;stroke-width:3}.plot .down{stroke:var(--purple);fill:none;stroke-width:3}.plot .center{stroke:var(--green);fill:none;stroke-width:3}.plot .selected{stroke-width:6}.plot .marker-up{fill:var(--blue)}.plot .marker-down{fill:var(--purple)}.plot .marker-center{fill:var(--green)}.plot .eventmark{fill:var(--red);stroke:#8f292b;stroke-width:1}.plot .now{stroke:var(--red);stroke-width:2;stroke-dasharray:6 5}.plot .clock{stroke:var(--blue);stroke-width:3;fill:none}.plot .countclock{stroke:var(--green);stroke-width:3;fill:none}.explain{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;padding:13px 16px;background:#eef6fb;border-top:1px solid var(--line)}.explain b{color:var(--blue)}.formula{font:700 16px/1.8 Consolas,monospace}.compare-values{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line)}.mode-value{padding:12px 15px;border-right:1px solid var(--line)}.mode-value:last-child{border:0}.mode-value b{display:block}.mode-value strong{font:700 25px Consolas,monospace}.mode-value.event{background:#fff2df}.calculator{display:grid;grid-template-columns:1fr 1.15fr;gap:24px;padding:18px}.formula-list{display:grid;gap:10px}.formula-box{padding:12px 14px;border-left:4px solid var(--blue);background:#edf6fb}.formula-box.center{border-color:var(--green)}.event-log{width:100%;border-collapse:collapse}.event-log th,.event-log td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}.event-log th{background:#f0f6fa}.tag{display:inline-block;padding:1px 7px;border-radius:4px;background:#e9f1f6}.tag.event{background:#ffe2ba;color:#874c0a}.note{padding:12px 16px;color:var(--muted);font-size:13px}.mode-picker{display:flex;gap:8px;flex-wrap:wrap}.mode-picker button[aria-pressed=true]{background:#e4f2fa;border-color:#6faed3;color:#114d73}details{padding:14px 17px}details summary{cursor:pointer;font-weight:bold;font-size:16px}details p{margin:10px 0}details table{width:100%;border-collapse:collapse;margin-top:10px}details th,details td{padding:9px 11px;border-bottom:1px solid var(--line);text-align:left}details th{background:#f0f6fa}details pre{white-space:pre-wrap;background:#f1f6fa;padding:13px;border-radius:5px;font:13px/1.75 Consolas,monospace}.footer{font-size:12px;color:var(--muted);margin-top:16px}.flash{animation:flash .7s ease-out}.hidden{display:none!important}@keyframes flow{to{stroke-dashoffset:-34}}@keyframes flash{0%{filter:drop-shadow(0 0 12px #efaa37)}100%{}}@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.calculator,.explain{grid-template-columns:1fr}.heading{align-items:flex-start;flex-direction:column}.heading div:last-child{text-align:left}}@media(max-width:600px){main{padding:12px}h1{font-size:24px}header{display:block}.tabs{grid-template-columns:1fr;gap:6px}.tabs button{padding:8px 11px}.tabs span{display:inline}.stats{grid-template-columns:1fr 1fr}.stat b{font-size:19px}.toolbar .spacer{display:none}.compare-values{grid-template-columns:1fr}.mode-value{border-right:0;border-bottom:1px solid var(--line)}button{min-height:42px}}@media(prefers-reduced-motion:reduce){.plot .path.hot,.flash{animation:none}}
+
+.clock-focus .stats{display:none}.toolbar input[type=number]{width:64px}.toolbar label{display:inline-block}.toolbar sub{font-size:.72em}
+.teacher-note{padding:12px 18px 0;font-size:16px}.teacher-note b{color:var(--blue)}
+.psc-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 18px}
+.psc-actions button[aria-pressed=true]{background:#e3f1fb;border-color:#459aca}
+#pipeline{padding:0 18px 12px}
+.psc-flow{display:grid;grid-template-columns:minmax(155px,.8fr) 42px minmax(260px,1.65fr) 42px minmax(175px,1fr);align-items:stretch}
+.flow-card{padding:16px;border:2px solid var(--line);border-radius:10px;min-width:0;background:#fbfdff}
+.flow-card h3{font-size:18px}.flow-card small{display:block}
+.flow-card.received{border-color:var(--blue);background:#eef7fe}
+.flow-card.completed{border-color:var(--green);background:#edf9f2}
+.flow-number{font:700 34px/1.4 Consolas,monospace;margin:9px 0}.flow-number span{font:14px "Microsoft YaHei",sans-serif}
+.flow-arrow{display:flex;align-items:center;justify-content:center;font-size:27px;color:#8aa4b7}
+.flow-arrow.arrived{color:var(--blue)}.flow-arrow.emitted{color:var(--green)}
+.beat-cells{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}
+.beat-cell{width:48px;height:52px;display:flex;align-items:center;justify-content:center;flex-direction:column;border:1px solid #b8d0e0;border-radius:6px;background:#fff;color:var(--muted);font:700 20px Consolas,monospace}
+.beat-cell small{font:11px "Microsoft YaHei",sans-serif}.beat-cell.filled{background:#dceefd;color:#115786;border-color:#5e9fc9}
+.beat-cell.complete{background:#ccefdc;color:#146545;border-color:#579c78}.beat-cell.latest{outline:2px solid currentColor;outline-offset:2px}
+.psc-internal{font-size:13px;padding-top:7px;border-top:1px solid #c8dce8}.psc-internal code{font-weight:bold;font-size:16px}
+.flow-message{min-height:28px;font-weight:bold}.cnt-result{font-size:14px;padding-top:9px;border-top:1px solid var(--line)}
+.edge-effect{animation:edge-pop .55s ease-out 1}@keyframes edge-pop{0%{box-shadow:0 0 0 4px #65aed650}100%{box-shadow:0 0 0 0 transparent}}
+.clock-toolbar-note{padding:0 18px 10px;font-size:12px;color:var(--muted)}
+#clocks{min-width:0;width:100%}#clocks .forecast{stroke:#b6c5cf;stroke-dasharray:3 5;fill:none;stroke-width:1.5}
+#clocks .group-band{fill:#eef7f2}#clocks .cnt-trace{stroke:var(--purple);fill:none;stroke-width:2.5}
+#clocks .input-current{fill:#1378b8}#clocks .output-current{fill:#168263}#clocks text{font-size:12px}
+@media(max-width:850px){.psc-flow{grid-template-columns:1fr}.flow-arrow{height:26px;transform:rotate(90deg)}.flow-card{padding:12px}.flow-number{margin:3px 0}.flow-message{min-height:0}.explain{gap:10px}}
+@media(prefers-reduced-motion:reduce){.edge-effect{animation:none}}
+</style><style>
+.plot .up,.plot .down,.plot .center{stroke-width:3;stroke-linejoin:round}
+.plot .mode-current{stroke:var(--red);stroke-width:1.5;stroke-dasharray:5 5}
+.mode-tick-label{font-size:11px!important;fill:var(--muted)!important}
+.period-lead{padding:14px 18px;background:#eef6fb;font-size:16px}
+.period-lead b{color:var(--blue)}
+.period-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 18px}
+.period-explain{padding:13px 18px;background:#eef6fb;border-top:1px solid var(--line)}
+.period-explain b{color:var(--blue);font-size:16px}
+.period-math{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:14px 18px}
+.period-log-title{padding:6px 18px}
+.period-focus .stats,.period-focus #undo,.period-focus #edge,.period-focus #tick,.period-focus #play{display:none}
+.period-focus .period-math p{margin-top:8px}
+@media(max-width:760px){.period-math{grid-template-columns:1fr}.period-controls button{flex:1 1 42%}}
+.mode-only{display:none}
+.mode-lesson{padding:14px 18px;background:#eef6fb}.mode-lesson p+p{margin-top:6px}
+.mode-step-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:14px 18px}
+.mode-step-card{border-left:4px solid var(--blue);padding:10px 13px;background:#edf6fb}
+.mode-step-card.down{border-color:var(--purple)}.mode-step-card.center{border-color:var(--green)}
+.mode-step-card strong{display:block;font:700 22px/1.7 Consolas,monospace}
+.mode-step-card.event{background:#fff1dc}
+.mode-period-table{width:100%;border-collapse:collapse}.mode-period-table th,.mode-period-table td{padding:10px 18px;text-align:left;border-top:1px solid var(--line)}
+.mode-period-table th{background:#f0f6fa}.mode-source{padding:14px 18px}.mode-source a{color:var(--blue)}
+@media(max-width:760px){.mode-step-grid{grid-template-columns:1fr}.mode-period-table{font-size:13px}}
+.mode-focus .mode-only{display:block}
+.mode-focus #selected-stat,.mode-focus #mode-picker,.mode-focus .compare-values,.period-focus #mode-picker{display:none}
+.mode-focus .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+.mode-focus .stat.mode-up{border-left:4px solid var(--blue)}
+.mode-focus .stat.mode-down{border-left:4px solid var(--purple)}
+.mode-focus .stat.mode-center{border-left:4px solid var(--green)}
+.mode-focus .stat.uev{background:#fff1dc;border-color:#dda950}
+@media(max-width:900px){.mode-focus .stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body><main>
+<header><div><small>第八章 · 定时器与脉宽调制 · 本地离线课堂</small><h1>计数、时钟与三种计数模式</h1><p class="muted">每次只追踪一个问题：哪个时钟边沿到达了，预分频器累计到第几拍，CNT 为什么变成当前值。</p></div><div><a href="stm32-exti-priority-lab.html">EXTI 与中断优先级课堂</a><br><a href="stm32-gpio-register-map.html">GPIO 寄存器课堂</a></div></header>
+
+<nav class="tabs" id="tabs" aria-label="教学模块">
+<button data-tab="clock" aria-selected="true"><b>① 时钟怎样变成计数</b><span>CK_INT、PSC 与 CK_CNT</span></button>
+<button data-tab="modes" aria-selected="false"><b>② 三种模式同步比较</b><span>向上、向下、中央对齐</span></button>
+<button data-tab="period" aria-selected="false"><b>③ 周期与更新事件</b><span>ARR、UIF 与频率公式</span></button>
+</nav>
+
+<div class="toolbar">
+<button id="undo">← 上一步</button><button id="edge" class="primary">输入一拍 →</button><button id="tick">跳至下一次 CNT 变化</button><button id="play">自动演示</button>
+<label>速度 <select id="speed"><option value="2000">讲解 · 2 秒/拍</option><option value="1200">慢 · 1.2 秒/拍</option><option value="700">中 · 0.7 秒</option><option value="350">快 · 0.35 秒</option></select></label>
+<span class="spacer"></span><button id="reset">重新开始</button><small>键盘 ← / → 单步，空格播放</small>
+</div>
+
+<div class="toolbar" aria-label="当前教学板块的定时器参数">
+<strong id="module-preset">时钟与预分频 · 默认参数</strong>
+<label>定时器时钟 f<sub>TIM</sub> <select id="ftim"><option value="1000000">1 MHz</option><option value="8000000">8 MHz</option><option value="36000000">36 MHz</option><option value="72000000">72 MHz</option></select></label>
+<label>PSC <input id="psc" type="number" min="0" max="15" value="3"></label>
+<label>ARR <input id="arr" type="number" min="2" max="15" value="5"></label>
+<button id="apply">应用参数</button>
+<span class="spacer"></span>
+<div class="mode-picker" id="mode-picker" aria-label="主视图计数模式">
+<button data-mode="up" aria-pressed="true">向上</button><button data-mode="down" aria-pressed="false">向下</button><button data-mode="center" aria-pressed="false">中央对齐</button>
+</div>
+</div>
+
+<section class="stats" aria-label="当前关键数值">
+<div class="stat"><small>输入时钟边沿</small><b id="raw-value">0</b><span>CK_INT rising edges</span></div>
+<div class="stat"><small>预分频进度</small><b id="psc-value">0 / 4</b><span id="psc-caption">还需 4 个边沿</span></div>
+<div class="stat"><small>计数脉冲</small><b id="tick-value">0</b><span>CK_CNT pulses</span></div>
+<div class="stat" id="selected-stat"><small>当前模式 CNT</small><b id="cnt-value">0 ↑</b><span id="event-caption">尚无更新事件</span></div>
+<div class="stat mode-only mode-up" id="top-up"><small>向上计数 · CNT</small><b id="top-up-value">0 ↑</b><span id="top-up-caption">等待计数脉冲</span></div>
+<div class="stat mode-only mode-down" id="top-down"><small>向下计数 · CNT</small><b id="top-down-value">0 ↓</b><span id="top-down-caption">等待计数脉冲</span></div>
+<div class="stat mode-only mode-center" id="top-center"><small>中央对齐 · CNT</small><b id="top-center-value">0 ↑</b><span id="top-center-caption">等待计数脉冲</span></div>
+</section>
+
+<section class="panel" id="clock-panel">
+<div class="heading"><div><h2>时钟链路：每一个输入边沿去了哪里</h2><small id="division-intro"></small></div><div><b id="clock-question">现在 PSC 正在累计输入边沿</b><br><small id="clock-detail"></small></div></div>
+<p class="teacher-note"><b>每个输入上升沿，预分频器都在计数。</b>一组满 PSC+1 拍，CNT 才走一步。</p>
+<div class="psc-actions" id="psc-presets"><span>对照体验：</span><button data-psc="0">PSC=0 · 每拍计数</button><button data-psc="1">PSC=1 · 每2拍计数</button><button data-psc="3">PSC=3 · 每4拍计数</button><button id="one-group" class="primary">逐拍演示到本组完成</button></div>
+<div id="pipeline" aria-label="输入每一拍，预分频器累计，满一组后 CNT 变化"></div>
+<p class="clock-toolbar-note">格子表示一组内已收到的拍数。满格保留本组结果；下一拍开始新一组。下方的“内部计数”显示归零后的状态。</p>
+<svg id="clocks" class="plot" viewBox="0 0 1120 324" role="img" aria-label="输入边沿、计数有效边沿和 CNT 值在同一时间轴上对齐"></svg>
+<p class="clock-toolbar-note">实线：已发生；浅灰虚线：尚未到来。绿色短脉冲只标出 CK_CNT 的计数有效边沿，不表示实际占空比。动画速度用于慢放讲解，不是芯片真实频率。</p>
+<div class="explain"><div aria-live="polite"><b id="step-title">起点</b><p id="step-explain">定时器收到 CK_INT 的有效上升沿。预分频器先累计这些边沿，达到 PSC+1 后才给 CNT 一个计数脉冲。</p></div><div class="formula" id="clock-formula"></div></div>
+</section>
+
+<section class="panel hidden" id="modes-panel">
+<div class="heading"><div><h2>同一计数节拍，三种不同路线</h2><small>蓝：向上　紫：向下　绿：中央对齐。每条竖向参考线对应同一个 CK_CNT 边沿。</small></div><div><b>当前计数脉冲：<span id="mode-tick">0</span></b><br><small>每拍宽度固定 · 三路同步推进</small></div></div>
+<div class="mode-lesson"><p><b>中央对齐不会加快 CNT 的计数速度。</b>同样的时钟和 PSC 下，三种模式每收到一个 CK_CNT 有效边沿，各推进一步。普通步进为加 1 或减 1；向上／向下在边界处重装。</p><p>看竖线比较“同一拍”；看红色菱形比较“更新事件 UEV”。<b>事件不在同一拍出现，不代表计数速度不同。</b></p></div>
+<div class="plot-wrap"><svg id="mode-plot" class="plot" viewBox="0 0 1120 590" role="img" aria-label="固定节拍轴上的 CK_CNT 边沿与三种 CNT 计数序列"></svg></div>
+<p class="note" id="mode-step-status"></p>
+<div class="mode-step-grid" id="mode-transitions"></div>
+<div class="compare-values">
+<div class="mode-value" id="box-up"><b>向上计数</b><strong id="up-value">0</strong><span id="up-note">等待计数脉冲</span></div>
+<div class="mode-value" id="box-down"><b>向下计数</b><strong id="down-value">5</strong><span id="down-note">等待计数脉冲</span></div>
+<div class="mode-value" id="box-center"><b>中央对齐</b><strong id="center-value">0 ↑</strong><span id="center-note">先向上</span></div>
+</div>
+<table class="mode-period-table"><thead><tr><th>比较什么？</th><th>向上 / 向下</th><th>中央对齐</th></tr></thead><tbody id="mode-period-rows"></tbody></table>
+<div class="mode-source"><p><b>这里对应哪一种硬件情形？</b>以 STM32F1 的 TIM2～TIM5 连续计数为例，参数保持不变、UDIS=0，不插入软件 UG 或外部复位。向上和中央对齐从 CNT=0 开始，向下从 CNT=ARR 开始。页面并排展示三个独立的计数例子；一只定时器一次选择一种模式。</p><p>依据：ST《RM0008》Rev 21，第 15.3.2 节（计数模式），第 375～376 页（中央对齐计数与更新事件）。中央对齐在 ARR−1→ARR 与 1→0 的边沿换向并产生 UEV；向上在 ARR→0、向下在 0→ARR 的边沿产生 UEV。<a href="https://www.st.com/resource/en/reference_manual/rm0008-stm32f101xx-stm32f102xx-stm32f103xx-stm32f105xx-and-stm32f107xx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf#page=375" target="_blank" rel="noopener">打开官方手册</a>（可选，需联网）。</p><p>UEV 是硬件更新事件；进入中断还需要更新中断使能、NVIC 等条件。TIM1/TIM8 若启用重复计数器，更新事件间隔还会改变。</p></div>
+</section>
+
+<section class="panel hidden" id="period-panel">
+<div class="heading"><div><h2>一个计数周期，怎样变成一次更新事件？</h2><small>本页初始参数：fTIM=1 MHz、PSC=9、ARR=4。从 CNT=0 开始逐个 CK_CNT 边沿走，观察 ARR 边界和 UIF。</small></div><div><b id="period-summary"></b><br><small id="period-sub"></small></div></div>
+<div class="period-lead"><b>先记住路线：</b>计数时钟到来，CNT 走一步；计满 0 到 ARR 后，下一拍回到 0 并产生 UEV，UIF 置 1。</div>
+<div class="period-controls"><button id="period-back">← 上一拍</button><button id="period-next" class="primary">计入下一个 CK_CNT</button><button id="period-play">自动走完一周期</button><button id="period-clear">软件清 UIF</button><span id="period-progress"></span></div>
+<div class="plot-wrap"><svg id="period-plot" class="plot" viewBox="0 0 1000 330" role="img" aria-label="向上计数从零到 ARR 再溢出归零，产生更新事件并置位 UIF"></svg></div>
+<div class="period-explain" aria-live="polite"><b id="period-step-title"></b><p id="period-step-text"></p></div>
+<div class="period-math"><div class="formula-box"><h3>① 先算 CNT 的时钟</h3><div class="formula" id="f-count"></div><p>PSC 写入 N，分频系数是 N+1。</p></div><div class="formula-box"><h3>② 再数一轮有几拍</h3><div class="formula" id="f-edge"></div><p>0 到 ARR 有 ARR+1 个计数状态，一轮需 ARR+1 个 CK_CNT 周期。</p></div><div class="formula-box center"><h3>③ 中央对齐作对照</h3><div class="formula" id="f-center"></div><p>从 0 到 ARR 再回到 0，完整往返需要 2×ARR 个 CK_CNT 周期。</p></div></div>
+<div><h3 class="period-log-title">更新事件记录</h3><table class="event-log"><thead><tr><th>CK_CNT 序号</th><th>发生的变化</th><th>UIF 状态</th></tr></thead><tbody id="event-log"></tbody></table><p class="note hidden" id="log-empty">数到 ARR 后再走一个 CK_CNT 边沿，产生 UEV。</p></div>
+</section>
+
+<details class="panel"><summary>把波形翻译成寄存器：PSC、ARR、CNT、DIR、UIF</summary>
+<table><thead><tr><th>对象</th><th>页面中的作用</th><th>学生最容易混淆的地方</th></tr></thead><tbody>
+<tr><td><code>PSC</code></td><td>配置分频系数 PSC+1，运行中配置值保持不变</td><td>PSC=3 时，内部计数按 0→1→2→3→0 变化；回到 0 的这一拍给 CNT 一次计数有效边沿。</td></tr>
+<tr><td><code>ARR</code></td><td>规定计数边界</td><td>向上模式有 0、1、…、ARR，共 ARR+1 个状态。</td></tr>
+<tr><td><code>CNT</code></td><td>保存当前计数值</td><td>它只在 CK_CNT 有效边沿改变，不会跟每个 CK_INT 都变化。</td></tr>
+<tr><td><code>CR1.DIR</code></td><td>向上 / 向下方向；中央对齐时由硬件反映当前方向</td><td>中央对齐模式会在 ARR 和 0 两端自动换向。</td></tr>
+<tr><td><code>SR.UIF</code></td><td>记录更新事件</td><td>UIF 是标志位；是否进入 ISR 还要看 DIER.UIE、NVIC 与屏蔽状态。</td></tr>
+</tbody></table>
+<p>教学动画把“更新事件”和“中断服务程序”分开。计数器产生 UEV 后，UIF 可以置位；CPU 是否响应则属于 NVIC 课程的内容。</p>
+</details>
+
+<details class="panel"><summary>两个容易算错的地方</summary>
+<p><b>APB 定时器时钟：</b>在 STM32F1 中，如果相应 APB 预分频器等于 1，定时器时钟通常等于 PCLK；如果 APB 预分频器大于 1，定时器时钟通常为 2×PCLK。页面中的 f<sub>TIM</sub> 指已经送到定时器的时钟，不直接等同于总线频率。</p>
+<p><b>中央对齐周期：</b>一轮完整波形按 <code>0 → ARR → 0</code> 计算，需要 <code>2×ARR</code> 个 CK_CNT 周期。在本页 TIM2～TIM5 连续计数、UDIS=0、无额外 UG 或复位的条件下，两端各产生一次 UEV，更新事件的频率是完整往返频率的两倍。TIM1/TIM8 的重复计数器会进一步影响更新事件间隔。</p>
+</details>
+
+<details class="panel"><summary>对应的初始化代码框架</summary>
+<pre><code>// 例：fTIM = 1 MHz，PSC = 3，ARR = 5
+// fCK_CNT = 1 MHz / (3 + 1) = 250 kHz
+TIM2->PSC = 3;
+TIM2->ARR = 5;
+TIM2->CNT = 0;
+
+// 向上：CMS = 00，DIR = 0
+TIM2->CR1 &= ~(TIM_CR1_CMS | TIM_CR1_DIR);
+
+// 向下：CMS = 00，DIR = 1
+// TIM2->CR1 = (TIM2->CR1 & ~TIM_CR1_CMS) | TIM_CR1_DIR;
+
+// 中央对齐：选择 CMS 非零的模式；CMS1/2/3 的差别主要涉及
+// 输出比较标志在向上、向下或两个方向中的置位条件。
+// TIM2->CR1 = (TIM2->CR1 & ~(TIM_CR1_CMS | TIM_CR1_DIR))
+//             | TIM_CR1_CMS_0;
+
+TIM2->EGR = TIM_EGR_UG;       // 装载 PSC 等预装载值，产生一次更新
+TIM2->SR &= ~TIM_SR_UIF;      // 清掉初始化产生的 UIF
+TIM2->DIER |= TIM_DIER_UIE;   // 如需更新中断
+TIM2->CR1 |= TIM_CR1_CEN;     // 启动计数</code></pre>
+</details>
+
+<p class="footer">内容依据所给《第8章 定时器与脉宽调制16-9》第 5、6 页重新组织。图中采用理想时钟和离散计数模型，省略同步延迟、影子寄存器装载时机、重复计数器及触发控制器等细节。页面为单文件离线网页，不加载网络资源。</p>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const moduleDefaults={clock:{ftim:1e6,psc:3,arr:5},modes:{ftim:1e6,psc:0,arr:8},period:{ftim:1e6,psc:9,arr:4}};
+const moduleNames={clock:'时钟与预分频',modes:'三种计数模式',period:'周期与更新事件'};
+let cfg={...moduleDefaults.clock},state,history=[],timer=null,tab='clock',selected='up',groupRun=false,periodModel={tick:0,uif:false,events:[]},periodHistory=[],moduleMemory={};
+const clone=v=>JSON.parse(JSON.stringify(v));
+const fmtHz=v=>v>=1e6?(v/1e6).toFixed(v%1e6?3:0)+' MHz':v>=1e3?(v/1e3).toFixed(v%1e3?3:0)+' kHz':v.toFixed(2)+' Hz';
+function fresh(){
+ state={raw:0,phase:0,ticks:0,up:0,down:cfg.arr,center:0,cdir:1,lastTick:false,lastEvents:[],events:[],samples:[{t:0,up:0,down:cfg.arr,center:0,upE:false,downE:false,centerE:false}]};
+ history=[];periodModel={tick:0,uif:false,events:[]};periodHistory=[];stop();render();
+}
+function syncParameterInputs(){ $('ftim').value=cfg.ftim;$('psc').value=cfg.psc;$('arr').value=cfg.arr;$('module-preset').textContent=moduleNames[tab]+' · '+cfg.ftim+' Hz / PSC '+cfg.psc+' / ARR '+cfg.arr; }
+function switchTab(next){
+ if(next===tab)return;
+ stop();
+ moduleMemory[tab]={cfg:clone(cfg),state:clone(state),history:clone(history),periodModel:clone(periodModel),periodHistory:clone(periodHistory),selected};
+ tab=next;
+ const saved=moduleMemory[next];
+ if(saved){cfg=clone(saved.cfg);state=clone(saved.state);history=clone(saved.history);periodModel=clone(saved.periodModel);periodHistory=clone(saved.periodHistory);selected=saved.selected}
+ else{cfg=clone(moduleDefaults[next]);state={raw:0,phase:0,ticks:0,up:0,down:cfg.arr,center:0,cdir:1,lastTick:false,lastEvents:[],events:[],samples:[{t:0,up:0,down:cfg.arr,center:0,upE:false,downE:false,centerE:false}]};history=[];periodModel={tick:0,uif:false,events:[]};periodHistory=[]}
+ syncParameterInputs();render();
+}
+function pushHistory(){history.push(clone(state));if(history.length>200)history.shift()}
+function countTick(){
+ state.ticks++;state.lastEvents=[];
+ let upE=false,downE=false,centerE=false;
+ if(state.up===cfg.arr){state.up=0;upE=true;event('向上','ARR 溢出后回到 0')}else state.up++;
+ if(state.down===0){state.down=cfg.arr;downE=true;event('向下','0 下溢后重装 ARR')}else state.down--;
+ if(state.cdir>0){
+  if(state.center>=cfg.arr-1){state.center=cfg.arr;state.cdir=-1;centerE=true;event('中央对齐','到达 ARR，方向改为向下')}else state.center++;
+ }else{
+  if(state.center<=1){state.center=0;state.cdir=1;centerE=true;event('中央对齐','到达 0，方向改为向上')}else state.center--;
+ }
+ state.samples.push({t:state.ticks,up:state.up,down:state.down,center:state.center,upE,downE,centerE});
+ if(state.samples.length>80)state.samples.shift();
+}
+function event(mode,what){const e={tick:state.ticks,mode,what};state.lastEvents.push(e);state.events.unshift(e);if(state.events.length>12)state.events.pop()}
+function edge(){
+ pushHistory();state.raw++;state.lastTick=false;state.lastEvents=[];
+ if(state.phase===cfg.psc){state.phase=0;state.lastTick=true;countTick()}else state.phase++;
+ render();
+}
+function toTick(){pushHistory();do{state.raw++;state.lastTick=false;state.lastEvents=[];if(state.phase===cfg.psc){state.phase=0;state.lastTick=true;countTick();break}else state.phase++}while(true);render()}
+function undo(){if(!history.length)return;state=history.pop();stop();render()}
+function stop(){clearInterval(timer);timer=null;groupRun=false;if($('one-group'))$('one-group').textContent='逐拍演示到本组完成';if($('play'))$('play').textContent='自动演示';if($('period-play'))$('period-play').textContent='自动走完一周期'}
+function play(){if(timer){stop();return}timer=setInterval(()=>{edge();animateEdge()},Number($('speed').value));$('play').textContent='暂停'}
+function apply(){
+ const p=Math.max(0,Math.min(15,Math.trunc(Number($('psc').value)||0))),a=Math.max(2,Math.min(15,Math.trunc(Number($('arr').value)||2)));
+ cfg={ftim:Number($('ftim').value),psc:p,arr:a};$('psc').value=p;$('arr').value=a;fresh();
+}
+function periodAdvance(){
+ const length=cfg.arr+1;if(periodModel.tick>=2*length)return;periodHistory.push(clone(periodModel));
+ periodModel.tick++;
+ if(periodModel.tick%length===0){periodModel.uif=true;periodModel.events.unshift({tick:periodModel.tick,cnt:'ARR → 0',text:'CNT 回到 0，产生 UEV'});periodModel.events=periodModel.events.slice(0,8)}
+ render();
+}
+function periodUndo(){if(!periodHistory.length)return;periodModel=periodHistory.pop();stop();render()}
+function periodPlay(){
+ if(timer){stop();return}
+ if(periodModel.tick>=2*(cfg.arr+1))return;
+ const goal=(Math.floor(periodModel.tick/(cfg.arr+1))+1)*(cfg.arr+1);
+ $('period-play').textContent='暂停';
+ timer=setInterval(()=>{periodAdvance();if(periodModel.tick>=goal)stop()},Number($('speed').value));
+ periodAdvance();if(periodModel.tick>=goal)stop();
+}
+function modeState(mode){return mode==='center'?{cnt:state.center,dir:state.cdir,event:state.lastEvents.some(e=>e.mode==='中央对齐')}:{cnt:state[mode],dir:mode==='up'?1:-1,event:state.lastEvents.some(e=>e.mode===(mode==='up'?'向上':'向下'))}}
+
+function cntAt(ticks,mode=selected){
+ if(mode==='up')return ticks%(cfg.arr+1);
+ if(mode==='down')return cfg.arr-ticks%(cfg.arr+1);
+ const p=ticks%(2*cfg.arr);return p<=cfg.arr?p:2*cfg.arr-p;
+}
+function renderPipeline(){
+ const d=cfg.psc+1,m=modeState(selected),hasEdge=state.raw>0,filled=state.lastTick?d:state.phase;
+ const group=state.raw?Math.floor((state.raw-1)/d)+1:1;
+ const before=hasEdge?(state.raw-1)%d:0;
+ const oldCnt=cntAt(Math.max(0,Math.floor((state.raw-1)/d)));
+ const mode={up:'向上',down:'向下',center:'中央对齐'}[selected];
+ const cells=Array.from({length:d},(_,i)=>'<div class="beat-cell '+(i<filled?'filled ':'')+(state.lastTick?'complete ':'')+(i+1===filled?'latest':'')+'" aria-label="第'+(i+1)+'拍'+(i<filled?'已收到':'未收到')+'"><span>'+(i+1)+'</span><small>第'+(i+1)+'拍</small></div>').join('');
+ $('pipeline').innerHTML='<div class="psc-flow">'+
+ '<section class="flow-card '+(hasEdge?'received':'')+'"><h3>① 输入时钟</h3><small>CK_INT · 每拍取一个上升沿</small><div class="flow-number">'+state.raw+' <span>拍</span></div><p class="flow-message">'+(hasEdge?'本拍：第 '+state.raw+' 个 ↑':'等待第 1 个 ↑')+'</p><small>f<sub>TIM</sub> = '+fmtHz(cfg.ftim)+'</small></section>'+
+ '<div class="flow-arrow '+(hasEdge?'arrived':'')+'" aria-hidden="true">→</div>'+
+ '<section id="psc-card" class="flow-card '+(hasEdge?'received':'')+' '+(state.lastTick?'completed':'')+'"><h3>② 预分频器 · 每拍都计数</h3><small>PSC 配置 = <b>'+cfg.psc+'</b>，每 <b>'+d+'</b> 拍组成一组</small><div class="beat-cells">'+cells+'</div><p class="flow-message" id="group-status">第 '+group+' 组：'+(state.lastTick?'已满 '+d+' 拍，给 CNT 一次计数边沿':filled+' / '+d+' 拍，还差 '+(d-filled)+' 拍')+'</p><div class="psc-internal">内部计数：<code>'+before+(hasEdge?' → '+state.phase:'')+'</code>'+(state.lastTick?'（本拍归零，准备下一组）':'')+'<br>PSC 寄存器仍为 '+cfg.psc+'，配置值不会逐拍递增。</div></section>'+
+ '<div class="flow-arrow '+(state.lastTick?'emitted':'')+'" aria-hidden="true">→</div>'+
+ '<section id="cnt-card" class="flow-card '+(state.lastTick?'completed':'')+'"><h3>③ CNT · '+mode+'</h3><small>'+(state.lastTick?'收到 CK_CNT 有效边沿':'本拍没有 CK_CNT 有效边沿')+'</small><div class="flow-number">'+(state.lastTick?oldCnt+' → ':'')+m.cnt+'</div><p class="flow-message">'+(state.lastTick?'走了一步':'CNT 保持 '+m.cnt)+'</p><div class="cnt-result">累计 '+state.ticks+' 次计数<br>ARR = '+cfg.arr+' · 下一步'+(m.dir>0?'向上 ↑':'向下 ↓')+(m.event?'<br><b>本拍另产生边界更新事件 UEV</b>':'')+'</div></section></div>';
+ $('division-intro').textContent='当前 PSC='+cfg.psc+'：每 '+d+' 个输入上升沿，CNT 计数一次。';
+ $('clock-question').textContent=!hasEdge?'从第一拍开始观察':state.lastTick?'这一组已满，CNT 走一步':'第 '+filled+' 拍已收到，预分频器正在工作';
+ $('clock-detail').textContent='第 '+group+' 组 · PSC 配置值 '+cfg.psc+' · 内部计数 '+state.phase;
+ $('psc-presets').querySelectorAll('[data-psc]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.psc)===cfg.psc)));
+}
+function renderClocks(){
+ const el=$('clocks'),width=Math.max(270,Math.round(el.parentElement.clientWidth||1000));
+ const d=cfg.psc+1,slots=Math.max(2,Math.min(12,Math.floor((width-118)/54)));
+ const start=state.raw?Math.floor((state.raw-1)/slots)*slots:0;
+ const left=94,right=width-18,dx=(right-left)/(slots+.5),x=n=>left+(n-start)*dx;
+ const seen=Math.min(state.raw,start+slots),val=n=>cntAt(Math.floor(Math.max(0,n)/d)),cy=n=>279-val(n)/cfg.arr*45;
+ const txt=(px,py,t,extra='')=>'<text x="'+px+'" y="'+py+'" '+extra+'>'+t+'</text>';
+ let svg='<title>三个信号在同一输入拍号上对齐</title>';
+ for(let n=start+1;n<=start+slots;n++){
+  if(Math.floor((n-1)/d)%2===0)svg+='<rect class="group-band" x="'+x(n-.5)+'" y="26" width="'+dx+'" height="265"/>';
+  svg+='<line x1="'+x(n)+'" y1="48" x2="'+x(n)+'" y2="288" class="grid"/>'+txt(x(n),310,n,'text-anchor="middle"');
+  const arrived=n<=state.raw,input='M'+x(n-.48)+' 93 H'+x(n)+' V65 H'+x(n+.42)+' V93';
+  svg+='<path d="'+input+'" class="'+(arrived?'clock':'forecast')+'" data-input-edge="'+n+'"/>';
+  if(n%d===0)svg+='<path d="M'+x(n-.48)+' 180 H'+x(n)+' V149 H'+x(n+.18)+' V180 H'+x(n+.48)+'" class="'+(arrived?'countclock':'forecast')+'" data-count-edge="'+n+'"/>';
+  else svg+='<path d="M'+x(n-.48)+' 180 H'+x(n+.48)+'" class="'+(arrived?'countclock':'forecast')+'"/>';
+  if(arrived)svg+=txt(x(n+.12),cy(n)-8,val(n),'text-anchor="middle"');
+ }
+ let path='M'+x(start)+' '+cy(start);
+ for(let n=start+1;n<=seen;n++)path+=' H'+x(n)+' V'+cy(n);
+ path+=' H'+x(seen+.42);
+ svg+='<path d="'+path+'" class="cnt-trace"/>';
+ svg+=txt(9,71,'输入时钟')+txt(9,88,'CK_INT')+txt(9,151,'计数边沿')+txt(9,169,'CK_CNT')+txt(9,247,'CNT 值')+txt(9,267,'当前模式')+txt(9,310,'输入拍号');
+ const now=x(state.raw);
+ if(state.raw>0){svg+='<line x1="'+now+'" x2="'+now+'" y1="35" y2="290" class="now"/><circle class="input-current" cx="'+now+'" cy="65" r="4"/>';
+ if(state.lastTick)svg+='<circle class="output-current" cx="'+now+'" cy="149" r="5"/>';}
+ svg+=txt(right,19,'当前：第 '+state.raw+' 拍','text-anchor="end"');
+ el.setAttribute('viewBox','0 0 '+width+' 324');el.innerHTML=svg;
+}
+function animateEdge(){
+ for(const id of ['psc-card',...(state.lastTick?['cnt-card']:[])]){
+ const el=$(id);if(el){el.classList.remove('edge-effect');void el.offsetWidth;el.classList.add('edge-effect')}
+ }
+}
+function playGroup(){
+ if(groupRun){stop();return}
+ stop();groupRun=true;$('one-group').textContent='暂停本组演示';$('play').textContent='暂停';
+ const advance=()=>{edge();animateEdge();if(state.lastTick)stop()};
+ timer=setInterval(advance,Number($('speed').value));advance();
+}
+
+function renderModePlot(){
+ const span=Math.max(12,2*cfg.arr+2),start=Math.max(0,state.ticks-span),samples=state.samples.filter(s=>s.t>=start);
+ const x0=150,x1=1025,w=x1-x0,sx=t=>x0+(t-start)*w/span;
+ const rows=[{key:'up',name:'向上',y:100,color:'up'},{key:'down',name:'向下',y:250,color:'down'},{key:'center',name:'中央对齐',y:400,color:'center'}],rh=100;
+ let svg='<title>每个 CK_CNT 边沿同时推进三种计数模式；红色菱形表示 UEV</title><text x="18" y="47" class="title">CK_CNT</text><text x="18" y="70" class="small">有效边沿</text>';
+ for(let t=start;t<=start+span;t++){
+  const x=sx(t),past=t<=state.ticks;
+  svg+='<line x1="'+x+'" y1="80" x2="'+x+'" y2="510" stroke="'+(past?'#bdcdda':'#e4ebf1')+'" stroke-dasharray="3 4"/>';
+  svg+='<text x="'+x+'" y="535" text-anchor="middle" class="mode-tick-label">'+t+'</text>';
+  if(t>0)svg+='<path d="M'+x+' 70 V35 m-4 7 l4 -7 l4 7" fill="none" stroke="'+(past?'#1378b8':'#d6e1e9')+'" stroke-width="2"/>';
+ }
+ svg+='<rect x="'+(sx(state.ticks)-4)+'" y="82" width="8" height="428" fill="#c44243" opacity=".08"/>';
+ rows.forEach(row=>{
+  const base=row.y+rh,sy=v=>base-(v/cfg.arr)*rh;
+  for(let k=0;k<=cfg.arr;k++){const y=sy(k);svg+='<line x1="'+x0+'" y1="'+y+'" x2="'+x1+'" y2="'+y+'" class="grid"/>';if(k===0||k===cfg.arr)svg+='<text x="'+(x0-12)+'" y="'+(y+4)+'" text-anchor="end" class="small">'+k+'</text>'}
+  svg+='<text x="18" y="'+(row.y+20)+'" class="title">'+row.name+'</text><text x="18" y="'+(row.y+43)+'" class="small">CNT</text>';
+  let pts='M'+sx(samples[0].t)+' '+sy(samples[0][row.key]);
+  for(let i=1;i<samples.length;i++)pts+=' H'+sx(samples[i].t)+' V'+sy(samples[i][row.key]);
+  svg+='<path d="'+pts+'" class="'+row.color+'"/>';
+  samples.forEach(s=>{if(s[row.key+'E']){const x=sx(s.t),y=sy(s[row.key]);svg+='<rect x="'+(x-6)+'" y="'+(y-6)+'" width="12" height="12" transform="rotate(45 '+x+' '+y+')" class="eventmark"/>'}});
+  const last=samples.at(-1);svg+='<circle cx="'+sx(last.t)+'" cy="'+sy(last[row.key])+'" r="6" class="marker-'+row.key+'"/><text x="1040" y="'+(row.y+55)+'" class="title">'+last[row.key]+'</text>';
+ });
+ svg+='<line x1="'+sx(state.ticks)+'" y1="80" x2="'+sx(state.ticks)+'" y2="515" class="mode-current"/>';
+ svg+='<text x="'+((x0+x1)/2)+'" y="565" text-anchor="middle" class="small">CK_CNT 拍序 · 浅灰为未来节拍 · 红色菱形 = UEV（不等于 CPU 已进入中断）</text>';
+ $('mode-plot').innerHTML=svg;
+ const last=state.samples.at(-1),prev=state.samples.at(-2);
+ $('mode-step-status').textContent=!state.raw?'起点：先点“输入一拍”或“跳至下一次 CNT 变化”。':!state.lastTick?'本次输入边沿只推进 PSC，尚未产生 CK_CNT；三个 CNT 全部保持。':'第 '+state.ticks+' 个 CK_CNT 有效边沿：三路同时推进，分别按各自规则处理边界。';
+ $('mode-transitions').innerHTML=rows.map(row=>{
+  const k=row.key,active=state.lastTick&&prev,e=active&&last[k+'E'];
+  let why='初始值：'+(k==='down'?'从 ARR 向下计数':'从 0 向上计数');
+  if(state.raw&&!active)why='等待下一个 CK_CNT 有效边沿';
+  if(active){
+   if(k==='up')why=e?'ARR → 0：溢出重装，产生 UEV':last.up===cfg.arr?'刚到 ARR：本拍无 UEV，下一拍溢出重装':'加 1，本拍无 UEV';
+   if(k==='down')why=e?'0 → ARR：下溢重装，产生 UEV':last.down===0?'刚到 0：本拍无 UEV，下一拍下溢重装':'减 1，本拍无 UEV';
+   if(k==='center')why=e?(last.center===cfg.arr?'ARR−1 → ARR：换向向下，产生 UEV':'1 → 0：换向向上，产生 UEV'):(last.center>prev.center?'加 1，仍向上；本拍无 UEV':'减 1，仍向下；本拍无 UEV');
+  }
+  return '<div class="mode-step-card '+k+(e?' event':'')+'"><b>'+row.name+'</b><strong>'+(active?prev[k]+' → ':'CNT = ')+last[k]+'</strong><p>'+why+'</p></div>';
+ }).join('');
+ $('mode-period-rows').innerHTML='<tr><td>每拍如何推进</td><td>每个 CK_CNT 推进一步</td><td>每个 CK_CNT 推进一步（同速）</td></tr><tr><td>完整计数周期</td><td>ARR+1 = '+(cfg.arr+1)+' 拍</td><td>2×ARR = '+(2*cfg.arr)+' 拍（完整往返）</td></tr><tr><td>相邻 UEV 间隔</td><td>'+(cfg.arr+1)+' 拍</td><td>'+cfg.arr+' 拍（上下两端各一次）</td></tr><tr><td>从本页起点算，首次 UEV</td><td>第 '+(cfg.arr+1)+' 拍</td><td>第 '+cfg.arr+' 拍</td></tr>';
+}
+function renderPeriod(){
+ const d=cfg.arr+1,limit=2*d,t=periodModel.tick,cnt=t%d,done=t>0&&t%d===0;
+ const left=104,right=970,dx=(right-left)/limit,x=n=>left+n*dx,y=v=>197-v/cfg.arr*118,shown=Math.min(t,limit);
+ let svg='<title>向上计数一整轮：CNT 从 0 到 ARR，再回到 0 并产生 UEV</title>';
+ for(let n=0;n<=limit;n++){
+  if(n%d===0&&n<limit)svg+='<rect x="'+x(n)+'" y="38" width="'+(dx*d)+'" height="218" fill="#eff7f3"/>';
+  svg+='<line x1="'+x(n)+'" y1="52" x2="'+x(n)+'" y2="258" class="grid"/><text x="'+x(n)+'" y="278" text-anchor="middle" class="small">'+n+'</text>';
+  if(n<=shown&&n%d===0&&n>0)svg+='<path d="M'+x(n)+' 53 l9 9 -9 9 -9 -9 Z" class="eventmark"/>';
+ }
+ let path='M'+x(0)+' '+y(0);
+ for(let n=1;n<=shown;n++)path+=' H'+x(n)+' V'+y(n%d);
+ if(shown<limit)path+=' H'+x(shown+.25);
+ svg+='<path d="'+path+'" class="up selected"/>';
+ for(let n=1;n<=shown;n++){const value=n%d;svg+='<circle cx="'+x(n)+'" cy="'+y(value)+'" r="5" fill="'+(n%d===0?'#c44243':'#1378b8')+'"/><text x="'+x(n)+'" y="'+(y(value)-9)+'" text-anchor="middle" class="small">'+value+'</text>'}
+ svg+='<text x="12" y="82" class="mono">CK_CNT</text><text x="12" y="103" class="small">每拍一次</text><text x="12" y="185" class="mono">CNT</text><text x="12" y="208" class="small">计数值</text><text x="12" y="235" class="mono">UIF</text>';
+ svg+='<line x1="'+left+'" y1="290" x2="'+right+'" y2="290" class="axis"/><text x="'+((left+right)/2)+'" y="315" text-anchor="middle" class="small">计入的 CK_CNT 个数（每一格是一拍）</text>';
+ if(t>0){svg+='<line x1="'+x(shown)+'" y1="42" x2="'+x(shown)+'" y2="257" class="now"/><text x="'+x(shown)+'" y="30" text-anchor="'+(shown>=limit-1?'end':'middle')+'" class="small">当前第 '+t+' 拍</text>'}
+ svg+='<text x="'+left+'" y="37" class="small">第 1 轮</text><text x="'+x(d)+'" y="37" class="small">UEV：ARR → 0</text>';
+ let flagPath='M'+x(0)+' 240';
+ for(const snapshot of [...periodHistory,periodModel])flagPath+=' H'+x(Math.min(snapshot.tick,limit))+' V'+(snapshot.uif?218:240);
+ svg+='<path d="'+flagPath+'" class="countclock"/><text x="'+(right-4)+'" y="256" text-anchor="end" class="small">UIF = '+Number(periodModel.uif)+(periodModel.uif?'（等待软件清除）':'')+'</text>';
+ $('period-plot').innerHTML=svg;
+ $('period-summary').textContent='fTIM '+fmtHz(cfg.ftim)+' · PSC '+cfg.psc+' · ARR '+cfg.arr;
+ $('period-sub').textContent='计数时钟 '+fmtHz(cfg.ftim/(cfg.psc+1));
+ $('period-progress').textContent='已计 '+t+' 拍 · CNT='+cnt+' · UIF='+Number(periodModel.uif);
+ $('period-back').disabled=!periodHistory.length;
+ $('period-next').disabled=t>=limit;
+ $('period-play').disabled=t>=limit;
+ $('period-clear').disabled=!periodModel.uif;
+ $('log-empty').classList.toggle('hidden',periodModel.events.length>0);
+ $('event-log').innerHTML=periodModel.events.map(e=>'<tr><td>'+e.tick+'</td><td>'+e.text+'</td><td>UIF=1（保持到软件清除）</td></tr>').join('');
+ if(!t){$('period-step-title').textContent='起点：CNT 从 0 开始';$('period-step-text').textContent='现在先看时钟：每收到一个 CK_CNT 有效边沿，CNT 加 1。点“计入下一个 CK_CNT”，逐拍观察。'}
+ else if(done){$('period-step-title').textContent='本轮完成：计满 '+d+' 拍，CNT 回到 0';$('period-step-text').textContent='这个计数边沿使 CNT 从 ARR 回到 0，产生一次更新事件 UEV。'+(periodModel.uif?'UIF 已置 1，并保持到软件清除。':'UIF 已由软件清为 0，已经发生的 UEV 仍保留在事件记录中。')}
+ else{$('period-step-title').textContent='第 '+t+' 拍：CNT 从 '+(cnt-1)+' 加到 '+cnt;$('period-step-text').textContent='还没有走完 0 到 ARR 的完整一轮，所以这拍只改变 CNT，没有产生这轮的 UEV；UIF='+Number(periodModel.uif)+'。'}
+}
+function render(){
+ const fcnt=cfg.ftim/(cfg.psc+1),m=modeState(selected),remain=cfg.psc+1-state.phase;
+ $('raw-value').textContent=state.raw;$('psc-value').textContent=(state.lastTick?cfg.psc+1:state.phase)+' / '+(cfg.psc+1);$('psc-caption').textContent=state.lastTick?'本组完成，内部计数已归零':('还需 '+remain+' 个边沿');
+ $('tick-value').textContent=state.ticks;$('cnt-value').textContent=m.cnt+' '+(m.dir>0?'↑':'↓');$('event-caption').textContent=m.event?'本步产生更新事件':'尚无本模式更新事件';
+ for(const k of ['up','down','center']){const mm=modeState(k),label=k==='up'?'向上':k==='down'?'向下':mm.dir>0?'向上':'向下';$('top-'+k+'-value').textContent=mm.cnt+' '+(mm.dir>0?'↑':'↓');$('top-'+k+'-caption').textContent=mm.event?'本拍产生更新事件 UEV':state.ticks===0?'等待计数脉冲':'当前'+label+'计数';$('top-'+k).classList.toggle('uev',mm.event)}
+ $('clock-detail').textContent='PSC='+cfg.psc+'，ARR='+cfg.arr+'，当前 CNT='+m.cnt;
+ $('clock-question').textContent=state.lastTick?(m.event?'CNT 到达边界并产生 UEV':'PSC 放行一次，CNT 改变'):'PSC 正在累计第 '+state.phase+' 个输入边沿';
+ $('step-title').textContent=state.lastTick?(m.event?'本步：计数并产生更新事件':'本步：产生 CK_CNT，CNT 更新'):'本步：PSC 接收 CK_INT，CNT 保持';
+ $('step-explain').textContent=state.lastTick?('第 '+state.raw+' 个输入边沿完成 '+(cfg.psc+1)+' 分频。CNT 按'+({up:'向上',down:'向下',center:'中央对齐'}[selected])+'规则变化。'+(m.event?'边界条件同时成立，生成 UEV。':'')):(state.raw?'本拍让预分频器内部计数从 '+((state.raw-1)%(cfg.psc+1))+' 变成 '+state.phase+'。这一组还差 '+remain+' 拍，CNT 保持 '+m.cnt+'。':'先点“输入一拍”，观察第一格和预分频器内部计数，再逐拍看到 CNT 何时变化。');
+ $('clock-formula').innerHTML='f<sub>CK_CNT</sub> = f<sub>TIM</sub> / (PSC+1)<br>= '+fmtHz(cfg.ftim)+' / '+(cfg.psc+1)+'<br>= '+fmtHz(fcnt);
+ renderPipeline();renderClocks();renderModePlot();
+ $('mode-tick').textContent=state.ticks;
+ for(const k of ['up','down','center']){const mm=modeState(k),name=k==='up'?'up':k==='down'?'down':'center';$(name+'-value').textContent=mm.cnt+(k==='center'?' '+(mm.dir>0?'↑':'↓'):'');$(name+'-note').textContent=mm.event?(k==='center'?'到达端点，方向改变':'产生 UEV'):(k==='center'?(mm.dir>0?'正在向上':'正在向下'):'等待下一脉冲');$('box-'+name).classList.toggle('event',mm.event)}
+ $('period-summary').textContent='当前 fCK_CNT = '+fmtHz(fcnt);$('period-sub').textContent='PSC='+cfg.psc+'，ARR='+cfg.arr;
+ $('f-count').innerHTML='f<sub>CK_CNT</sub> = '+fmtHz(cfg.ftim)+' / '+(cfg.psc+1)+' = '+fmtHz(fcnt);
+ const fed=fcount=>fmtHz(fcount);
+ $('f-edge').innerHTML='f<sub>UEV</sub> = f<sub>CK_CNT</sub> / (ARR+1)<br>= '+fed(fcnt/(cfg.arr+1));
+ $('f-center').innerHTML='端点 UEV 频率 = f<sub>CK_CNT</sub> / ARR = '+fed(fcnt/cfg.arr)+'<br>完整往返频率 = f<sub>CK_CNT</sub> / (2×ARR) = '+fed(fcnt/(2*cfg.arr));
+ $('event-log').innerHTML=state.events.map(e=>'<tr><td>'+e.tick+'</td><td>'+e.mode+'</td><td>'+e.what+'</td><td><span class="tag event">UIF=1</span></td></tr>').join('');
+ $('log-empty').classList.toggle('hidden',state.events.length>0);
+ $('undo').disabled=!history.length;
+ syncParameterInputs();
+ document.querySelectorAll('#mode-picker button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===selected)));
+ document.querySelector('main').classList.toggle('clock-focus',tab==='clock');
+ document.querySelector('main').classList.toggle('mode-focus',tab==='modes');
+ document.querySelector('main').classList.toggle('period-focus',tab==='period');
+ document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));
+ for(const t of ['clock','modes','period'])$(t+'-panel').classList.toggle('hidden',t!==tab);
+ if(tab==='clock')renderClocks();
+ if(tab==='period')renderPeriod();
+}
+$('edge').onclick=()=>{stop();edge();animateEdge()};$('tick').onclick=()=>{stop();toTick();animateEdge()};$('undo').onclick=undo;$('play').onclick=play;$('reset').onclick=fresh;$('apply').onclick=apply;
+$('tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(b)switchTab(b.dataset.tab)};
+$('mode-picker').onclick=e=>{const b=e.target.closest('[data-mode]');if(b){selected=b.dataset.mode;render()}};
+$('speed').onchange=()=>{if(timer){const wasGroup=groupRun;stop();if(tab==='period')periodPlay();else if(wasGroup)playGroup();else play()}};
+$('one-group').onclick=playGroup;
+$('period-next').onclick=()=>{stop();periodAdvance()};
+$('period-back').onclick=periodUndo;
+$('period-play').onclick=periodPlay;
+$('period-clear').onclick=()=>{periodHistory.push(clone(periodModel));periodModel.uif=false;render()};
+$('psc-presets').addEventListener('click',e=>{const b=e.target.closest('[data-psc]');if(!b)return;cfg.psc=Number(b.dataset.psc);$('psc').value=cfg.psc;fresh()});
+new ResizeObserver(()=>{if(tab==='clock')renderClocks()}).observe($('clock-panel'));
+document.addEventListener('keydown',e=>{if(e.target.closest('input,select,textarea')||e.altKey||e.ctrlKey||e.metaKey)return;if(e.key==='ArrowRight'){e.preventDefault();if(tab==='period'){stop();periodAdvance()}else{stop();edge();animateEdge()}}if(e.key==='ArrowLeft'){e.preventDefault();if(tab==='period')periodUndo();else undo()}if(e.code==='Space'&&!e.target.closest('button,summary,a')){e.preventDefault();if(tab==='period')periodPlay();else play()}});
+window.timerLab={getState:()=>clone(state),getConfig:()=>clone(cfg),getPeriod:()=>clone(periodModel),getModuleMemory:()=>clone(moduleMemory),edge,toTick,undo,applyConfig:(ftim,psc,arr)=>{cfg={ftim,psc,arr};$('ftim').value=ftim;$('psc').value=psc;$('arr').value=arr;fresh()},selectMode:m=>{selected=m;render()},selectTab:switchTab,stop};
+fresh();
+</script>
+<footer id="course-credit" style="box-sizing:border-box;position:static;max-width:1480px;margin:24px auto 0;padding:22px 26px 28px;border-top:1px solid #dce4e8;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;font:13px/1.7 -apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif;color:#617785;text-align:left;background:transparent"><a href="./index.html" style="color:#176b58;text-decoration:none">← 返回课程目录</a><span>Designed By Xianyu Wu</span></footer>
+</body></html>

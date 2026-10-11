@@ -1,0 +1,545 @@
+<!doctype html>
+<!-- 独立离线整合版：LED 与七种寄存器共用同一个仿真状态，原版文件未修改。 -->
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>STM32F1 GPIO · 固定寄存器框图课堂</title>
+<style>
+:root{--ink:#173249;--muted:#62788b;--bg:#f3f6fa;--line:#d1dce6;--blue:#176da3;--green:#168362;--purple:#7951a1;--amber:#ac6a18}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Microsoft YaHei",sans-serif}main{max-width:1460px;margin:auto;padding:24px}h1,h2,h3,p{margin:0}h1{font-size:30px}h2{font-size:19px}h3{font-size:16px}button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--line);background:white;color:var(--ink);border-radius:6px;padding:8px 12px}button:hover:not(:disabled){background:#edf5fb}button:disabled{cursor:default;opacity:.4}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #89bee5;outline-offset:2px}button.primary,button[aria-selected=true]{color:white;background:var(--blue);border-color:var(--blue)}select,input{padding:7px 9px;border:1px solid var(--line);border-radius:5px;background:white;color:var(--ink)}a{color:var(--blue)}header{display:flex;justify-content:space-between;gap:20px;margin-bottom:16px}.eyebrow{color:var(--blue);font-size:12px;letter-spacing:.1em;font-weight:700}.muted,small{color:var(--muted)}.meta{font-size:13px;white-space:nowrap}.tabs,.toolbar,.inline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.tabs{margin-bottom:12px}.tabs button{flex:1;white-space:nowrap}.toolbar{padding:10px 12px;background:white;border:1px solid var(--line);border-radius:8px;margin-bottom:14px}.toolbar .muted{font-size:13px}.spacer{flex:1}.workspace{display:grid;grid-template-columns:310px minmax(0,1fr);gap:15px;align-items:start}.panel{background:white;border:1px solid var(--line);border-radius:9px;overflow:hidden}.pad{padding:14px 16px}.heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 15px;border-bottom:1px solid var(--line)}.heading small{font-size:12px}.code-list{list-style:none;margin:0;padding:8px;max-height:370px;overflow:auto}.code-list button{width:100%;display:block;text-align:left;margin:3px 0;border-color:transparent;font-size:13px;padding:8px 10px}.code-list button.active{background:#e6f1fa;border-color:#b6d6eb}.code-list code{display:block;overflow-wrap:anywhere;font:12px/1.5 Consolas,monospace}.code-list small{display:block;margin-bottom:3px}.explain{border-top:1px solid var(--line);padding:13px 15px;font-size:14px}.question{background:#fff7e9;padding:12px 15px;border-top:1px solid #eedcb9;font-size:14px}.question strong{display:block;color:var(--amber)}.stage-scroll{overflow-x:auto}.stage{display:block;width:100%;min-width:740px;background:#fbfdff}.stage text{font-family:"Microsoft YaHei",sans-serif;fill:var(--ink)}.stage .box{fill:white;stroke:#a9bfd0;stroke-width:2}.stage .label{font-size:17px;font-weight:700}.stage .detail{font-size:13px;fill:var(--muted)}.stage .mono{font:16px Consolas,monospace}.wire{fill:none;stroke:#b5c5d3;stroke-width:3}.wire.read{stroke:#9fcab9}.stage .hot{fill:#e8f4fc;stroke:var(--blue);stroke-width:3}.stage .pin-high{fill:#fff0cf;stroke:#b8771b}.stage .pin-low{fill:#ddecff;stroke:var(--blue)}.stage .pin-x{fill:#eff1f4;stroke:#92a2b1}.trace{padding:10px 15px;border-top:1px solid var(--line);font-size:14px;min-height:68px;background:#f8fbfe}.trace code{font:14px Consolas,monospace}.pins{display:grid;grid-template-columns:repeat(16,minmax(42px,1fr));gap:5px;padding:12px;min-width:790px}.pin-button{padding:5px 2px;font-size:12px;text-align:center}.pin-button b{display:block;font:700 16px Consolas,monospace}.pin-button.selected{outline:2px solid var(--blue);outline-offset:1px}.pin-button.high b{color:var(--amber)}.pin-button.low b{color:var(--blue)}.pin-button.unknown b{color:#7b8893}.pin-button small{display:block;font-size:10px}.pin-tools{display:flex;gap:12px;flex-wrap:wrap;padding:9px 15px;border-top:1px solid var(--line);font-size:13px;align-items:center}.pin-tools label{display:flex;gap:7px;align-items:center}.selected-summary{padding:9px 15px;background:#f4f8fc;font-size:14px}.register-panel{margin-top:15px}.reg-tabs{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;padding:12px}.reg-tabs button{padding:8px 4px;min-width:0}.reg-tabs b,.reg-tabs code,.reg-tabs small{display:block}.reg-tabs code{font:12px/1.5 Consolas,monospace;overflow-wrap:anywhere}.reg-tabs small{font-size:10px}.reg-tabs [aria-selected=true] small{color:#d8ebf8}.reg-intro{padding:0 15px 10px;font-size:14px}.reg-intro code{font:14px Consolas,monospace}.bits-scroll{overflow-x:auto;padding:0 15px 12px}.bits{display:grid;grid-template-columns:repeat(16,minmax(30px,1fr));gap:4px;min-width:580px}.bit{text-align:center;border:1px solid var(--line);border-radius:4px;background:#f7f9fc;padding:2px}.bit small{display:block;font:10px Consolas,monospace}.bit b{font:16px Consolas,monospace}.bit.on{background:#e0effa;border-color:#85b5d5}.bit.cnf{border-bottom:3px solid var(--purple)}.bit.mode{border-bottom:3px solid var(--blue)}.bit.locked{background:#fff0d3;border-color:#d9ad68}.bit.reserved{opacity:.45}.bit.chosen{outline:2px solid #2481b9;outline-offset:-2px}.changed{animation:flash 2.3s ease-out}@keyframes flash{0%,45%{background:#ffe49d}100%{}}.bit-legend{font-size:13px;margin:0 15px 12px;color:var(--muted)}.editor{border-top:1px solid var(--line);padding:12px 15px}.editor summary{cursor:pointer;font-weight:700;font-size:15px}.editor-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:20px;margin-top:12px}.editor label{font-size:13px}.editor input{font:16px Consolas,monospace;width:180px}.editor .inline{margin:8px 0}.editor pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.7 Consolas,monospace;background:#f1f6fb;padding:10px;border-radius:5px}.draft-bits{display:grid;grid-template-columns:repeat(16,1fr);gap:3px;margin-top:8px;min-width:520px}.draft-bits button{padding:3px 0;font:12px Consolas,monospace}.draft-bits button.on{background:#d9ecfa}.lock-seq{display:flex;gap:6px;flex-wrap:wrap;margin:10px 15px}.lock-seq span{border:1px solid var(--line);padding:4px 8px;border-radius:4px;font-size:12px}.lock-seq .done{background:#e1f4eb;border-color:#89bfa7}.foot{font-size:12px;color:var(--muted);margin-top:18px}.status{font-size:13px;margin-top:8px;color:var(--blue)}[hidden]{display:none!important}
+@media(max-width:1050px){.workspace{grid-template-columns:1fr}.code-list{max-height:190px}.reg-tabs{grid-template-columns:repeat(4,1fr)}}@media(max-width:650px){main{padding:12px}header{display:block}h1{font-size:24px}.meta{margin-top:8px}.tabs button{flex:1 0 40%}.toolbar .spacer{display:none}.reg-tabs{grid-template-columns:repeat(2,1fr)}.editor-grid{grid-template-columns:1fr}.heading{align-items:start;flex-direction:column;gap:2px}}
+.bits.config-view{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.field-block{border:1px solid var(--line);border-radius:5px;padding:5px}.field-block button{display:block;width:100%;border:0;padding:2px 3px 5px;font-size:12px}.four-bits{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.focus-strip{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 15px;background:#f0f6fc;border-bottom:1px solid var(--line);font-size:14px}.focus-strip .mini{display:flex;align-items:center;gap:7px;padding:3px 9px;background:white;border:1px solid var(--line);border-bottom:3px solid var(--blue);border-radius:4px}.focus-strip .mini.cnf{border-bottom-color:var(--purple)}.focus-strip b{font-family:Consolas,"Microsoft YaHei",sans-serif}.editor-grid>*{min-width:0}
+.reg-tabs .reg-name{display:block;margin:2px 0 4px;font-size:11px;line-height:1.35;color:var(--muted);font-weight:400}.reg-tabs button[aria-selected=true] .reg-name{color:#d8ebf8}@keyframes flash{0%,45%{background:#bcecd9}100%{}}
+@media(prefers-reduced-motion:reduce){.changed{animation:none}}
+.scene-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%}.scene-row>span{width:82px;font-size:13px;color:var(--muted)}.scene-row button{flex:1}.led-area{padding:14px 16px;border-bottom:1px solid var(--line);background:#fcfdff}.led-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}.led-top small{font-size:12px}.led-grid{display:grid;grid-template-columns:290px minmax(0,1fr);gap:14px;align-items:center}.lamps{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.lamp{padding:10px 3px;text-align:center;border:1px solid var(--line);background:white;font-size:12px}.lamp.chosen{outline:2px solid var(--blue);outline-offset:1px}.lamp .bulb{display:block;margin:0 auto 10px;width:39px;height:45px;border-radius:50% 50% 35% 35%;background:#bdc7d0;border:2px solid #8798a8;position:relative;transition:background .3s,box-shadow .3s}.bulb:after{content:'';position:absolute;bottom:-5px;left:5px;right:5px;height:5px;border-radius:2px;background:#7890a1}.lamp.on .bulb{background:#ff554b;border-color:#dc3b35;box-shadow:0 0 20px #ff736c80,inset 5px 3px 4px #ffa59f}.lamp.uncertain .bulb{background:repeating-linear-gradient(45deg,#e9ca8a 0 5px,#f8ebd0 5px 10px)}.lamp b,.lamp small{display:block}.lamp.on b{color:#bb3129}.lamp-tools{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.lamp-tools button{padding:6px 9px;font-size:13px}.lamp-note{margin-top:8px;font-size:12px;color:var(--muted)}.led-chain{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0 0;padding:10px;background:#eaf3fa;font-size:13px}.led-chain code{font:14px Consolas,monospace}.led-circuit{display:block;width:100%;min-width:470px}.led-circuit text{font-family:"Microsoft YaHei",sans-serif;fill:var(--ink);font-size:15px}.led-circuit .lead{fill:none;stroke:#8299ac;stroke-width:3}.led-circuit .current{stroke:#df6157}.led-circuit .symbol{fill:white;stroke:#8299ac;stroke-width:2.5}.live-line{padding:10px 15px;background:#173249;color:#f4f9fc;font-size:13px;overflow-wrap:anywhere}.live-line code{font:14px/1.7 Consolas,monospace}.live-line span{display:block;color:#d0e1ed}.full-code{margin-top:15px;padding:12px 16px}.full-code summary{cursor:pointer;font-weight:bold}.full-code pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.8 Consolas,monospace;background:#f3f7fb;padding:14px}.route-note{font-size:13px;margin-bottom:12px}.workbench-note{font-size:12px;padding:0 15px 10px;color:var(--muted)}
+@media(max-width:1230px){.led-grid{grid-template-columns:1fr}.lamps{max-width:460px}.lamp .bulb{width:34px;height:37px}.led-circuit{max-width:650px;margin:auto}}@media(max-width:650px){.scene-row>span{width:100%}.scene-row button{flex:1 0 40%;white-space:normal}.led-area{padding:12px}.led-chain{font-size:12px}.led-chain code{font-size:12px}}@media(prefers-reduced-motion:reduce){.bulb{transition:none}}
+.map-toolbar{padding:12px 15px;background:#edf5fb;display:flex;align-items:center;gap:10px;flex-wrap:wrap}.map-toolbar strong{font-size:15px}.map-toolbar code{font:14px Consolas,monospace}.map-caption{padding:8px 15px;font-size:12px;color:var(--muted)}.map-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:0 15px 12px}.map-steps button{text-align:left;padding:9px 11px;min-width:0}.map-steps b{display:block;font-size:14px;margin-bottom:4px}.map-steps span{display:block;font-size:12px;line-height:1.6}.map-steps .reached{background:#eaf3fb;border-color:#9bbdd7}.map-steps .current{border:2px solid #176da3;padding:8px 10px;background:#dceefa}.register-map{display:block;width:100%;min-width:1000px;background:#fbfdff}.register-map text{font-family:"Microsoft YaHei",sans-serif;fill:#173249;font-size:16px}.register-map .node-title{font-size:20px;font-weight:700}.register-map .node-cn{font-size:15px;fill:#526f83}.register-map .node-value{font:18px Consolas,monospace}.register-map .node-note{font-size:14px;fill:#526f83}.map-node rect{fill:white;stroke:#b6c8d5;stroke-width:1.7;rx:8}.map-node.inspect rect{stroke:#7951a1;stroke-dasharray:5 3;stroke-width:2}.map-node.reached rect{fill:#eaf3fb;stroke:#176da3;stroke-width:2.5;stroke-dasharray:none}.map-node.current rect{fill:#e1f4ec;stroke:#168362;stroke-width:3}.map-node.blocked rect{fill:#fff0e7;stroke:#ae572b}.map-node.changed rect{fill:#e1f4ec;stroke:#168362}.map-edge{fill:none;stroke:#bccbd6;stroke-width:2;color:#bccbd6}.map-edge.logic{stroke-dasharray:5 4}.map-edge.reached{stroke:#176da3;color:#176da3;stroke-width:3.5}.map-edge.locked{stroke:#a66b19;color:#a66b19}.map-edge.current{stroke:#168362;color:#168362;stroke-width:4}.map-node{cursor:pointer}.map-legend{padding:0 15px 10px;font-size:12px;color:var(--muted)}@media(max-width:650px){.map-steps{grid-template-columns:1fr}.map-toolbar code{overflow-wrap:anywhere}.map-caption{line-height:1.6}}
+.config-ref-body{padding-top:16px;font-size:14px;line-height:1.85}.config-ref-body p{margin:0 0 12px}.config-ref-body h3{margin:22px 0 10px}.config-ref-body h4{margin:0 0 8px;font-size:15px}.config-bit-key{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.config-bit-key span{padding:7px 16px;background:#f4f0f9;border-bottom:3px solid var(--purple);font-family:Consolas,monospace}.config-bit-key .mode-key{background:#eaf3fb;border-color:var(--blue)}.config-matrix{border-collapse:collapse;width:100%;min-width:780px;margin:8px 0 12px;font-size:13px;line-height:1.65}.config-matrix caption{text-align:left;color:var(--muted);padding-bottom:8px}.config-matrix th,.config-matrix td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}.config-matrix th{background:#edf4fa}.config-matrix td code,.config-matrix td strong,.config-matrix td span{display:block}.config-matrix td code{font:15px/1.6 Consolas,monospace;color:var(--blue)}.config-matrix td span{color:var(--muted);font-size:12px}.config-matrix .config-reserved{background:#fff4e8}.config-explain-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}.config-explain-grid ul{margin:0;padding-left:20px}.config-explain-grid li{margin:0 0 9px}.config-reminder{background:#edf5fb;padding:12px 15px;border-left:3px solid var(--blue)}.config-ref-jump{display:block;margin-top:7px;padding:4px 8px;font-size:13px}@media(max-width:700px){.config-explain-grid{grid-template-columns:1fr;gap:12px}.config-bit-key{gap:4px}.config-bit-key span{padding:5px 8px}}
+.map-pin-card>rect{transition:fill .25s,stroke .25s}.map-pin-card .pin-led-halo,.map-pin-card .pin-led-rays{opacity:0}.map-pin-card .pin-led-bulb{fill:#d1d9e2;stroke:#8295a8;stroke-width:2}.map-pin-card .pin-led-leads{fill:none;stroke:#8295a8;stroke-width:3}.map-pin-card .pin-led-mark{font-size:23px;font-weight:bold}.map-pin-card .pin-led-glint{opacity:0}.map-pin-card[data-led="on"]>rect{fill:#fff3c4;stroke:#de9b29;stroke-width:3}.map-pin-card[data-led="on"] .pin-led-halo{opacity:1}.map-pin-card[data-led="on"] .pin-led-rays{opacity:1;stroke:#e39220;stroke-width:2.5}.map-pin-card[data-led="on"] .pin-led-bulb{fill:#ff554b;stroke:#c6352e;filter:drop-shadow(0 0 7px #ff7966)}.map-pin-card[data-led="on"] .pin-led-glint{opacity:.65}.map-pin-card[data-led="on"] .map-lamp-label{fill:#a32920;font-weight:bold;font-size:17px}.map-pin-card[data-led="off"]>rect{fill:#334155;stroke:#172638;stroke-width:3}.map-pin-card[data-led="off"] text{fill:#f1f5f9}.map-pin-card[data-led="off"] .pin-led-bulb{fill:#637186;stroke:#9caaba}.map-pin-card[data-led="off"] .pin-led-leads{stroke:#a8b7c7}.map-pin-card[data-led="disconnected"]>rect{fill:#f3f5f7;stroke:#a0afbe}.map-pin-card[data-led="disconnected"] .pin-led-bulb{fill:none;stroke-dasharray:4 3}.map-pin-card[data-led="uncertain"]>rect{fill:#fff0db;stroke:#b9781f;stroke-width:3}.map-pin-card[data-led="uncertain"] .pin-led-bulb{fill:#f1d199;stroke:#a77124}@media(prefers-reduced-motion:reduce){.map-pin-card>rect{transition:none}}
+.register-map .map-pin-card .pin-small{font-size:14px}.register-map .map-pin-card .map-lamp-label{font-size:14px}.map-pin-card[data-observed="true"]>rect{stroke-width:4}.map-pin-card:focus-visible>rect{stroke:#7951a1;stroke-width:4}.led-grid{align-items:start}
+</style></head><body><main>
+<header><div><div class="eyebrow">STM32F1 · LED × 7 个 GPIO 寄存器 · 课件第 55—65 页</div><h1>看灯学寄存器 · 路径讲解版</h1><p class="muted">代码怎么写 → 寄存器怎么变 → 引脚怎么动 → 灯为什么亮。</p></div><div class="meta">本地离线 · 独立新版本<br><a href="stm32-gpio-registers.html">LED 简明版</a> · <a href="stm32-gpio-registers-advanced.html">原完整版本</a></div></header>
+<p class="route-note">建议先走上排 LED 案例，再用下排完整实验解释细节。两排共用同一套寄存器与灯板；点击灯可切换观察引脚。</p>
+<nav class="tabs" id="scenes" aria-label="教学实验"></nav>
+<div class="toolbar"><button id="prev">← 上一步</button><button id="next" class="primary">下一步 →</button><button id="play">自动演示</button><label>间隔 <select id="pace"><option value="6000">6 秒</option><option value="9000">9 秒</option><option value="4000">4 秒</option></select></label><span id="progress"></span><span class="spacer"></span><button id="restart">重播本实验</button><button id="reset">模拟系统复位</button><small>← / → 翻步；空格播放 / 暂停</small></div>
+<div class="workspace"><aside class="panel"><div class="heading"><h2 id="lesson-title"></h2></div><ol class="code-list" id="code-list"></ol><div class="explain" id="explanation" aria-live="polite"></div><div class="question"><strong>先想一想</strong><p id="question"></p></div></aside>
+<section class="panel">
+<div class="led-area"><div class="led-top"><h2>LED 观察板 · 高电平点亮</h2><small id="led-bank"></small></div>
+<div class="led-grid"><div><div class="lamps" id="lamps" aria-label="LED 观察板"></div><div class="lamp-tools"><button id="led-set">置 1 · BSRR</button><button id="led-clear">清 0 · BRR</button><button id="led-setup">配置当前脚为推挽</button></div><p class="lamp-note">按钮真正访问下方寄存器，不会直接修改灯。选择 PA8—PA15 时同步切换观察板。</p></div>
+<div class="stage-scroll"><svg class="led-circuit" id="led-circuit" viewBox="0 0 620 208" role="img" aria-label="各引脚独立连接限流电阻和LED"></svg></div></div>
+<div id="led-chain" class="led-chain" aria-live="polite"></div>
+<p class="lamp-note">教学约定：仅在通用推挽模式接入上图 LED 支路，其他模式自动断开，显示“未接入”，不等同于“灭”。图中开关是观察板接线，不是芯片内部新增开关。保留原实验的输入、开漏与外部连接模型；不模拟 LED 亮度及电气瞬态。限流电阻示例为 330 Ω，真实硬件需核算电流。</p></div>
+<div class="live-line"><span id="live-step"></span><code id="live-code"></code></div>
+<div class="heading" id="map-heading"><h2>CPU 访问与引脚状态 · 固定寄存器框图</h2><button id="map-replay">重播本条路径</button></div><div class="focus-strip" id="focus-strip" aria-live="polite"></div>
+<div class="map-toolbar"><strong id="map-access"></strong><code id="map-transaction"></code></div>
+<div class="map-caption">数值为本条指令完成后的结果；依次高亮“访问 → 寄存器作用 → 引脚结果”。点击下方分段可停留讲解。分段表示因果关系，不代表三条机器指令。</div>
+<div id="map-steps" class="map-steps" aria-live="polite"></div>
+<div class="stage-scroll"><svg class="register-map" id="register-map" viewBox="0 0 1200 625" role="group" aria-labelledby="map-title map-desc"><title id="map-title">GPIO 七个寄存器与引脚控制功能框图</title><desc id="map-desc">CPU通过总线访问固定位置的寄存器。BSRR和BRR修改ODR，CRL和CRH配置引脚模式，LCKR限制配置修改。引脚经输入缓冲送到IDR，CPU读取IDR取得采样结果。</desc>
+<defs><marker id="map-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 Z" fill="context-stroke"/></marker></defs>
+<path class="map-edge" d="M170 310 H215 M215 58 V590"/>
+<g id="map-edges">
+<path id="edge-access-LCKR" class="map-edge" d="M170 310 H215 V58 H265"/>
+<path id="edge-access-CRL" class="map-edge" d="M170 310 H215 V125 H637 V95"/>
+<path id="edge-access-CRH" class="map-edge" d="M170 310 H215 V125 H842 V95"/>
+<path id="edge-access-BSRR" class="map-edge" d="M170 310 H215 V222 H265"/>
+<path id="edge-access-BRR" class="map-edge" d="M170 310 H215 V342 H265"/>
+<path id="edge-access-ODR" class="map-edge" d="M170 310 H215 V420 H642 V350"/>
+<path id="edge-access-IDR" class="map-edge" d="M170 310 H215 V522 H545"/>
+<path id="edge-BSRR-ODR" class="map-edge" d="M450 222 H490 V268 H545" marker-end="url(#map-arrow)"/>
+<path id="edge-BRR-ODR" class="map-edge" d="M450 342 H490 V323 H545" marker-end="url(#map-arrow)"/>
+<path id="edge-lock-CRL" class="map-edge logic" d="M450 58 H545" marker-end="url(#map-arrow)"/>
+<path id="edge-lock-CRH" class="map-edge logic" d="M495 58 V10 H842 V20" marker-end="url(#map-arrow)"/>
+<path id="edge-CRL-driver" class="map-edge" d="M637 95 V156 H860 V220" marker-end="url(#map-arrow)"/>
+<path id="edge-CRH-driver" class="map-edge" d="M842 95 V142 H930 V220" marker-end="url(#map-arrow)"/>
+<path id="edge-ODR-driver" class="map-edge" d="M740 295 H815" marker-end="url(#map-arrow)"/>
+<path id="edge-driver-pin" class="map-edge" d="M1015 295 H1070" marker-end="url(#map-arrow)"/>
+<path id="edge-pin-IDR" class="map-edge" d="M1125 450 V522 H740" marker-end="url(#map-arrow)"/>
+</g>
+<text x="230" y="593" class="node-note">CPU 总线访问：按地址选择寄存器；蓝色路径标出本次访问</text>
+<text x="475" y="112" class="node-note">配置锁限制 CRL / CRH 修改</text>
+<text x="770" y="194" class="node-note">CNF / MODE：控制引脚模式</text>
+<text x="772" y="282" text-anchor="middle" class="node-note">位值</text>
+<text x="925" y="472" text-anchor="middle" class="node-note">输入缓冲 / 采样</text>
+<text x="925" y="493" text-anchor="middle" class="node-note">模拟输入时数字输入关闭</text>
+<g id="node-CPU" class="map-node"><rect x="25" y="250" width="145" height="120"/><text x="97" y="277" text-anchor="middle" class="node-title">CPU</text><text x="97" y="304" text-anchor="middle" id="map-cpu-action">暂无访问</text><text x="97" y="330" text-anchor="middle" class="node-note">软件变量 tmp</text><text x="97" y="354" text-anchor="middle" class="node-value" id="map-cpu-value"></text></g>
+<g id="node-LCKR" class="map-node" data-map-reg="LCKR"><rect x="265" y="20" width="185" height="75"/><text x="357" y="43" text-anchor="middle" class="node-title">LCKR</text><text x="357" y="65" text-anchor="middle" class="node-cn">配置锁定寄存器</text><text x="357" y="86" text-anchor="middle" class="node-value" id="map-value-LCKR"></text></g>
+<g id="node-CRL" class="map-node" data-map-reg="CRL"><rect x="545" y="20" width="185" height="75"/><text x="637" y="43" text-anchor="middle" class="node-title">CRL · PA0—7</text><text x="637" y="65" text-anchor="middle" class="node-cn">配置寄存器低位</text><text x="637" y="86" text-anchor="middle" class="node-value" id="map-value-CRL"></text></g>
+<g id="node-CRH" class="map-node" data-map-reg="CRH"><rect x="750" y="20" width="185" height="75"/><text x="842" y="43" text-anchor="middle" class="node-title">CRH · PA8—15</text><text x="842" y="65" text-anchor="middle" class="node-cn">配置寄存器高位</text><text x="842" y="86" text-anchor="middle" class="node-value" id="map-value-CRH"></text></g>
+<g id="node-BSRR" class="map-node" data-map-reg="BSRR"><rect x="265" y="180" width="185" height="85"/><text x="357" y="204" text-anchor="middle" class="node-title">BSRR · 置位/复位</text><text x="357" y="229" text-anchor="middle" class="node-value" id="map-value-BSRR"></text><text x="357" y="251" text-anchor="middle" class="node-note">最近写入命令 · 不锁存输出</text></g>
+<g id="node-BRR" class="map-node" data-map-reg="BRR"><rect x="265" y="300" width="185" height="85"/><text x="357" y="324" text-anchor="middle" class="node-title">BRR · 位复位</text><text x="357" y="349" text-anchor="middle" class="node-value" id="map-value-BRR"></text><text x="357" y="372" text-anchor="middle" class="node-note">最近写入命令 · 不锁存输出</text></g>
+<g id="node-ODR" class="map-node" data-map-reg="ODR"><rect x="545" y="240" width="195" height="110"/><text x="642" y="265" text-anchor="middle" class="node-title">ODR</text><text x="642" y="288" text-anchor="middle" class="node-cn">输出数据寄存器 · 锁存值</text><text x="642" y="314" text-anchor="middle" class="node-value" id="map-value-ODR"></text><text x="642" y="338" text-anchor="middle" class="node-note" id="map-odr-bit"></text></g>
+<g id="node-IDR" class="map-node" data-map-reg="IDR"><rect x="545" y="475" width="195" height="95"/><text x="642" y="500" text-anchor="middle" class="node-title">IDR · 输入数据</text><text x="642" y="527" text-anchor="middle" class="node-value" id="map-value-IDR"></text><text x="642" y="551" text-anchor="middle" class="node-note" id="map-idr-bit"></text></g>
+<g id="node-driver" class="map-node"><rect x="815" y="220" width="200" height="150"/><text x="915" y="248" text-anchor="middle" class="node-title">引脚控制 / 输出级</text><text x="915" y="278" text-anchor="middle" id="map-mode"></text><text x="915" y="305" text-anchor="middle" class="node-note" id="map-config"></text><text x="915" y="332" text-anchor="middle" class="node-note" id="map-driver-note"></text><text x="915" y="353" text-anchor="middle" class="node-note">配置与 ODR 共同决定行为</text></g>
+<g id="map-pin-bank"></g>
+</svg></div><div class="map-legend">蓝框／蓝线：本条访问和作用路径；绿色：当前讲解段或已变化的状态；紫色虚框：下方正在查看的寄存器。虚线连接表示锁定约束。图中为功能连接，电流路径见上方 LED 接线。</div>
+<div id="trace" class="trace" aria-live="polite"></div><div class="stage-scroll"><div class="pins" id="pins"></div></div>
+<div class="pin-tools"><label>观察引脚 <select id="pin-select"></select></label><label>外部连接 <select id="external"><option value="none">未连接</option><option value="pullup">接 3.3 V 弱上拉</option><option value="low">接 GND</option><option value="high">接 3.3 V</option></select></label><small>下方 H / L / ? 为电平探针，不是 LED 负载</small></div><div class="selected-summary" id="pin-summary"></div></section></div>
+<section class="panel register-panel"><div class="heading"><h2>7 个寄存器，各自改了什么？</h2><small>GPIOA 基址 0x40010800；本页假设已使能 GPIOA 时钟</small></div><div class="reg-tabs" id="registers"></div><div class="reg-intro" id="reg-intro"></div><div class="bits-scroll"><div class="bits" id="bits"></div></div><div class="bit-legend" id="bit-legend"></div><div class="lock-seq" id="lock-seq" hidden></div>
+<details class="editor" id="editor"><summary>自由实验：配置引脚、翻转写入位，再执行访问</summary><div class="editor-grid"><div><label>待写入的 32 位数据（翻位只修改草稿）</label><div class="inline"><input id="draft" value="0x00000001" aria-label="待写入数据" spellcheck="false"><button id="write" class="primary">执行写入</button><button id="read">读取寄存器</button></div><div class="stage-scroll"><div class="draft-bits" id="draft-bits"></div></div><p id="feedback" class="status" role="status"></p></div><div><label>当前观察引脚的 4 位配置</label><div class="inline"><label>MODE <select id="mode"><option value="0">00 · 输入</option><option value="1">01 · 输出 10 MHz</option><option value="2">10 · 输出 2 MHz</option><option value="3">11 · 输出 50 MHz</option></select></label><label>CNF <select id="cnf"></select></label></div><button id="configure">按掩码修改此引脚</button><pre id="config-code"></pre><small>MODE 的 MHz 是最大输出速度等级，不会自动生成这个频率的波形。</small></div></div></details></section>
+<details class="panel full-code" id="full-code"><summary>LED 案例的完整 C 代码：上板时怎么写？</summary><p class="lamp-note">基于 STM32F1 CMSIS 设备头文件；PA0 起的高电平有效 LED。课堂把 delay_ms 拆成手动下一步，真实程序请提供毫秒延时函数。请勿对接了其他电路的引脚直接套用。</p><pre id="led-c-code"></pre></details>
+<details class="panel full-code config-reference" id="config-reference">
+<summary>CNF / MODE 四位配置：16 种组合分别是什么输入输出模式？</summary>
+<div class="config-ref-body">
+<p>每个引脚在 CRL 或 CRH 中占 <strong>4 个配置位</strong>。从高位到低位依次是：</p>
+<div class="config-bit-key" aria-label="高两位为CNF，低两位为MODE"><span class="cnf-key">CNF[1]</span><span class="cnf-key">CNF[0]</span><span class="mode-key">MODE[1]</span><span class="mode-key">MODE[0]</span></div>
+<p>先看低两位 <strong>MODE</strong>：<code>00</code> 是输入；<code>01 / 10 / 11</code> 是输出，分别选择 <strong>10 / 2 / 50 MHz</strong> 的速度等级。再按输入或输出，解释高两位 <strong>CNF</strong>。这里的 0、1 是寄存器中的配置位，不表示 PA 引脚此刻必然为低电平或高电平。</p>
+<h3>全部 16 种组合：先选 MODE 所在列，再找 CNF 所在行</h3>
+<div class="stage-scroll"><table class="config-matrix"><caption>单个引脚的四位字段 = (CNF &lt;&lt; 2) | MODE；每格同时列出二进制、十六进制与模式。</caption><thead><tr><th scope="col">高两位<br>CNF</th><th scope="col">MODE = 00<br>输入</th><th scope="col">MODE = 01<br>输出 · 10 MHz</th><th scope="col">MODE = 10<br>输出 · 2 MHz</th><th scope="col">MODE = 11<br>输出 · 50 MHz</th></tr></thead><tbody>
+<tr><th scope="row"><code>00</code></th><td data-config="0"><code>0000 · 0x0</code><strong>模拟输入</strong><span>关闭数字输入缓冲</span></td><td data-config="1"><code>0001 · 0x1</code><strong>通用推挽输出</strong><span>10 MHz 速度等级</span></td><td data-config="2"><code>0010 · 0x2</code><strong>通用推挽输出</strong><span>2 MHz 速度等级</span></td><td data-config="3"><code>0011 · 0x3</code><strong>通用推挽输出</strong><span>50 MHz 速度等级</span></td></tr>
+<tr><th scope="row"><code>01</code></th><td data-config="4"><code>0100 · 0x4</code><strong>浮空输入</strong><span>无内部上拉、下拉</span></td><td data-config="5"><code>0101 · 0x5</code><strong>通用开漏输出</strong><span>10 MHz 速度等级</span></td><td data-config="6"><code>0110 · 0x6</code><strong>通用开漏输出</strong><span>2 MHz 速度等级</span></td><td data-config="7"><code>0111 · 0x7</code><strong>通用开漏输出</strong><span>50 MHz 速度等级</span></td></tr>
+<tr><th scope="row"><code>10</code></th><td data-config="8"><code>1000 · 0x8</code><strong>上拉 / 下拉输入</strong><span>ODR=1 上拉；ODR=0 下拉</span></td><td data-config="9"><code>1001 · 0x9</code><strong>复用推挽输出</strong><span>10 MHz 速度等级</span></td><td data-config="10"><code>1010 · 0xA</code><strong>复用推挽输出</strong><span>2 MHz 速度等级</span></td><td data-config="11"><code>1011 · 0xB</code><strong>复用推挽输出</strong><span>50 MHz 速度等级</span></td></tr>
+<tr><th scope="row"><code>11</code></th><td data-config="12" class="config-reserved"><code>1100 · 0xC</code><strong>保留配置</strong><span>不应作为有效模式使用</span></td><td data-config="13"><code>1101 · 0xD</code><strong>复用开漏输出</strong><span>10 MHz 速度等级</span></td><td data-config="14"><code>1110 · 0xE</code><strong>复用开漏输出</strong><span>2 MHz 速度等级</span></td><td data-config="15"><code>1111 · 0xF</code><strong>复用开漏输出</strong><span>50 MHz 速度等级</span></td></tr>
+</tbody></table></div>
+<p class="config-reminder"><strong>读表示例：</strong><code>0110 = 01 | 10 = 0x6</code>。先读 MODE=<code>10</code>，知道是 2 MHz 输出；再读 CNF=<code>01</code>，因此是<strong>通用开漏输出</strong>。但 <code>0100 = 01 | 00 = 0x4</code> 的 MODE 为 00，同样的 CNF=01 此时表示<strong>浮空输入</strong>。</p>
+<h3>这些模式对引脚做了什么？</h3>
+<div class="config-explain-grid">
+<div><h4>输入：MODE = 00</h4><ul>
+<li><strong>CNF=00，模拟输入：</strong>数字输入缓冲关闭，常用于 ADC 等模拟信号通路；是否连接到相应外设还取决于芯片引脚与外设配置。</li>
+<li><strong>CNF=01，浮空输入：</strong>数字输入开启，无内部上下拉，电平由外部电路决定；悬空时不能保证读到 0 或 1。</li>
+<li><strong>CNF=10，上拉 / 下拉输入：</strong>用对应的 ODR 位进一步选择：1 接内部上拉，0 接内部下拉。IDR 读到的是实际引脚电平。</li>
+<li><strong>CNF=11，保留：</strong><code>1100 / 0xC</code> 不对应有效的输入工作模式。</li>
+</ul></div>
+<div><h4>输出：MODE = 01、10 或 11</h4><ul>
+<li><strong>CNF=00，通用推挽：</strong>ODR=1 主动拉高，ODR=0 主动拉低，适合本页高电平有效的 LED 示例。</li>
+<li><strong>CNF=01，通用开漏：</strong>ODR=0 拉低；ODR=1 释放引脚，呈高阻态。要获得稳定高电平，通常需要外部上拉。</li>
+<li><strong>CNF=10，复用推挽：</strong>由定时器、串口等外设信号控制推挽输出级；具体功能由引脚映射和外设设置决定。</li>
+<li><strong>CNF=11，复用开漏：</strong>由外设控制拉低或释放引脚，例如符合对应引脚功能的 I²C 信号。</li>
+</ul></div>
+</div>
+<h3>上拉和下拉为什么都是 1000？</h3>
+<p><code>CNF=10、MODE=00 → 1000 → 0x8</code> 只选择“上拉 / 下拉输入”这一类；对应 <strong>ODR 位</strong>决定具体方向。以下以 PA0 为例，假设 GPIOA 时钟已使能：</p>
+<pre>// PA0 上拉输入：先预置 ODR[0]=1，再把 PA0 配置为 1000
+GPIOA-&gt;BSRR = 1u;
+GPIOA-&gt;CRL = (GPIOA-&gt;CRL &amp; ~0xFu) | 0x8u;
+
+// PA0 下拉输入：ODR[0]=0，四位配置仍为 1000
+GPIOA-&gt;BRR = 1u;
+
+// 外部电路可以把电平拉到相反方向；应从 IDR 读取实际电平
+uint32_t input = GPIOA-&gt;IDR &amp; 1u;</pre>
+<h3>从四位配置读懂整字数值</h3>
+<p><code>CRL = 0x44444442</code> 中，最右边的 <code>2 = 0010</code> 对应 PA0，表示通用推挽输出、2 MHz；其余七个 <code>4 = 0100</code> 分别对应 PA1—PA7，表示浮空输入。每个十六进制数字恰好对应一个引脚的四位配置。</p>
+<p>PA0—PA7 看 CRL；PA8—PA15 看 CRH。例如 PA0 使用 CRL[3:0]，PA1 使用 CRL[7:4]，PA8 使用 CRH[3:0]。修改某个引脚时，先用掩码清除它的四位，再写入目标配置，保留其他引脚的配置。</p>
+<p class="config-reminder"><strong>速度等级不会自动产生波形：</strong>MODE=10 选择 2 MHz 速度等级，不会让 LED 自动以 2 MHz 闪烁。闪烁节奏由软件写入的时刻或定时器等外设决定。复用输出还需要配置相应外设；仅修改这四位不能启动串口、PWM 或 I²C。</p>
+<p class="lamp-note">适用于本页 STM32F1 的 CRL / CRH 编码。配置和上下拉选择可对照 <a href="https://github.com/STMicroelectronics/stm32f1xx-hal-driver/blob/master/Src/stm32f1xx_hal_gpio.c">ST 官方 GPIO 初始化实现</a>；MODE 速度编码可对照 <a href="https://github.com/STMicroelectronics/stm32f1xx-hal-driver/blob/master/Inc/stm32f1xx_hal_gpio.h">官方 GPIO 头文件</a>。</p>
+</div></details>
+<p class="foot">依据《第6章 通用输入输出接口16-9》第55—65页，并核对 <a href="https://github.com/STMicroelectronics/stm32f1xx-hal-driver/blob/master/Src/stm32f1xx_hal_gpio.c">ST 官方 STM32F1 GPIO 驱动</a>中的配置、位操作与锁定流程。各访问按 32 位字展示。? / X 表示未确定，不是硬件存储的第三种逻辑值。复用外设输出、SWJ 占用及电气瞬态未模拟。复位示例采用课件给定的 CRL/CRH 默认值。页面完全离线运行，资料链接仅在主动点击后联网。</p>
+</main><script>
+'use strict';
+const $=id=>document.getElementById(id),hex=v=>'0x'+(v>>>0).toString(16).toUpperCase().padStart(8,'0'),bin=(v,n)=>v.toString(2).padStart(n,'0');
+const regs={
+ CRL:{cn:'配置寄存器低位',offset:0,access:'读 / 写',page:'55—56',role:'配置 PA0—PA7',desc:'每个引脚占四位：高两位 CNF、低两位 MODE。CRL 的“低”指引脚编号较低，不是低电平。'},
+ CRH:{cn:'配置寄存器高位',offset:4,access:'读 / 写',page:'57',role:'配置 PA8—PA15',desc:'与 CRL 相同，每个引脚占四位。PA8 使用 CRH[3:0]，不是 CRH[35:32]。'},
+ IDR:{cn:'输入数据寄存器',offset:8,access:'只读',page:'58',role:'读取实际引脚',desc:'低 16 位采样实际引脚，高 16 位读零。输入模式、外部连接都会影响它；写 IDR 不能驱动引脚。'},
+ ODR:{cn:'输出数据寄存器',offset:12,access:'读 / 写',page:'59',role:'保存输出位值',desc:'低 16 位保存输出锁存值。整字写入会同时覆盖这 16 位；上拉/下拉输入模式下，ODR 选择内部上拉还是下拉。'},
+ BSRR:{cn:'置位 / 复位寄存器',offset:16,access:'只写命令',page:'60',role:'原子置位 / 清位',desc:'低 16 位写 1 置位对应 ODR；高 16 位写 1 清位对应 ODR；写 0 不动作。同一位同时请求置位和清位时，置位优先。'},
+ BRR:{cn:'位复位寄存器',offset:20,access:'只写命令',page:'61',role:'只清除选定位',desc:'低 16 位写 1 清除对应 ODR，写 0 保持原状。BRR 的作用相当于 BSRR 的高 16 位，高 16 位保留。'},
+ LCKR:{cn:'配置锁定寄存器',offset:24,access:'锁定序列',page:'62—65',role:'锁住引脚配置',desc:'低 16 位选定引脚，bit16 是 LCKK。完成写1、写0、写1、读0、读1后确认锁定。锁住的是 CRL/CRH 的四位配置，ODR 仍可改变。'}
+};
+let s,previous,selected='CRL',pin=0,sceneIndex=0,step=0,free=false,timer=null,animation=null,draft=1;
+function resetModel(){s={CRL:0x44444444,CRH:0x44444444,ODR:0,lastBSRR:0,lastBRR:0,lckMask:0,lckWord:0,lockMask:0,lockActive:false,lockPhase:0,tmp:0,ext:Array(16).fill('none'),event:{kind:'none',reg:'CRL',title:'实验准备',message:'所有引脚从课件给定的浮空输入配置开始。'},focus:0}}
+function snapshot(){return JSON.parse(JSON.stringify(s))}
+function nibble(i){return (s[i<8?'CRL':'CRH']>>>((i%8)*4))&15}
+function decode(i){
+ const n=nibble(i),mode=n&3,cnf=n>>>2,odr=(s.ODR>>>i)&1,ext=s.ext[i];
+ let name,level='X',sample='X',why='',speed=mode?['','10','2','50'][mode]+' MHz':'';
+ if(!mode){name=['模拟输入','浮空输入',odr?'上拉输入':'下拉输入','保留配置'][cnf];if(cnf!==3){if(ext==='pullup'&&cnf===2&&!odr){level='X';why='上下拉分压 / 未确定';}else if(ext==='low')level=0;else if(ext==='high'||ext==='pullup')level=1;else if(cnf===2)level=odr;}if(!why)why=level==='X'?'悬空 / 未确定':ext==='none'?'内部上下拉':'外部连接';sample=cnf===0?0:level;}
+ else if(cnf>=2){name=cnf===2?'复用推挽':'复用开漏';why='外设信号未模拟';}
+ else {name=cnf===0?'通用推挽':'通用开漏';const drive=cnf===0?odr:odr===0?0:null;
+  if(drive!==null){level=drive;why='输出级驱动';if(ext==='high'&&drive===0||ext==='low'&&drive===1){level='X';why='外部与输出争用';}}
+  else if(ext==='high'||ext==='pullup'){level=1;why='外部拉高';}else if(ext==='low'){level=0;why='外部拉低';}else why='开漏释放 / 悬空';sample=level;
+ }
+ return {n,mode,cnf,odr,name,speed,level,sample,why,locked:!!(s.lockMask&(1<<i))};
+}
+function idr(){let value=0,unknown=0;for(let i=0;i<16;i++){const v=decode(i).sample;if(v==='X')unknown|=1<<i;else if(v)value|=1<<i;}return {value,unknown}}
+function displayIDR(){const r=idr();let out='0x0000';for(let n=3;n>=0;n--)out+=(r.unknown&(15<<(n*4)))?'X':((r.value>>>(n*4))&15).toString(16).toUpperCase();return out}
+function valueOf(reg){if(reg==='IDR')return idr().value;if(reg==='BSRR')return s.lastBSRR;if(reg==='BRR')return s.lastBRR;if(reg==='LCKR')return s.lockActive?(s.lockMask|0x10000):s.lckWord;return s[reg]>>>0}
+function event(kind,reg,title,message,value){s.event={kind,reg,title,message,value};}
+function writeReg(reg,raw){
+ const v=raw>>>0;
+ if(reg==='IDR'){event('blocked',reg,'IDR 是只读寄存器','写入未改变采样结果，也不会改变外部引脚。',v);return}
+ if(reg==='CRL'||reg==='CRH'){const old=s[reg];let next=v,blocked=0;
+  for(let j=0;j<8;j++){const i=j+(reg==='CRH'?8:0),mask=(15<<(j*4))>>>0;if(s.lockMask&(1<<i)){if((old&mask)!==(v&mask))blocked|=1<<i;next=((next&~mask)|(old&mask))>>>0;}}
+  s[reg]=next>>>0;event(blocked?'blocked':'write',reg,blocked?'锁定字段拒绝修改':'四位配置更新',blocked?'被锁定引脚保持原配置；未锁定引脚仍按本次写入更新。':'本次整字写入后，CNF 和 MODE 决定各引脚的模式。',v);return;
+ }
+ if(reg==='ODR'){const old=s.ODR;s.ODR=v&65535;event('write',reg,'整字覆盖 ODR','ODR：'+hex(old)+' → '+hex(s.ODR)+'。未写成 1 的位也会被写成 0。',v);return}
+ if(reg==='BSRR'){const set=v&65535,clear=v>>>16,old=s.ODR;s.lastBSRR=v;s.ODR=((old&~clear)|set)&65535;event('write',reg,'命令作用于 ODR','置位掩码 '+hex(set)+'，清位掩码 '+hex(clear)+'；ODR '+hex(old)+' → '+hex(s.ODR)+(set&clear?'。重叠位按置位优先处理。':'。写 0 的位置保持原值。'),v);return}
+ if(reg==='BRR'){const old=s.ODR;s.lastBRR=v;s.ODR&=~(v&65535);event('write',reg,'清除选中的 ODR 位','ODR：'+hex(old)+' → '+hex(s.ODR)+'；写入 0 不产生清位操作。',v);return}
+ if(s.lockActive){event('blocked','LCKR','配置锁已激活','LCKR 写入被忽略；需复位才能重新配置锁。',v);return}
+ const key=(v>>>16)&1,mask=v&65535,p=s.lockPhase;
+ if(p===0&&key===1){s.lckMask=mask;s.lockPhase=1}
+ else if(p===1&&key===0&&mask===s.lckMask)s.lockPhase=2;
+ else if(p===2&&key===1&&mask===s.lckMask)s.lockPhase=3;
+ else {s.lockPhase=0;s.lckMask=mask;}
+ s.lckWord=mask;
+ event('write','LCKR',s.lockPhase?'锁键写入第 '+s.lockPhase+' 步':'锁定序列未成立',s.lockPhase===3?'三次写入已完成，下一次读取完成锁定握手。':s.lockPhase?'低 16 位引脚掩码必须保持一致。':'写入顺序或掩码不符，需要从写 LCKK=1 重新开始。',v);
+}
+function readReg(reg){
+ if(reg==='BSRR'||reg==='BRR'){event('blocked',reg,'只写命令不用于读取状态','请读取 ODR 查看输出锁存值，或读取 IDR 查看引脚电平。');return}
+ let value=valueOf(reg),message='';
+ if(reg==='IDR'){s.tmp=displayIDR();message='读取实际采样；X 表示其中有悬空或未建模的位。本步观察 PA'+pin+' 的 IDR='+decode(pin).sample+'。'}
+ else if(reg==='LCKR'){
+  if(s.lockPhase===3){value=s.lckMask;s.lockMask=s.lckMask;s.lockActive=true;s.lockPhase=4;message='首次读返回 LCKK=0 并完成锁定握手；再读一次确认 LCKK=1。'}
+  else if(s.lockActive){value=s.lockMask|0x10000;s.lockPhase=5;message='读到 LCKK=1，确认配置锁已激活。'}
+  else {s.lockPhase=0;message='尚未完成锁键序列；本次读取不会锁定配置。'}
+  s.tmp=value;
+ }else {s.tmp=value;message='将 '+reg+' 当前值读入软件变量 tmp；读取本身不改变寄存器。';}
+ event('read',reg,'CPU 读取 '+reg,message,reg==='IDR'?displayIDR():value);
+}
+function configurePin(i,n){const reg=i<8?'CRL':'CRH',shift=(i%8)*4;writeReg(reg,((s[reg]&~(15<<shift))|(n<<shift))>>>0)}
+function external(i,v){s.ext[i]=v;event('external','IDR','外部连接改变','PA'+i+' 的实际电平变化后进入 IDR；ODR 不因此改写。');s.focus=i;}
+const L=(title,code,note,question,run,focus=0)=>({title,code,note,question,run,focus});
+const scenes=[
+ {name:'① 四位配置',title:'CRL / CRH：四位控制一根引脚',reg:'CRL',setup:()=>{},steps:[
+ L('课件的复位起点','CRL = CRH = 0x44444444','已先使能 GPIOA 时钟。本实验从浮空输入开始，每个十六进制数字 4 对应一根引脚的四位配置。','把 PA0 改成推挽 50 MHz，只需要改哪四位？',()=>{}),
+ L('只修改 PA0 的四位','GPIOA->CRL = (GPIOA->CRL & ~0xFu) | 0x3u;','CNF=00、MODE=11，四位合起来是 0011，即 0x3；CRL 变成课件第56页的 0x44444443。','配置好输出模式后，PA0 会自动输出高电平吗？',()=>configurePin(0,3)),
+ L('ODR 决定输出 1','GPIOA->ODR = 0x00000001;','模式说明怎样驱动；ODR 说明输出哪一个位值。现在 PA0 才被主动拉高。','PA8 的配置是在 CRL，还是在 CRH？',()=>writeReg('ODR',1)),
+ L('PA8 使用 CRH 最低四位','GPIOA->CRH = (GPIOA->CRH & ~0xFu) | 0x3u;','PA8 对应 CRH[3:0]。引脚编号跨过 7 后换寄存器，位移从 0 重新开始。','把 PA8 置 1 时，怎样保留已经为 1 的 PA0？',()=>configurePin(8,3),8),
+ L('只置位 PA8','GPIOA->BSRR = 1u << 8;','BSRR 的 bit8 写 1，只把 ODR[8] 置 1。ODR[0] 保持为 1。','BRR 写 bit0，会影响 PA8 吗？',()=>writeReg('BSRR',0x100),8),
+ L('只清除 PA0','GPIOA->BRR = 1u << 0;','BRR 把 ODR[0] 清为 0，其余位不变；PA8 继续保持高电平。','CRL 的“低”、CRH 的“高”，说的是引脚编号还是电平？',()=>writeReg('BRR',1)),
+ L('恢复 PA0 浮空输入','GPIOA->CRL = (GPIOA->CRL & ~0xFu) | 0x4u;','配置恢复 0100：浮空输入。ODR[0] 仍为 0，但它此时不再主动把引脚拉低。','进入自由实验，选 PA9，再观察 CRH 中被选中的四位。',()=>configurePin(0,4))
+ ]},
+ {name:'② 置位与清位',title:'ODR / BSRR / BRR：三种写法',reg:'ODR',setup:()=>{s.CRL=0x44444422;s.ODR=3},steps:[
+ L('准备两个高电平输出','// PA0、PA1：推挽 2 MHz；ODR = 3','此实验预先把 PA0、PA1 配置为推挽输出，并置为 1。其余引脚保持浮空输入。','向 BSRR 写入 0，会把所有输出清零吗？',()=>{}),
+ L('BSRR 写 0 不动作','GPIOA->BSRR = 0;','BSRR 是写入命令。0 表示这个位置不发命令，因此 ODR 仍是 3。','BRR 写入 0，是清零还是保持？',()=>writeReg('BSRR',0)),
+ L('BRR 写 0 也不动作','GPIOA->BRR = 0;','BRR 同样是写 1 才清位。不要把“清除寄存器”误解成写 0 执行清除。','清 PA0，要写 BSRR 的 bit0 还是 bit16？',()=>writeReg('BRR',0)),
+ L('BSRR 高半字清位','GPIOA->BSRR = 1u << 16;','BR0 位于 bit16。它把 ODR[0] 清零，而 ODR[1] 保持 1。','一次写入能同时把 PA0 置 1、PA1 清 0 吗？',()=>writeReg('BSRR',0x10000)),
+ L('一笔访问，置一个、清一个','GPIOA->BSRR = (1u << 0) | (1u << 17);','低半字 bit0 置 PA0，高半字 bit17 清 PA1。一次总线写入完成两项操作。','BRR=1 的结果等同于 BSRR 的哪个值？',()=>writeReg('BSRR',0x20001)),
+ L('BRR 专门负责清位','GPIOA->BRR = 1u;','BRR=0x1 与 BSRR=0x00010000 都清除 ODR[0]。','同一位同时收到置位和清位命令，谁优先？',()=>writeReg('BRR',1)),
+ L('同一位冲突时置位优先','GPIOA->BSRR = 0x00010001;','BS0、BR0 同时为 1，按课件第60页的 BS 优先规则，最终 ODR[0]=1。实际代码通常应避免这种冲突写法。','ODR=2 会保留 PA0 原来的 1 吗？',()=>writeReg('BSRR',0x10001)),
+ L('ODR 整字写会覆盖其它位','GPIOA->ODR = 0x00000002;','PA1 置 1 的同时，PA0 被覆盖为 0。要只改某些位，优先考虑 BSRR / BRR。','打开自由实验，给 BSRR 的 bit0、bit16 分别写 1 试一试。',()=>writeReg('ODR',2),1)
+ ]},
+ {name:'③ 读回引脚',title:'IDR 与 ODR：两个不同的值',reg:'IDR',setup:()=>{},steps:[
+ L('准备一个输入引脚','// PA0 浮空，外部未连接','电平未确定时，界面用 X 表示“无法预测读数”，不是硬件中存在第三种逻辑值。','只把 ODR[0] 写 1，会让浮空输入主动输出高吗？',()=>{}),
+ L('先预置上拉选择位','GPIOA->BSRR = 1u;','ODR[0]=1，但当前仍是浮空输入，PA0 仍未确定。ODR 位的作用取决于模式。','再把四位配置改为 1000，会发生什么？',()=>writeReg('BSRR',1)),
+ L('启用上拉 / 下拉输入','GPIOA->CRL = (GPIOA->CRL & ~0xFu) | 0x8u;','CNF=10、MODE=00；ODR[0]=1 选择内部上拉，因此无外部驱动时 IDR[0]=1。','外部接地之后，ODR 会跟着变成 0 吗？',()=>configurePin(0,8)),
+ L('按键按下：外部接地','// 按键闭合：PA0 接 GND','实际引脚被拉低，IDR[0]=0；ODR[0] 仍保存 1，内部仍选上拉。','读 ODR，能判断这个按键有没有按下吗？',()=>external(0,'low')),
+ L('读取 IDR 的 bit0','tmp = GPIOA->IDR & 1u;','整字读取 IDR 后，用掩码只取 PA0 的采样位，tmp=0。','按键松开后，哪一个寄存器会先反映引脚恢复高？',()=>{readReg('IDR');s.tmp=decode(0).sample;s.event.value=s.tmp} ),
+ L('松开按键','// 按键断开，PA0 只保留内部上拉','IDR 跟随实际电平恢复 1，ODR 始终没有被外部按键改写。','再读一次 bit0，tmp 应是多少？',()=>external(0,'none')),
+ L('再次采样','tmp = GPIOA->IDR & 1u;','这次读到 1。CPU 的 tmp 是最近一次读出的快照，不会自动跟随引脚变化。','输入模式中把 ODR[0] 清零，会改变什么？',()=>{readReg('IDR');s.tmp=decode(0).sample;s.event.value=s.tmp}),
+ L('输入模式也使用 ODR','GPIOA->BRR = 1u;','配置仍是 1000；ODR[0]=0 改选内部下拉，因此松开状态下 IDR[0] 变成 0。','给 IDR 写 1 能强行把引脚拉高吗？',()=>writeReg('BRR',1)),
+ L('验证 IDR 只读','GPIOA->IDR = 1u; // 错误用法演示','写 IDR 不会修改输入采样，也不能驱动引脚。实际程序应读 IDR，写 ODR / BSRR / BRR。','试着改变右侧“外部连接”，比较引脚、IDR 和 CPU 的 tmp。',()=>writeReg('IDR',1))
+ ]},
+ {name:'④ 锁定配置',title:'LCKR：锁模式，输出仍可变化',reg:'LCKR',setup:()=>{s.CRL=0x44444443},steps:[
+ L('准备锁住 PA0','// PA0 已配置推挽 50 MHz','低 16 位掩码选中 PA0，bit16 是锁键。以下过程对应课件第65页的两次读取代码。','只写一次 LCKK=1 就算锁住了吗？',()=>{}),
+ L('锁键：第一次写 1','GPIOA->LCKR = 0x00010001;','选中 PA0，并开始锁键序列。此时尚未完成锁定。','下一次写入时，低 16 位的 0x0001 能改变吗？',()=>writeReg('LCKR',0x10001)),
+ L('锁键：写 0','GPIOA->LCKR = 0x00000001;','只把 bit16 改为 0，低 16 位仍为 0x0001。','第三次写入的锁键应该是多少？',()=>writeReg('LCKR',1)),
+ L('锁键：再次写 1','GPIOA->LCKR = 0x00010001;','三次写入完成。接下来必须读取，不能省略握手读取。','两次读取是修改配置，还是完成并确认握手？',()=>writeReg('LCKR',0x10001)),
+ L('首次读：完成握手','tmp = GPIOA->LCKR; // LCKK 返回 0','这次读取完成锁定握手；tmp 的 bit16 为 0。随后 LCKK 进入激活状态。','再读取一次，怎样确认锁定成功？',()=>readReg('LCKR')),
+ L('再次读：确认 LCKK=1','tmp = GPIOA->LCKR; // LCKK 返回 1','低位掩码 1、锁键 1，因此读回 0x00010001。界面用金色标出被锁的四位。','现在把 CRL[3:0] 改回浮空输入，会成功吗？',()=>readReg('LCKR')),
+ L('修改 PA0 配置被拒绝','GPIOA->CRL = (GPIOA->CRL & ~0xFu) | 0x4u;','PA0 的四位仍是 0011。锁定限制的是配置寄存器中的选中字段。','锁 PA0 会不会顺便锁住 PA1？',()=>configurePin(0,4)),
+ L('未锁的 PA1 仍能改配置','GPIOA->CRL = (GPIOA->CRL & ~0xF0u) | 0x20u;','PA1 成功改为推挽 2 MHz，PA0 的已锁四位保持原状。','PA0 的 ODR 还能从 0 改成 1 吗？',()=>configurePin(1,2),1),
+ L('锁定后仍可输出高','GPIOA->BSRR = 1u;','PA0 仍是推挽输出，ODR[0] 置 1，实际引脚随之变高。锁配置不等于冻结电平。','再用 BRR 清除 PA0，会生效吗？',()=>writeReg('BSRR',1)),
+ L('锁定后仍可输出低','GPIOA->BRR = 1u;','ODR[0] 清零成功，PA0 回到低电平。','真正解除配置锁，需要做什么？',()=>writeReg('BRR',1)),
+ L('模拟系统复位解除锁','// 系统复位','配置锁解除，CRL / CRH 恢复课件默认值。上一步按钮是教学回放，不是芯片上的解锁指令。','在自由实验中故意改动三次写入的低位掩码，看序列能否完成。',()=>{resetModel();event('reset','LCKR','系统复位','配置锁解除，寄存器恢复默认值。')})
+ ]},
+ {name:'⑤ 中断插入对照',title:'为什么逐位操作常用 BSRR？',reg:'ODR',setup:()=>{s.CRL=0x44444422},steps:[
+ L('两个任务改不同引脚','// 主程序改 PA0，中断改 PA1','PA0、PA1 均为推挽输出且起始为 0。下面把读、修改、写回拆开，观察中断插入。','主程序读出 ODR 后，另一个任务还可能改它吗？',()=>{}),
+ L('主程序先读 ODR','tmp = GPIOA->ODR;','CPU 读到 tmp=0。它是软件中的旧快照。','如果此时中断把 PA1 置 1，tmp 会自动更新吗？',()=>readReg('ODR')),
+ L('中断插入：设置 PA1','GPIOA->BSRR = 1u << 1; // ISR','ODR 已经是 2，但主程序手里的 tmp 仍是 0。','主程序继续用旧 tmp 写回，会丢掉谁的修改？',()=>writeReg('BSRR',2),1),
+ L('主程序修改旧快照','tmp |= 1u;','tmp 从 0 改为 1；ODR 此时仍是 2。修改软件变量并不立即改硬件寄存器。','把 tmp 整字写回 ODR，最终会是 1 还是 3？',()=>{s.tmp=(s.tmp|1)>>>0;event('cpu','ODR','只改软件变量','tmp=1，ODR=2；尚未写回。')}),
+ L('主程序写回：更新丢失','GPIOA->ODR = tmp;','最终 ODR=1，中断置起的 PA1 被主程序的旧快照清掉了。','如果主程序直接发“只置 PA0”的命令，结果会不同吗？',()=>writeReg('ODR',s.tmp)),
+ L('重置输出，开始对照','GPIOA->ODR = 0;','只为对照实验恢复起点。下面两次访问都只修改自己选择的位。','中断仍先把 PA1 置 1。',()=>writeReg('ODR',0)),
+ L('中断使用 BSRR','GPIOA->BSRR = 1u << 1; // ISR','ODR=2，PA1 为高。','主程序的 BSRR 写入会触碰 PA1 吗？',()=>writeReg('BSRR',2),1),
+ L('主程序也使用 BSRR','GPIOA->BSRR = 1u << 0;','最终 ODR=3，两个修改都保留。单次 BSRR 写入保护未选中的位，不代表整个函数都不可被中断。','比较 ODR 整字覆盖与 BSRR 按掩码执行命令。',()=>writeReg('BSRR',1))
+ ]}
+];
+// LED lessons call the original register functions; there is no independent LED state.
+function makeLEDLesson(count,name){
+ const mask=(1<<count)-1,configMask=(Math.pow(16,count)-1)>>>0;
+ let configValue=0;for(let i=0;i<count;i++)configValue|=2<<(4*i);
+ const list=[
+ L('① 先使能 GPIOA 时钟','RCC->APB2ENR |= (1u << 2); // IOPAEN','所有实验均以 GPIOA 时钟已使能为前提，此行是进入实验前已执行的初始化。这里只模拟 GPIO 七个寄存器，不展开 RCC。引脚目前仍是浮空输入，灯板尚未接入。','时钟打开以后，引脚就自动变成推挽输出了吗？',()=>{}),
+ L('② 预先清除输出位','GPIOA->BRR = '+hex(mask)+'u;','先让将要使用的 ODR 位为 0，再启用输出，可避免带着旧的 1 开始驱动。现在灯板仍未接入：改变 ODR 不等于已配置输出。','ODR 已清零，接下来要在哪个寄存器配置引脚？',()=>writeReg('BRR',mask)),
+ L('③ 配置通用推挽输出','GPIOA->CRL = (GPIOA->CRL & ~'+hex(configMask)+'u) | '+hex(configValue)+'u;','PA0'+(count>1?'—PA'+(count-1):'')+' 每脚四位写 0010：CNF=00，MODE=10（2 MHz 速度等级，不是闪灯频率）。此时才接入 LED 观察支路；ODR=0，灯灭。','下一步只把 ODR 的一位置 1，电流会从哪里流到哪里？',()=>writeReg('CRL',((s.CRL&~configMask)|configValue)>>>0))
+ ];
+ const values=count===1?[1,0,1,0]:count===2?[1,2,1,2]:[1,2,4,8,1];
+ values.forEach((value,k)=>{
+  const focus=value?Math.log2(value):0,clear=mask&~value,word=((clear<<16)|value)>>>0,reg=value?'BSRR':'BRR',write=value?word:mask;
+  const title=value?'点亮 LED'+(focus+1)+' · PA'+focus:'熄灭 LED1';
+  list.push(L(title,'GPIOA->'+reg+' = '+hex(write)+'u;',
+   (count===1?(value?'BSRR 的低半字写 1，把 ODR[0] 置 1。':'BRR 的 bit0 写 1，把 ODR[0] 清零。'):'同一笔 BSRR 写入：低半字 '+hex(value)+' 选中要亮的灯，高半字 '+hex(clear)+' 清除本组其他灯；组外引脚保持不变。')+' '+(value?'推挽输出高电平：芯片 VDD 经输出级 → PA'+focus+' → 电阻 → LED → GND，形成电流回路。':'推挽输出低电平，两端没有足够正向电压，LED 熄灭。')+' 实际程序在这一状态保持约 500 ms；课堂用下一步控制节奏。',
+   k===values.length-1?'试试下面读 IDR，或者使用灯板按钮自由置位、清位。':'先预测下一条指令执行后，哪些 ODR 位会变，哪些灯会亮？',
+   ()=>writeReg(reg,write),focus));
+ });
+ list.push(L('读回真实引脚电平','tmp = GPIOA->IDR & '+hex(mask)+'u;','IDR 读取引脚采样，不是发出输出命令。本例为正常推挽接线，读回位值与 ODR 一致；切换到“读回引脚”实验可观察它们不一致的情况。','打开下方自由实验，修改 BSRR 或 CRL，观察灯是否同步变化。',()=>{readReg('IDR');s.tmp=idr().value&mask;s.event.value=s.tmp},values.at(-1)?Math.log2(values.at(-1)):0));
+ return {name,title:name+'：先看灯，再看位',reg:'CRL',setup:()=>{},steps:list,ledCount:count};
+}
+scenes.push(makeLEDLesson(1,'A · 单灯亮灭'),makeLEDLesson(2,'B · 双灯交替'),makeLEDLesson(4,'C · 四灯流水'));
+function lampState(i){
+ const p=decode(i),connected=!!p.mode&&p.cnf===0;
+ return {connected,status:!connected?'disconnected':p.level==='X'?'uncertain':p.level===1?'on':'off',
+ label:!connected?'未接入':p.level==='X'?'电平冲突':p.level===1?'亮':'灭'};
+}
+function visibleLEDPins(){
+ const count=scenes[sceneIndex].ledCount||([1,3,4].includes(sceneIndex)?2:1);
+ const base=Math.floor(pin/count)*count;
+ return Array.from({length:count},(_,k)=>base+k);
+}
+function renderLEDCircuits(pins){
+ const svg=$('led-circuit'),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ svg.setAttribute('viewBox','0 0 620 '+(pins.length*112+35));
+ let flow='';
+ svg.innerHTML='<title>同时观察 '+pins.length+' 路独立 LED 接线</title><defs><marker id="led-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#d65a51"/></marker></defs><text x="12" y="19" style="font-size:14px">各引脚独立驱动 · 每路各有 330 Ω 限流电阻</text>'+pins.map((i,k)=>{
+  const d=decode(i),v=lampState(i),lit=v.status==='on',y=30+k*112;
+  if(lit&&!reduced)flow+='<g transform="translate(0 '+y+')"><circle r="4" fill="#e5a634"><animateMotion path="M155 50 H555 V78" dur="3s" repeatCount="indefinite"/></circle></g>';
+  return '<g class="led-branch" data-circuit-pin="'+i+'" data-led="'+v.status+'" transform="translate(0 '+y+')">'+
+   '<rect x="12" y="15" width="143" height="76" rx="7" fill="'+(lit?'#fff3c4':'#edf4fa')+'" stroke="'+(pin===i?'#176da3':'#b3c4d0')+'" stroke-width="'+(pin===i?2.5:1.5)+'"/>'+
+   '<text x="83" y="37" text-anchor="middle" style="font-weight:bold">PA'+i+' · ODR['+i+']='+d.odr+'</text><text x="83" y="60" text-anchor="middle">'+(d.level==='X'?'电平未确定':d.level?'H · ≈3.3 V':'L · ≈0 V')+'</text><text x="83" y="81" text-anchor="middle" style="font-size:12px">'+d.name+'</text>'+
+   '<circle cx="424" cy="50" r="29" fill="#ffded7" opacity="'+(lit?1:0)+'"/><path class="lead'+(lit?' current':'')+'" d="M155 50 H180 M214 50 H260 M326 50 H407 M442 50 H555 V78"/>'+
+   '<circle cx="180" cy="50" r="3" fill="#8299ac"/><circle cx="214" cy="50" r="3" fill="#8299ac"/><path class="lead" d="'+(v.connected?'M180 50 H214':'M180 50 L211 32')+'"/><text x="197" y="20" text-anchor="middle" style="font-size:12px">'+(v.connected?'已接入':'断开')+'</text>'+
+   '<rect x="260" y="36" width="66" height="28" class="symbol"/><text x="293" y="25" text-anchor="middle">330 Ω</text>'+
+   '<path class="symbol" style="fill:'+(lit?'#ffaaa0':'white')+'" d="M407 31 L440 50 L407 69 Z M442 30 V70"/><path d="M427 22 L442 7 M445 26 L461 10" stroke="#d65a51" stroke-width="2" fill="none" marker-end="url(#led-arrow)" opacity="'+(lit?1:.15)+'"/>'+
+   '<text x="399" y="86" style="font-size:12px">A</text><text x="444" y="86" style="font-size:12px">K</text><text x="424" y="106" text-anchor="middle" style="font-weight:bold">LED'+(i+1)+' · '+v.label+'</text>'+
+   '<path class="lead" d="M538 78 H572 M544 86 H566 M551 94 H559"/><text x="586" y="87" text-anchor="middle" style="font-size:12px">GND</text></g>';
+ }).join('')+'<g id="led-flow">'+flow+'</g>';
+}
+function renderLED(){
+ const pins=visibleLEDPins(),p=decode(pin),lamp=lampState(pin),lesson=scenes[sceneIndex],entry=lesson.steps[step];
+ $('led-bank').textContent='同时显示 '+pins.map(i=>'PA'+i).join('、')+' · 当前观察 PA'+pin;
+ $('lamps').style.gridTemplateColumns='repeat('+pins.length+',minmax(0,1fr))';
+ $('lamps').style.maxWidth=pins.length===1?'130px':'';
+ $('lamps').innerHTML=pins.map(i=>{const d=decode(i),v=lampState(i);return '<button class="lamp '+v.status+(pin===i?' chosen':'')+'" data-led="'+i+'" aria-pressed="'+(pin===i)+'" aria-label="LED'+(i+1)+'，PA'+i+'，'+v.label+'"><span class="bulb" aria-hidden="true"></span><span>LED'+(i+1)+' · PA'+i+'</span><b>'+v.label+'</b><small>ODR['+i+']='+d.odr+'</small></button>'}).join('');
+ renderLEDCircuits(pins);
+ $('led-chain').innerHTML='<span>配置 <code>'+(pin<8?'CRL':'CRH')+'['+((pin%8)*4+3)+':'+((pin%8)*4)+']='+bin(p.n,4)+'</code></span><b>→</b><span>锁存 <code>ODR['+pin+']='+p.odr+'</code></span><b>→</b><span>PA'+pin+' <code>'+(p.level==='X'?'?':p.level?'H':'L')+'</code></span><b>→</b><strong>LED'+(pin+1)+' '+lamp.label+'</strong>';
+ $('live-step').textContent=free?'自由实验 · '+s.event.title:'正在执行 '+step+' / '+(lesson.steps.length-1)+' · '+entry.title;
+ $('live-code').textContent=free?(s.event.kind==='read'?'tmp = GPIOA->'+s.event.reg+';':typeof s.event.value==='number'?'GPIOA->'+s.event.reg+' = '+hex(s.event.value)+';':s.event.message):entry.code;
+ $('full-code').hidden=!lesson.ledCount;
+ if(lesson.ledCount)$('led-c-code').textContent=ledCode(lesson.ledCount);
+}
+function ledCode(count){
+ const mask=(1<<count)-1,configMask=Math.pow(16,count)-1;let config=0;
+ for(let i=0;i<count;i++)config|=2<<(i*4);
+ const body=count===1?'    GPIOA->BSRR = 1u;  // 只置 PA0：亮\n    delay_ms(500);\n    GPIOA->BRR = 1u;   // 只清 PA0：灭\n    delay_ms(500);':'    for (uint32_t i = 0; i < '+count+'u; ++i) {\n      uint32_t on = 1u << i;\n      uint32_t off = '+hex(mask)+'u & ~on;\n      GPIOA->BSRR = (off << 16) | on; // 同时关旧灯、开新灯\n      delay_ms(500);\n    }';
+ return '#include "stm32f1xx.h"\nvoid delay_ms(uint32_t ms); // 须由你的工程实现，例如使用 SysTick\n\nint main(void) {\n  RCC->APB2ENR |= (1u << 2); // GPIOA 时钟使能\n  (void)RCC->APB2ENR;        // 读回，留出时钟使能后的同步时间\n  GPIOA->BRR = '+hex(mask)+'u; // 先预置低电平\n  GPIOA->CRL = (GPIOA->CRL & ~'+hex(configMask)+'u)\n             | '+hex(config)+'u; // 每脚 0010：通用推挽，2 MHz\n  while (1) {\n'+body+'\n    // 可选观察：uint32_t sample = GPIOA->IDR & '+hex(mask)+'u;\n  }\n}\n// 仿真不模拟毫秒延时；使用下一步或自动演示逐条观察。\n// 未改动组外引脚。真实LED须串联限流电阻，阳极朝PA，阴极接GND。';
+}
+function stop(){if(timer)clearInterval(timer);timer=null;$('play').textContent='自动演示'}
+function chooseScene(i){stop();sceneIndex=i;step=0;free=false;manualHistory=[];go(0,false)}
+function go(n,animate=true){
+ stop();const lesson=scenes[sceneIndex];step=Math.max(0,Math.min(lesson.steps.length-1,n));free=false;manualHistory=[];resetModel();lesson.setup();pin=0;selected=lesson.reg;event('none',lesson.reg,'实验预置',lesson.steps[0].note);previous=snapshot();
+ for(let i=1;i<=step;i++){previous=snapshot();pin=lesson.steps[i].focus;lesson.steps[i].run();}
+ if(step)selected=s.event.reg;
+ syncDraft();render(animate&&step>0);
+}
+function formatTmp(v){return typeof v==='number'?hex(v):String(v)}
+function selectReg(reg){selected=reg;if(reg==='CRH'&&pin<8)pin+=8;else if(reg==='CRL'&&pin>=8)pin-=8;syncDraft();render(false)}
+function syncDraft(){draft=selected==='BSRR'||selected==='BRR'||selected==='IDR'?1:selected==='LCKR'?0x10001:valueOf(selected);$('draft').value=hex(draft);$('feedback').textContent=''}
+function render(animate=false){
+ const lesson=scenes[sceneIndex],entry=lesson.steps[step],p=decode(pin);
+ $('scenes').innerHTML=[[5,6,7],[0,1,2,3,4]].map((group,j)=>'<div class="scene-row"><span>'+(j?'完整实验':'LED 案例')+'</span>'+group.map(i=>'<button data-scene="'+i+'" aria-selected="'+(i===sceneIndex)+'">'+scenes[i].name+'</button>').join('')+'</div>').join('');
+ $('lesson-title').textContent=lesson.title;
+ $('code-list').innerHTML=lesson.steps.map((x,i)=>'<li><button data-step="'+i+'" class="'+(!free&&i===step?'active':'')+'"><small>'+i+' · '+x.title+'</small><code>'+escapeHTML(x.code)+'</code></button></li>').join('');
+ const active=$('code-list').querySelector('.active');if(active){const list=$('code-list');if(active.offsetTop-list.offsetTop<list.scrollTop||active.offsetTop-list.offsetTop+active.offsetHeight>list.scrollTop+list.clientHeight)list.scrollTop=Math.max(0,active.offsetTop-list.offsetTop-100)}
+ $('explanation').textContent=free?s.event.message:entry.note;$('question').textContent=free?'先观察当前值，再尝试读写。自由实验中的“上一步”是教学撤销，实际芯片的配置锁仍需复位解除。':entry.question;
+ $('progress').textContent=free?'自由实验':step+' / '+(lesson.steps.length-1);
+ $('prev').disabled=free?!manualHistory.length:step===0;$('next').disabled=!free&&step===lesson.steps.length-1;$('next').textContent=free?'返回教学 →':'下一步 →';
+ $('pin-select').value=String(pin);$('external').value=s.ext[pin];
+ $('pins').innerHTML=Array.from({length:16},(_,i)=>{const d=decode(i);return '<button data-pin="'+i+'" class="pin-button '+(i===pin?'selected ':'')+(d.level===1?'high':d.level===0?'low':'unknown')+'" aria-label="PA'+i+' '+d.name+' 电平 '+d.level+'"><span>PA'+i+'</span><b>'+(d.level==='X'?'?':d.level?'H':'L')+'</b><small>'+(d.locked?'已锁配置':i<8?'CRL':'CRH')+'</small></button>'}).join('');
+ $('pin-summary').textContent='PA'+pin+'：'+p.name+(p.speed?' / '+p.speed:'')+'；CNF='+bin(p.cnf,2)+'，MODE='+bin(p.mode,2)+'；ODR='+p.odr+'，IDR='+p.sample+'。'+p.why+(p.locked?'。此引脚配置已锁定。':'。');
+ renderLED();renderStage();renderFocus();renderRegisters();renderDraft();$('mode').value=p.mode;renderCNF(p.cnf);renderConfigCode();
+ $('trace').innerHTML='<strong>'+escapeHTML(s.event.title)+'</strong>　<code>'+(s.event.reg?'GPIOA_'+s.event.reg:'')+'</code><br>'+escapeHTML(s.event.message);
+ if(animate)drawTransfer();
+}
+function escapeHTML(text){return String(text).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+let mapTimers=[],mapPhases=[],mapPhaseIndex=0;
+function clearMapTimers(){mapTimers.forEach(clearTimeout);mapTimers=[]}
+function mapPhase(title,detail,nodes=[],edges=[],extra={}){return {title,detail,nodes,edges,...extra}}
+function buildMapPhases(){
+ const e=s.event,p=decode(pin),reg=e.reg,bank=pin<8?'CRL':'CRH',old=previous||s;
+ const access='access-'+reg,read=e.kind==='read',write=e.kind==='write'||e.kind==='blocked';
+ const before=(old.ODR>>>pin)&1,after=p.odr;
+ const result='PA'+pin+'：'+p.name+'；电平 '+(p.level==='X'?'未确定':p.level?'高':'低')+'；LED '+lampState(pin).label+'。';
+ const locks=()=>['CRL','CRH'].filter(r=>s.lockMask&(r==='CRL'?0xff:0xff00));
+ const lockEffects=()=>locks().map(r=>'lock-'+r);
+ if(e.kind==='none'||e.kind==='reset')return [mapPhase(e.kind==='reset'?'系统复位后的状态':'实验预置状态','七个寄存器位置固定。点击“下一步”观察本条代码实际访问的位置。')];
+ if(e.kind==='cpu')return [mapPhase('只修改 CPU 中的软件变量','tmp = '+formatTmp(s.tmp)+'；本步没有总线写入，ODR 和灯保持原状态。',['CPU'])];
+ if(e.kind==='external')return [
+  mapPhase('外部连接改变引脚','当前连接：'+{none:'未连接',low:'接地',high:'接 3.3 V',pullup:'外部弱上拉'}[s.ext[pin]]+'。',['pin']),
+  mapPhase('实际电平进入 IDR','IDR['+pin+'] = '+p.sample+'，ODR['+pin+'] 仍为 '+p.odr+'。',['pin','IDR'],['pin-IDR']),
+  mapPhase('等待 CPU 读取','tmp 仍保存上次结果 '+formatTmp(s.tmp)+'；本步没有执行读指令。',['IDR'])
+ ];
+ if(read){
+  const first=reg==='IDR'?mapPhase('引脚电平已经进入 IDR','IDR['+pin+']='+p.sample+'；数字输入电路采样引脚。',['pin','IDR'],['pin-IDR']):mapPhase('选中待读取的寄存器','本次读取 '+reg+'。'+(reg==='LCKR'?'锁键握手会影响读回值与锁状态。':'读取前值保存在寄存器中。'),[reg]);
+  return [first,mapPhase(reg+' → CPU','CPU 按地址 '+hex(0x40010800+regs[reg].offset)+' 读取。',['CPU',reg],[access],{reverse:[access]}),
+   mapPhase(reg==='LCKR'?'读回结果与锁定状态':'本条执行后的 CPU 结果','tmp = '+formatTmp(s.tmp)+(reg==='IDR'?'；示例代码可能用掩码只保留部分采样位。':reg==='LCKR'?'；当前 '+(s.lockActive?'配置锁已激活。':'配置锁尚未激活。'):'。读取未改变寄存器。'),['CPU',...(reg==='LCKR'?['LCKR',...locks()]:[])],reg==='LCKR'?lockEffects():[])];
+ }
+ const first=mapPhase('CPU → '+reg,(e.value===undefined?'发出读取请求。':'写入 '+hex(e.value)+'，地址 '+hex(0x40010800+regs[reg].offset)+'。'),['CPU',reg],[access]);
+ if(e.kind==='blocked'&&!['CRL','CRH'].includes(reg))return [first,mapPhase('该访问不能完成预期修改',e.message,[reg],[],{blocked:[reg]}),mapPhase('观察实际状态',result,['driver','pin'])];
+ if(reg==='LCKR')return [first,mapPhase('更新锁键序列',e.message,['LCKR']),mapPhase('锁定只约束配置',s.lockActive?'已锁引脚的 CNF / MODE 不能修改；ODR 仍可置位、清位。':'尚未完成锁定握手；不会改变输出电平。',['LCKR',...locks()],lockEffects())];
+ if(reg==='CRL'||reg==='CRH'){
+  const changed=(old[reg]>>>0)!==(s[reg]>>>0),relevant=bank===reg&&((old[reg]>>>((pin%8)*4))&15)!==p.n;
+  return [first,mapPhase(e.kind==='blocked'?'检查锁定字段':'更新四位配置',e.kind==='blocked'?'被锁字段保持原值；同一字中未锁字段仍可更新。':reg+'：'+hex(old[reg])+' → '+hex(s[reg])+'。',[reg,...(e.kind==='blocked'?['LCKR']:[])],e.kind==='blocked'&&locks().includes(reg)?['lock-'+reg]:[],{blocked:e.kind==='blocked'?[reg]:[],changed:changed?[reg]:[]}),
+   mapPhase(relevant?'新模式作用于引脚':'当前观察引脚的状态',result+(bank!==reg?' 当前观察脚由 '+bank+' 配置。':''),['driver','pin'],relevant?[reg+'-driver','driver-pin']:[])];
+ }
+ if(write&&['BSRR','BRR','ODR'].includes(reg)){
+  const affected=reg==='ODR'?true:reg==='BRR'?!!(e.value&(1<<pin)):!!(((e.value&65535)|(e.value>>>16))&(1<<pin));
+  const detail=reg==='ODR'?'整字写入会覆盖 ODR 的低 16 位。':reg==='BRR'?'BR'+pin+' = '+((e.value>>>pin)&1)+'；写 1 清零，写 0 保持。':'BS'+pin+' = '+((e.value>>>pin)&1)+'，BR'+pin+' = '+((e.value>>>(pin+16))&1)+'；同一位同时置位、清位时置位优先。';
+  return [first,mapPhase('作用于 ODR 锁存值',detail+' ODR['+pin+']：'+before+' → '+after+'。',['ODR'],reg==='ODR'?[]:[reg+'-ODR'],{changed:old.ODR!==s.ODR?['ODR']:[]}),
+   mapPhase(affected?'配置决定实际引脚行为':'本次未选择当前引脚',result+(p.mode?'':' 输入模式不会由 ODR 主动输出；上/下拉输入时它选择内部电阻。'),['driver','pin'],affected?['ODR-driver','driver-pin']:[])];
+ }
+ return [first];
+}
+function showMapPhase(index){
+ mapPhaseIndex=Math.max(0,Math.min(index,mapPhases.length-1));
+ document.querySelectorAll('.map-node').forEach(el=>el.setAttribute('class','map-node'+(el.hasAttribute('data-map-pin')?' map-pin-card':'')+(el.dataset.mapReg===selected?' inspect':'')));
+ document.querySelectorAll('.map-edge[id]').forEach(el=>{
+  el.setAttribute('class','map-edge'+(el.id.startsWith('edge-lock-')?' logic':''));
+  el.removeAttribute('marker-start');if(el.id.startsWith('edge-access-'))el.removeAttribute('marker-end');else el.setAttribute('marker-end','url(#map-arrow)');
+ });
+ for(let i=0;i<=mapPhaseIndex;i++){
+  const phase=mapPhases[i];
+  phase.nodes.forEach(n=>{const el=$('node-'+n);if(el)el.classList.add('reached');});
+  phase.edges.forEach(n=>{const el=$('edge-'+n);if(!el)return;el.classList.add('reached');if(phase.reverse?.includes(n)){el.removeAttribute('marker-end');el.setAttribute('marker-start','url(#map-arrow)')}else el.setAttribute('marker-end','url(#map-arrow)');});
+  (phase.blocked||[]).forEach(n=>$('node-'+n)?.classList.add('blocked'));
+  (phase.changed||[]).forEach(n=>$('node-'+n)?.classList.add('changed'));
+ }
+ // Draw the active bus path above inactive paths sharing the same trunk.
+ document.querySelectorAll('#map-edges .map-edge.reached').forEach(el=>$('map-edges').append(el));
+ const current=mapPhases[mapPhaseIndex];
+ current.nodes.forEach(n=>$('node-'+n)?.classList.add('current'));
+ current.edges.forEach(n=>$('edge-'+n)?.classList.add('current'));
+ $('map-steps').innerHTML=mapPhases.map((p,i)=>'<button data-map-phase="'+i+'" aria-pressed="'+(i===mapPhaseIndex)+'" class="'+(i<=mapPhaseIndex?'reached ':'')+(i===mapPhaseIndex?'current':'')+'"><b>'+(i+1)+' · '+escapeHTML(p.title)+'</b><span>'+escapeHTML(p.detail)+'</span></button>').join('');
+}
+function mapPinNode(i){return i===pin?'pin':'pin-'+i}
+function mapPinEdge(i){return i===pin?'driver-pin':'driver-pin-'+i}
+function renderMapPins(){
+ const pins=visibleLEDPins(),ns='http://www.w3.org/2000/svg';
+ document.querySelectorAll('[data-extra-pin-edge]').forEach(el=>el.remove());
+ $('map-pin-bank').innerHTML=pins.map((i,k)=>{
+  const d=decode(i),v=lampState(i),y=pins.length===4?135+k*112:pins.length===2?200+k*130:240;
+  const mid=y+55,port=pins.length===1?295:250+k*90/(pins.length-1);
+  let edge=$('edge-'+mapPinEdge(i));
+  if(!edge){edge=document.createElementNS(ns,'path');edge.id='edge-'+mapPinEdge(i);edge.setAttribute('data-extra-pin-edge','true');edge.setAttribute('class','map-edge');$('map-edges').append(edge);}
+  edge.setAttribute('d','M1015 '+port+' C1025 '+port+' 1035 '+mid+' 1045 '+mid);
+  edge.setAttribute('marker-end','url(#map-arrow)');
+  if(i===pin)$('edge-pin-IDR').setAttribute('d','M1185 '+mid+' H1193 V600 H770 V522 H740');
+  return '<g id="node-'+mapPinNode(i)+'" class="map-node map-pin-card" data-map-pin="'+i+'" data-observed="'+(pin===i)+'" data-led="'+v.status+'" role="button" tabindex="0" aria-label="观察 PA'+i+'，LED'+(i+1)+' '+v.label+'" transform="translate(1045 '+y+')">'+
+   '<rect width="140" height="102"/><text x="13" y="23" class="node-title">PA'+i+'</text><text x="97" y="23" text-anchor="middle" class="pin-small">LED'+(i+1)+'</text>'+
+   '<circle class="pin-led-halo" cx="30" cy="55" r="25" fill="#ffd68b"/><path class="pin-led-rays" d="M30 26 V30 M8 34 L12 38 M48 38 L52 34" fill="none"/><path class="pin-led-leads" d="M24 68 V80 M36 68 V80"/><circle class="pin-led-bulb" cx="30" cy="55" r="17"/><circle class="pin-led-glint" cx="24" cy="49" r="5" fill="white"/>'+
+   '<text class="pin-led-mark" x="30" y="63" text-anchor="middle">'+(v.status==='uncertain'?'?':v.status==='disconnected'?'—':'')+'</text>'+
+   '<text x="95" y="51" text-anchor="middle" class="pin-small">'+(d.level==='X'?'? 未确定':d.level?'H · 3.3 V':'L · 0 V')+'</text><text x="95" y="74" text-anchor="middle" class="node-note map-lamp-label">'+v.label+'</text><text x="70" y="94" text-anchor="middle" class="node-note" style="font-size:12px">ODR['+i+']='+d.odr+(i===pin?' · 当前观察':'')+'</text></g>';
+ }).join('');
+ $('map-mode').textContent='PA'+pin+' · '+decode(pin).name;
+ $('map-config').textContent='CNF='+bin(decode(pin).cnf,2)+' / MODE='+bin(decode(pin).mode,2);
+ if(pins.length>1)$('map-driver-note').textContent=pins.length+' 路独立输出';
+}
+function expandPinPhases(){
+ const pins=visibleLEDPins(),e=s.event,old=previous||s;
+ if(pins.length===1)return;
+ const affected=pins.filter(i=>{
+  if(e.reg==='ODR')return true;
+  if(e.reg==='BSRR')return !!(((e.value&65535)|(e.value>>>16))&(1<<i));
+  if(e.reg==='BRR')return !!(e.value&(1<<i));
+  if(e.reg==='CRL'||e.reg==='CRH')return (i<8?'CRL':'CRH')===e.reg&&(((old[e.reg]>>>((i%8)*4))&15)!==nibble(i));
+  return false;
+ });
+ if(['write','blocked'].includes(e.kind)&&['ODR','BSRR','BRR','CRL','CRH'].includes(e.reg)){
+  const phase=mapPhases[mapPhases.length-1];
+  phase.nodes=[...phase.nodes.filter(n=>n!=='pin'),...affected.map(mapPinNode)];
+  phase.edges=[...phase.edges.filter(n=>n!=='driver-pin'),...affected.map(mapPinEdge)];
+  if(affected.length&&!phase.edges.includes(e.reg==='CRL'||e.reg==='CRH'?e.reg+'-driver':'ODR-driver'))phase.edges.unshift(e.reg==='CRL'||e.reg==='CRH'?e.reg+'-driver':'ODR-driver');
+  phase.detail=pins.map(i=>'PA'+i+'：ODR='+decode(i).odr+'，LED '+lampState(i).label).join('；')+'。各路独立，框图输入反馈线跟随当前观察脚。';
+ }
+}
+function renderStage(){
+ clearMapTimers();
+ const p=decode(pin),e=s.event,accessed=['read','write','blocked'].includes(e.kind);
+ for(const reg of Object.keys(regs)){
+  $('map-value-'+reg).textContent=reg==='IDR'?displayIDR():hex(valueOf(reg));
+  const node=$('node-'+reg);node.setAttribute('tabindex','0');node.setAttribute('role','button');node.setAttribute('aria-label',reg+' '+regs[reg].cn+'，查看寄存器位图');
+ }
+ $('map-cpu-value').textContent=formatTmp(s.tmp);$('map-cpu-action').textContent=e.kind==='cpu'?'计算 tmp':!accessed?'暂无访问':e.kind==='read'?'读取 '+e.reg:e.value===undefined?'请求读 '+e.reg:'写入 '+e.reg;
+ $('map-access').textContent=accessed?'本次访问：GPIOA_'+e.reg+' · '+regs[e.reg].cn:e.kind==='external'?'外部连接改变 · CPU 尚未读取':e.kind==='cpu'?'CPU 修改软件变量 · 无寄存器访问':'初始化 / 复位状态';
+ $('map-transaction').textContent=accessed?hex(0x40010800+regs[e.reg].offset)+(e.kind==='read'?'　读回 '+(e.reg==='IDR'?displayIDR():formatTmp(e.value)):e.value!==undefined?'　写入 '+hex(e.value):'　无有效状态读回'):'';
+ $('map-odr-bit').textContent='ODR['+pin+']：'+((oldValue('ODR')>>>pin)&1)+' → '+p.odr;
+ $('map-idr-bit').textContent='IDR['+pin+'] = '+p.sample+' · 只读采样';
+ $('map-mode').textContent=p.name;
+ $('map-config').textContent='CNF='+bin(p.cnf,2)+' / MODE='+bin(p.mode,2);
+ $('map-driver-note').textContent=p.mode?p.speed+' · ODR='+p.odr:p.cnf===2?'ODR='+p.odr+' → 内部'+(p.odr?'上拉':'下拉'):'数字输出关闭';
+ renderMapPins();
+ mapPhases=buildMapPhases();expandPinPhases();showMapPhase(mapPhases.length-1);
+ $('map-replay').disabled=mapPhases.length<2;
+}
+function renderFocus(){
+ const d=decode(pin),before=(oldValue('ODR')>>>pin)&1,bit=(valueOf(selected)>>>pin)&1,mini=(name,value,cnf=false)=>'<span class="mini'+(cnf?' cnf':'')+'">'+name+' <b>'+value+'</b></span>';
+ let html='<strong>观察 PA'+pin+'</strong>';
+ if(selected==='CRL'||selected==='CRH'){const reg=pin<8?'CRL':'CRH',shift=(pin%8)*4;html+=' <span>'+reg+'['+(shift+3)+':'+shift+']</span>'+mini('CNF',bin(d.cnf,2),true)+mini('MODE',bin(d.mode,2))+'<span>= 0x'+d.n.toString(16).toUpperCase()+' · '+d.name+(d.speed?' '+d.speed:'')+'</span>';}
+ else if(selected==='BSRR'){html+=mini('BS'+pin,bit)+mini('BR'+pin,(valueOf(selected)>>>(pin+16))&1)+'<span>ODR['+pin+']：<b>'+before+' → '+d.odr+'</b></span><small>1 执行，0 保持</small>';}
+ else if(selected==='BRR'){html+=mini('BR'+pin,bit)+'<span>ODR['+pin+']：<b>'+before+' → '+d.odr+'</b></span><small>写 1 才清零</small>';}
+ else if(selected==='LCKR'){html+=mini('LCK'+pin,((valueOf(selected)>>>pin)&1))+mini('LCKK · 当前状态',s.lockActive?1:0)+'<span>'+(d.locked?'四位配置已锁，ODR 仍可改变':'此引脚配置未锁')+'</span>';}
+ else if(selected==='IDR'){html+=mini('ODR['+pin+']',d.odr)+mini('IDR['+pin+']',d.sample)+'<small>左边保存写入值，右边采样实际引脚</small>';}
+ else html+=mini('ODR['+pin+']',before+' → '+d.odr)+mini('IDR['+pin+']',d.sample)+'<small>'+d.name+'</small>';
+ $('focus-strip').innerHTML=html;
+}
+function oldValue(reg){if(!previous)return valueOf(reg);if(reg==='BSRR')return previous.lastBSRR;if(reg==='BRR')return previous.lastBRR;if(reg==='LCKR')return previous.lockActive?(previous.lockMask|0x10000):previous.lckWord;return previous[reg]||0}
+function renderRegisters(){
+ $('registers').innerHTML=Object.entries(regs).map(([name,r])=>'<button data-reg="'+name+'" aria-selected="'+(name===selected)+'"><b>'+name+'</b><span class="reg-name">'+r.cn+'</span><code>'+(name==='IDR'?displayIDR():(name==='BSRR'||name==='BRR'?'写 ':'')+hex(valueOf(name)))+'</code><small>'+hex(0x40010800+r.offset)+' · '+r.access+'</small></button>').join('');
+ const meta=regs[selected],word=valueOf(selected),unk=selected==='IDR'?idr().unknown:0,base=selected==='CRH'?8:0,isConfig=selected==='CRL'||selected==='CRH';
+ $('reg-intro').innerHTML='<strong>GPIOA_'+selected+'</strong>　<code>'+hex(0x40010800+meta.offset)+'</code>　'+meta.access+' · 课件第'+meta.page+'页<br>'+meta.desc;
+ if(isConfig)$('reg-intro').innerHTML+='<button type="button" class="config-ref-jump" data-open-config-reference>查看 CNF / MODE 全部 16 种配置 ↓</button>';
+ const cells=Array.from({length:32},(_,k)=>{const b=31-k,v=(word>>>b)&1,unknown=(unk>>>b)&1,isReserved=(['IDR','ODR','BRR'].includes(selected)&&b>=16)||(selected==='LCKR'&&b>=17),groupPin=base+Math.floor(b/4),locked=isConfig&&!!(s.lockMask&(1<<groupPin)),chosen=isConfig?groupPin===pin:selected==='BSRR'?b===pin||b===pin+16:b===pin||(selected==='LCKR'&&b===16);
+  const classes=['bit',v?'on':'',isReserved?'reserved':'',isConfig?(b%4>=2?'cnf':'mode'):'',locked?'locked':'',chosen?'chosen':'',selected!=='IDR'&&((oldValue(selected)>>>b)&1)!==v?'changed':''].join(' ');
+  const label=isConfig?'PA'+groupPin+' '+(b%4>=2?'CNF':'MODE')+'['+(b%2)+']':selected==='BSRR'?(b>=16?'BR':'BS')+(b%16):selected==='LCKR'&&b===16?'LCKK':'bit '+b;
+  return '<div class="'+classes+'" title="'+label+'"><small>'+b+'</small><b>'+(unknown?'X':v)+'</b></div>';
+ });
+ $('bits').classList.toggle('config-view',isConfig);
+ $('bits').innerHTML=isConfig?Array.from({length:8},(_,k)=>{const p=base+7-k;return '<div class="field-block"><button data-pin="'+p+'">PA'+p+' · 0x'+nibble(p).toString(16).toUpperCase()+' · CNF / MODE</button><div class="four-bits">'+cells.slice(k*4,k*4+4).join('')+'</div></div>'}).join(''):cells.join('');
+ let legend=isConfig?'每四位一组；紫色底线＝CNF，蓝色底线＝MODE。蓝框标出 PA'+pin+' 对应字段，金色字段已锁定。':selected==='BSRR'?'上排 bit31—16：BR15—BR0，写 1 清位；下排 bit15—0：BS15—BS0，写 1 置位。图中是最近写入命令，不是保存的输出值。':selected==='BRR'?'上排保留；下排写 1 清除对应 ODR 位。图中是最近写入命令。':selected==='IDR'?'上排保留位读 0；下排为实时采样。X 表示未确定，请同时查看所选引脚的单个位。':selected==='ODR'?'低 16 位为输出锁存值；高 16 位保留。金色闪烁标出本步变化的位。':'bit16 是锁键；bit15—0 选择要锁定的引脚。当前显示锁状态，写入握手值见代码与执行记录。';
+ if(isConfig)legend+=' PA'+pin+' → '+(pin<8?'CRL':'CRH')+'['+((pin%8)*4+3)+':'+((pin%8)*4)+']。';
+ $('bit-legend').textContent=legend.replace('金色闪烁','绿色闪烁')+' 绿色短闪表示本步发生了位变化。';
+ $('lock-seq').hidden=selected!=='LCKR'&&sceneIndex!==3;
+ $('lock-seq').innerHTML=['写 1','写 0','写 1','读 0 · 完成握手','读 1 · 确认'].map((x,i)=>'<span class="'+(s.lockPhase>i?'done':'')+'">'+(i+1)+'. '+x+'</span>').join('')+'<span>'+ (s.lockActive?'已锁掩码 '+hex(s.lockMask):'配置锁未激活')+'</span>';
+}
+function renderDraft(){$('draft-bits').innerHTML=Array.from({length:32},(_,k)=>{const b=31-k,v=(draft>>>b)&1;return '<button data-bit="'+b+'" class="'+(v?'on':'')+'" aria-label="待写入 bit'+b+'，当前 '+v+'">'+b+':'+v+'</button>'}).join('')}
+function renderCNF(value){
+ const input=Number($('mode').value)===0,labels=input?['00 · 模拟输入','01 · 浮空输入','10 · 上拉/下拉','11 · 保留']:['00 · 通用推挽','01 · 通用开漏','10 · 复用推挽','11 · 复用开漏'];
+ $('cnf').innerHTML=labels.map((label,i)=>'<option value="'+i+'">'+label+'</option>').join('');$('cnf').value=String(value);
+}
+function renderConfigCode(){const reg=pin<8?'CRL':'CRH',shift=(pin%8)*4,n=(Number($('cnf').value)<<2)|Number($('mode').value);$('config-code').textContent='// PA'+pin+' → '+reg+'['+(shift+3)+':'+shift+']\nGPIOA->'+reg+' = (GPIOA->'+reg+'\n  & ~(0xFu << '+shift+'))\n  | (0x'+n.toString(16).toUpperCase()+'u << '+shift+');'}
+function drawTransfer(){
+ clearMapTimers();
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches){showMapPhase(mapPhases.length-1);return}
+ showMapPhase(0);
+ for(let i=1;i<mapPhases.length;i++)mapTimers.push(setTimeout(()=>showMapPhase(i),i*1400));
+}
+let manualHistory=[];
+function manual(fn){stop();manualHistory.push({state:snapshot(),reg:selected,pin});previous=snapshot();fn();selected=s.event.reg||selected;free=true;render(true)}
+function next(){if(free)go(step,false);else go(step+1)}
+function prev(){if(free&&manualHistory.length){const old=manualHistory.pop();previous=snapshot();s=old.state;selected=old.reg;pin=old.pin;render(false)}else if(!free)go(step-1,false)}
+function play(){
+ if(timer){stop();return}
+ if(free||step===scenes[sceneIndex].steps.length-1)go(0,false);
+ const interval=Number($('pace').value);$('play').textContent='暂停';
+ timer=setInterval(()=>{const last=step===scenes[sceneIndex].steps.length-1;if(last){stop();return}const active=timer;timer=null;go(step+1);timer=active;$('play').textContent='暂停'},interval);
+}
+function parseWord(raw){const text=raw.trim();if(!/^(?:0x[0-9a-f]{1,8}|[0-9]+)$/i.test(text))throw Error('请输入 0x 开头的十六进制，或 0—4294967295 的十进制整数。');const value=Number(text);if(!Number.isSafeInteger(value)||value<0||value>0xffffffff)throw Error('数值超出 32 位无符号整数范围。');return value>>>0}
+$('scenes').onclick=e=>{const b=e.target.closest('[data-scene]');if(b)chooseScene(Number(b.dataset.scene))};
+$('code-list').onclick=e=>{const b=e.target.closest('[data-step]');if(b)go(Number(b.dataset.step))};
+$('registers').onclick=e=>{const b=e.target.closest('[data-reg]');if(b){stop();selectReg(b.dataset.reg)}};
+function setPin(i){stop();pin=i;if(selected==='CRL'||selected==='CRH')selected=i<8?'CRL':'CRH';syncDraft();render(false)}
+$('pins').onclick=e=>{const b=e.target.closest('[data-pin]');if(b)setPin(Number(b.dataset.pin))};
+$('bits').onclick=e=>{const b=e.target.closest('[data-pin]');if(b)setPin(Number(b.dataset.pin))};
+$('pin-select').innerHTML=Array.from({length:16},(_,i)=>'<option value="'+i+'">PA'+i+'</option>').join('');
+$('pin-select').onchange=()=>setPin(Number($('pin-select').value));
+$('external').onchange=()=>{const v=$('external').value;manual(()=>external(pin,v))};
+$('prev').onclick=prev;$('next').onclick=next;$('play').onclick=play;$('pace').onchange=stop;$('restart').onclick=()=>chooseScene(sceneIndex);
+$('reset').onclick=()=>manual(()=>{resetModel();pin=0;event('reset','CRL','模拟系统复位','配置锁解除；CRL/CRH 恢复 0x44444444，ODR 清零，外部连接回到未连接。')});
+$('draft').oninput=()=>{try{draft=parseWord($('draft').value);renderDraft();$('feedback').textContent='草稿已修改，尚未写入寄存器。'}catch(err){$('feedback').textContent=err.message}};
+$('draft-bits').onclick=e=>{const b=e.target.closest('[data-bit]');if(b){draft=(draft^(1<<Number(b.dataset.bit)))>>>0;$('draft').value=hex(draft);renderDraft();$('feedback').textContent='草稿已修改，点击“执行写入”才会访问寄存器。'}};
+$('write').onclick=()=>{try{const v=parseWord($('draft').value),reg=selected;draft=v;manual(()=>writeReg(reg,v));$('feedback').textContent=s.event.message}catch(err){$('feedback').textContent=err.message}};
+$('read').onclick=()=>{const reg=selected;manual(()=>readReg(reg));$('feedback').textContent=s.event.message};
+$('mode').onchange=()=>{const cnf=Number($('cnf').value);renderCNF(cnf);renderConfigCode()};$('cnf').onchange=renderConfigCode;
+$('configure').onclick=()=>{const n=(Number($('cnf').value)<<2)|Number($('mode').value);manual(()=>configurePin(pin,n));syncDraft();renderDraft();$('feedback').textContent=s.event.message};
+document.addEventListener('keydown',e=>{if(e.ctrlKey||e.altKey||e.metaKey||e.isComposing||['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)||e.target.isContentEditable)return;if(e.code==='ArrowRight'){e.preventDefault();next()}else if(e.code==='ArrowLeft'){e.preventDefault();prev()}else if(e.code==='Space'&&e.target.tagName!=='BUTTON'){e.preventDefault();play()}});
+$('reg-intro').onclick=e=>{if(e.target.closest('[data-open-config-reference]')){const ref=$('config-reference');ref.open=true;ref.scrollIntoView({block:'start'});ref.querySelector('summary').focus({preventScroll:true})}};
+$('map-replay').onclick=()=>{stop();drawTransfer()};
+$('map-steps').onclick=e=>{const b=e.target.closest('[data-map-phase]');if(b){stop();clearMapTimers();showMapPhase(Number(b.dataset.mapPhase))}};
+$('register-map').onclick=e=>{const p=e.target.closest('[data-map-pin]');if(p){setPin(Number(p.dataset.mapPin));return}const b=e.target.closest('[data-map-reg]');if(b){stop();selectReg(b.dataset.mapReg)}};
+$('register-map').onkeydown=e=>{const b=e.target.closest('[data-map-reg],[data-map-pin]');if(b&&(e.key==='Enter'||e.key===' ')){e.preventDefault();e.stopPropagation();stop();if(b.hasAttribute('data-map-pin'))setPin(Number(b.dataset.mapPin));else selectReg(b.dataset.mapReg)}};
+$('lamps').onclick=e=>{const b=e.target.closest('[data-led]');if(b)setPin(Number(b.dataset.led))};
+function ledManual(fn){manual(fn);syncDraft();renderDraft();$('feedback').textContent=s.event.message}
+$('led-set').onclick=()=>ledManual(()=>writeReg('BSRR',1<<pin));
+$('led-clear').onclick=()=>ledManual(()=>writeReg('BRR',1<<pin));
+$('led-setup').onclick=()=>ledManual(()=>configurePin(pin,2));
+window.registerLab={getState:()=>snapshot(),decode,idr,lampState,setPin,getScene:()=>sceneIndex,getStep:()=>step,chooseScene,go,selectReg,scenes:scenes.map(x=>({name:x.name,steps:x.steps.length}))};
+chooseScene(5);
+</script>
+<footer id="course-credit" style="box-sizing:border-box;position:static;max-width:1480px;margin:24px auto 0;padding:22px 26px 28px;border-top:1px solid #dce4e8;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;font:13px/1.7 -apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif;color:#617785;text-align:left;background:transparent"><a href="./index.html" style="color:#176b58;text-decoration:none">← 返回课程目录</a><span>Designed By Xianyu Wu</span></footer>
+</body></html>

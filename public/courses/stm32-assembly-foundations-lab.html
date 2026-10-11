@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cortex-M3 汇编语句与程序生成 · 第24–46页动态课堂</title>
+<style>
+:root{--ink:#17354d;--muted:#617789;--blue:#176fa6;--green:#13816b;--amber:#a76317;--purple:#765aab;--line:#cbdde8;--bg:#f2f7fa}*{box-sizing:border-box}body{margin:0;color:var(--ink);background:var(--bg);font:16px/1.65 "Microsoft YaHei",sans-serif}main{max-width:1480px;margin:auto;padding:24px}h1,h2,h3,p{margin:0}h1{font-size:29px}h2{font-size:21px}h3{font-size:17px}header{display:flex;justify-content:space-between;align-items:center;gap:22px}header small{color:var(--blue)}small,.muted{color:var(--muted)}a{color:var(--blue)}code,pre{font-family:Consolas,"Microsoft YaHei",monospace}button,select{font:inherit;color:inherit;padding:8px 12px;background:white;border:1px solid var(--line);border-radius:7px}button{cursor:pointer}button:hover:not(:disabled){background:#e8f4fc}button:disabled{opacity:.45;cursor:default}button:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #71b1dd;outline-offset:3px}.primary,.tabs button[aria-selected=true]{background:var(--blue);color:#fff;border-color:var(--blue)}.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:18px 0}.tabs button{text-align:left;padding:10px 15px}.tabs b,.tabs span{display:block}.tabs span{font-size:12px}.toolbar{display:flex;flex-wrap:wrap;gap:9px;align-items:center;padding:12px 15px;background:#fff;border:1px solid var(--line);border-radius:10px;position:sticky;top:0;z-index:10;box-shadow:0 3px 10px #17354d0a}.toolbar label,.controls label{display:flex;align-items:center;gap:8px}.spacer{flex:1}.panel{margin-top:15px;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}.heading{padding:14px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;align-items:center}.heading small{display:block}.lead{padding:13px 20px;background:#eef6fb}.controls{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 20px}.content{padding:16px 20px}.layout{display:grid;grid-template-columns:minmax(310px,.8fr) minmax(0,1.6fr);gap:0}.source{background:#f5f8fb;border-right:1px solid var(--line);padding:16px;overflow:auto}.source h3{margin-bottom:10px}.code-line{font:15px/1.85 Consolas,"Microsoft YaHei",monospace;white-space:pre-wrap;padding:4px 9px;border-left:4px solid transparent;overflow-wrap:anywhere}.code-line.now{background:#dcedf9;border-color:var(--blue);font-weight:bold}.code-line.done{color:#556f80}.code-line.meta{color:var(--purple)}.code-line.skip{background:#f1f2f3;text-decoration:line-through;color:#73818c}.explanation{padding:14px 20px;background:#eaf4fb;border-top:1px solid var(--line);min-height:95px}.explanation b{font-size:18px;color:var(--blue)}.explanation p{margin-top:5px}.flow{display:flex;flex-wrap:wrap;gap:8px;padding:14px 20px;border-bottom:1px solid var(--line)}.flow span{border:1px solid var(--line);border-radius:6px;padding:5px 10px;background:#f7fafc;font-size:14px}.flow .now{background:#176fa6;color:white}.flow .done{background:#e6f2ed;border-color:#91bba9}.scroll{overflow:auto}.diagram{display:block;width:100%;min-width:700px;background:#fcfdff}.diagram text{font:16px "Microsoft YaHei",sans-serif;fill:var(--ink)}.diagram .small{font-size:13px;fill:var(--muted)}.diagram .title{font-size:18px;font-weight:bold}.diagram .mono{font:700 21px Consolas,monospace}.diagram .wire{fill:none;stroke:#91aebe;stroke-width:2}.diagram .on{stroke:var(--green);stroke-width:3}.diagram .orange{stroke:var(--amber)}.diagram .packet text{fill:#fff;font:700 14px Consolas,monospace}.tokens{display:flex;flex-wrap:wrap;gap:7px;padding:15px 20px;background:#f8fbfd}.tokens button{font-family:Consolas,"Microsoft YaHei",monospace;border-bottom:3px solid var(--blue)}.tokens button:nth-child(2n){border-bottom-color:var(--purple)}.token-note{padding:10px 20px;min-height:52px;color:var(--muted)}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 20px}.card{border:1px solid var(--line);border-radius:9px;overflow:hidden;min-width:0}.card h3{padding:11px 15px;background:#eef5fa}.card .content{padding:13px 15px}.num{font:700 25px/1.6 Consolas,monospace}.flagrow{display:flex;gap:8px;flex-wrap:wrap;padding:10px 20px}.flag{padding:8px 13px;border:1px solid var(--line);border-radius:8px;background:#eef3f6;text-align:center}.flag.active{background:#ffe8b2;border-color:#d1a64a}.flag b{font:700 24px Consolas,monospace;display:block}.flag small{display:block}.bytes{display:flex;gap:5px;flex-wrap:wrap;margin:12px 0}.byte{display:flex;flex-direction:column;align-items:center;min-width:54px;padding:6px 8px;border:1px solid var(--line);border-radius:5px;background:#f5f8fa;font-family:Consolas,monospace}.byte.hot{background:#dff2e9;border-color:#6ba98e}.byte.pad{background:#f4ecfa;border-color:#bba6d2}.byte small{font-size:11px}.byte b{font-size:19px}.memory{padding:13px 17px}.memory-row{border-bottom:1px solid var(--line);padding:6px 0}.memory-row.hot{background:#ecf7f0}.memory-row .bytes{margin:6px 0}.memory-title{display:flex;justify-content:space-between;gap:12px;font-size:14px}.memory-title code{color:var(--blue)}.chips{display:flex;flex-wrap:wrap;gap:8px;padding:12px 20px}.chip{padding:6px 10px;border-radius:7px;background:#eef4f8;border:1px solid var(--line);font-size:14px}.chip.green{background:#e6f5ed;border-color:#82b99e}.chip.amber{background:#fff0d6;border-color:#d6b079}.note{padding:12px 20px;color:var(--muted);font-size:14px}.alert{margin:14px 20px;padding:12px 15px;border-left:4px solid var(--amber);background:#fff5e5}.registers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:12px 20px}.reg{border:1px solid var(--line);border-radius:7px;background:#f6f9fc;padding:10px}.reg code{display:block;font-size:18px;font-weight:bold}.reg.hot{background:#e3f4ed;border-color:#6ca98e}details{padding:14px 20px}summary{font-weight:bold;cursor:pointer}details p{margin-top:10px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)}th{background:#eef5fa}pre{background:#f2f6f9;padding:15px;white-space:pre-wrap;overflow:auto;font-size:14px}.ref{font-size:13px;color:var(--muted)}.foot{font-size:13px;color:var(--muted);margin:20px 0}[hidden]{display:none!important}.result-ok{padding:16px;background:#e3f4eb;color:#155c4b;border-radius:8px}.result-error{padding:16px;background:#fff0e5;color:#8e3e14;border-radius:8px}.quiz button{margin:8px 8px 0 0}.quiz .feedback{margin-top:10px;font-weight:bold}
+@media(max-width:1050px){.layout{grid-template-columns:1fr}.source{border-right:0;border-bottom:1px solid var(--line)}.source .code-line{font-size:14px}.spacer{display:none}}@media(max-width:720px){main{padding:12px}h1{font-size:24px}header{display:block}.tabs{grid-template-columns:1fr 1fr;gap:6px}.tabs button{padding:8px}.twocol{grid-template-columns:1fr}.toolbar{position:static}.toolbar button{flex:1 1 auto}.heading{display:block}.registers{grid-template-columns:1fr 1fr}.controls{padding:12px}.diagram{min-width:680px}.num{font-size:20px}table{font-size:14px}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+#lesson{scroll-margin-top:85px}.diagram .mono{font-family:Consolas,"Microsoft YaHei",monospace}
+.int-values{margin-top:5px;font-variant-numeric:tabular-nums;line-height:1.6}
+.int-values b,.int-values small{display:block;overflow-wrap:anywhere}
+.int-values b{font-size:15px}.int-values small{font-size:13px;color:var(--muted)}
+.diagram .signed-reading{font-size:15px;font-weight:bold;font-variant-numeric:tabular-nums}
+.diagram .unsigned-reading{font-size:13px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.build-diagram .diagram{max-height:160px}
+.data-memory .memory-row{display:grid;grid-template-columns:170px minmax(0,1fr);align-items:center;gap:10px;min-height:64px}
+.data-memory .memory-title{display:block}.data-memory .memory-title code{display:block;font-size:13px}
+.data-memory .bytes{margin:0}.data-memory .byte{min-width:43px;padding:2px 5px}
+@media(max-width:720px){#lesson{scroll-margin-top:10px}.data-memory .memory-row{display:block}.data-memory .memory-title{display:flex}.data-memory .bytes{margin-top:6px}}
+</style></head><body><main>
+<header><div><small>第4章 · 汇编语言及其程序设计 V2.1 · 第24～46页</small><h1>一行汇编，怎样变成程序？</h1><p class="muted">从助记符、标志位到内存布局，再看复位后 CPU 真正执行什么。</p></div><a href="stm32-branch-it-lab.html">转移指令与 IT 专题 →</a></header>
+<nav class="tabs" id="tabs" aria-label="教学模块">
+<button data-tab="syntax" aria-selected="true"><b>① 指令与标志位</b><span>第24～30页 · opcode、S、cond、操作数</span></button>
+<button data-tab="width" aria-selected="false"><b>② 16位与32位编码</b><span>第31～33页 · UAL、.N、.W</span></button>
+<button data-tab="data" aria-selected="false"><b>③ 伪指令布置内存</b><span>第34、36、39、41页 · AREA、EQU、数据定义</span></button>
+<button data-tab="address" aria-selected="false"><b>④ 地址与内容</b><span>第43页 · LDR =、ADR、LDR [ ]</span></button>
+<button data-tab="link" aria-selected="false"><b>⑤ 多文件怎样连接</b><span>第45页 · EXPORT、IMPORT、WEAK</span></button>
+<button data-tab="boot" aria-selected="false"><b>⑥ 源程序与复位运行</b><span>第35～46页的程序框架 · ENTRY、END、向量表</span></button>
+</nav>
+<div class="toolbar"><button id="back">← 上一步</button><button id="next" class="primary">下一步 →</button><button id="play">自动演示</button><label>速度 <select id="speed"><option value="1800">讲解 · 1.8秒</option><option value="3000">慢 · 3秒</option><option value="900">中 · 0.9秒</option></select></label><span id="progress"></span><span class="spacer"></span><button id="reset">重置本例</button><small>← / → 单步，空格播放</small></div>
+<div id="lesson"></div>
+<details class="panel"><summary>课件页码对应与需要校正的表述</summary>
+<table><thead><tr><th>课件页码</th><th>网页对应</th><th>讲解重点</th></tr></thead><tbody>
+<tr><td>24～30</td><td>① 指令与标志位</td><td>语句各部分、S 后缀、APSR、条件执行与 IT。</td></tr>
+<tr><td>31～33</td><td>② 16位与32位编码</td><td>Cortex-M3 执行 Thumb 指令，包含16位和32位编码。没有所有指令通用的 A32 式“31:28条件域”。</td></tr>
+<tr><td>34、36、39、41</td><td>③ 伪指令布置内存</td><td>AREA、EQU、DCB、DCW、DCD、DCFS、DCFD、SPACE，以及对齐。</td></tr>
+<tr><td>43</td><td>④ 地址与内容</td><td>LDR =label 得到地址，LDR label / [Rn] 读取内容；ADR 计算近处地址，受距离与同段限制。</td></tr>
+<tr><td>45</td><td>⑤ 多文件怎样连接</td><td>导出、导入、强符号覆盖弱定义，缺少必要定义时链接失败。</td></tr>
+<tr><td>35、37、38、40、42、44、46</td><td>⑥ 源程序与复位运行</td><td>把多次出现的程序框架合成一次从构建到执行的过程。</td></tr>
+</tbody></table>
+<p><b>第31页：</b>固定32位且含统一条件域的示意不适合作为 Cortex-M3 通用编码。网页用 Thumb 的16／32位并排示例说明。</p>
+<p><b>第32页：</b>S 后缀不能概括所有指令。CMP、CMN、TST、TEQ 等按各自规则更新标志；普通算术指令是否修改标志，还要结合编码和 IT 环境。网页用明确的 ADD.W / ADDS.W 对照。</p>
+<p><b>第36页：</b>属性拼写应为 READONLY、NOINIT。AREA 的 ALIGN=n 表示按 2ⁿ 字节对齐；不能把它与 ALIGN 指令的参数混为一谈。</p>
+<p><b>第37页：</b>ENTRY 为工具链标记入口，硬件复位入口来自向量表第二个字；它们不是同一个机制。</p>
+<p><b>第43页：</b>LDR =const 是交给汇编器展开的写法，不保证总读内存，也不表示任意常数都能直接放进一条 MOV 的立即数字段。ADR 也不是任意外部符号的通用地址装载方式。</p>
+<p><b>第45页：</b>未解析的弱引用如何处理取决于引用种类和链接器规则；不能把“弱引用一律变成0或NOP”当作跨工具链通用规则。</p>
+<p>保留 Keil armasm 风格。符号命名、列位置和指示符语法要以实际汇编器为准；网页不把课件中的“标号最长31个字符”当作所有工具链的统一限制。</p>
+</details>
+<details class="panel"><summary>三个课堂检查题</summary>
+<div class="quiz" data-answer="b"><p>1. 执行 <code>LDR R0,=DATA</code> 后，R0 通常要得到什么？</p><button data-choice="a">DATA 处存的内容</button><button data-choice="b">DATA 的地址</button><p class="feedback" aria-live="polite"></p></div>
+<div class="quiz" data-answer="a"><p>2. Cortex-M3 是32位处理器，是否意味着每条指令都占4字节？</p><button data-choice="a">不是，Thumb 编码有2字节和4字节</button><button data-choice="b">是，每条都4字节</button><p class="feedback" aria-live="polite"></p></div>
+<div class="quiz" data-answer="b"><p>3. 源程序中的 <code>DCD STACK_TOP</code> 由谁处理？</p><button data-choice="a">CPU 每次运行到这里时执行</button><button data-choice="b">汇编／链接工具生成数据，复位硬件再读取</button><p class="feedback" aria-live="polite"></p></div>
+</details>
+<details class="panel"><summary>官方依据与示例范围</summary>
+<p>课件来源：《第4章 汇编语言及其程序设计16-9-V2.1.pptx》第24～46页。具体页码见各模块。图中的地址和数值用于教学，实际程序以链接布局与反汇编为准。</p>
+<p><a href="https://www.st.com/resource/en/programming_manual/pm0056-stm32f10xxx20xxx21xxxl1xxxx-cortexm3-programming-manual-stmicroelectronics.pdf" target="_blank" rel="noopener">ST PM0056：Cortex-M3 指令与复位向量</a>；
+<a href="https://www.keil.com/support/man/docs/armasm/default.htm" target="_blank" rel="noopener">Arm / Keil armasm 用户指南：语法、UAL、伪指令与指示符</a>；
+<a href="https://developer.arm.com/community/arm-community-blogs/b/architectures-and-processors-blog/posts/condition-codes-3-conditional-execution-in-thumb-2" target="_blank" rel="noopener">Arm：Thumb-2 条件执行与指令宽度</a>。</p>
+<p>预设案例不是任意汇编源码的完整仿真器。动画把一条操作拆开讲解，步数不代表 CPU 时钟周期数。内存按 STM32F1 常见的小端方式展示。Cortex-M3 无硬件浮点单元，DCFS / DCFD 仍可在构建时生成浮点数据字节。</p>
+<p>复位示例假定从主 Flash 启动、无中断，Flash 映射到 0x00000000 的启动别名。省略完整中断向量、运行库初始化、外设时钟与工程链接文件。</p>
+</details>
+<p class="foot">本地单文件网页，可离线使用。外部资料链接仅在点击时联网。</p>
+</main><script>
+'use strict';
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hex=(n,w=8)=>'0x'+(Number(n)>>>0).toString(16).toUpperCase().padStart(w,'0');
+let current='syntax',timer=null;
+const state={syntax:{step:0,scenario:'carry',setFlags:true,cond:'EQ',token:'opcode'},width:{step:0,input:'65535'},data:{step:0},address:{step:0,mode:'literal'},link:{step:0,mode:'strong'},boot:{step:0}};
+const limits={syntax:4,width:3,data:10,address:3,link:3,boot:9};
+const cases={normal:[3,5],carry:[0xFFFFFFFF,1],overflow:[0x7FFFFFFF,1]};
+function add32(a,b){const full=BigInt(a)+BigInt(b),r=Number(full&0xFFFFFFFFn);return {r,N:r>>>31,Z:Number(r===0),C:Number(full>0xFFFFFFFFn),V:Number(((~(a^b)&(a^r))>>>31)!==0)};}
+const conds={EQ:{test:f=>f.Z===1,rule:'Z = 1'},NE:{test:f=>f.Z===0,rule:'Z = 0'},CS:{test:f=>f.C===1,rule:'C = 1（同 HS）'},CC:{test:f=>f.C===0,rule:'C = 0（同 LO）'},MI:{test:f=>f.N===1,rule:'N = 1'},PL:{test:f=>f.N===0,rule:'N = 0'},VS:{test:f=>f.V===1,rule:'V = 1'},VC:{test:f=>f.V===0,rule:'V = 0'},HI:{test:f=>f.C===1&&f.Z===0,rule:'C = 1 且 Z = 0'},LS:{test:f=>f.C===0||f.Z===1,rule:'C = 0 或 Z = 1'},GE:{test:f=>f.N===f.V,rule:'N = V'},LT:{test:f=>f.N!==f.V,rule:'N ≠ V'},GT:{test:f=>f.Z===0&&f.N===f.V,rule:'Z = 0 且 N = V'},LE:{test:f=>f.Z===1||f.N!==f.V,rule:'Z = 1 或 N ≠ V'}};
+function flags(s){const [a,b]=cases[s.scenario],f=add32(a,b);return s.step>=2&&s.setFlags?f:{N:0,Z:0,C:0,V:0};}
+function floatBytes(value,width){const b=new ArrayBuffer(width),v=new DataView(b);width===4?v.setFloat32(0,value,true):v.setFloat64(0,value,true);return [...new Uint8Array(b)];}
+const allocations=[
+{src:'VALUE   EQU   0x12345678',title:'EQU 记录一个符号常量',detail:'符号表记住 VALUE=0x12345678。EQU 本身不分配存储空间，也不把值写入 CPU 寄存器。',offset:0,bytes:[],kind:'symbol'},
+{src:'        AREA  Demo, DATA, READONLY, ALIGN=3',title:'AREA 声明一个段',detail:'Demo 是只读数据段，要求按 2³=8 字节对齐。本例链接器把它放在 0x08002000；AREA 自身没有指定这个绝对地址。',offset:0,bytes:[],kind:'area'},
+{src:'str     DCB   "AB"',title:'DCB 每项一个字节',detail:'字符 A、B 的 ASCII 值是 0x41、0x42，共占2字节。字符串末尾不会自动添加零终止符。',offset:0,bytes:[0x41,0x42],label:'str'},
+{src:'half    DCW   0x1234',title:'DCW 分配一个半字',detail:'半字占2字节。小端排列：低地址放 34，高地址放 12。',offset:2,bytes:[0x34,0x12],label:'half'},
+{src:'word    DCD   VALUE',title:'DCD 把一个32位值放进4字节',detail:'VALUE 已在符号表中定义。这里才真正生成 78 56 34 12 四个字节，代表字值 0x12345678。',offset:4,bytes:[0x78,0x56,0x34,0x12],label:'word'},
+{src:'single  DCFS  1.0',title:'DCFS 生成单精度浮点数据',detail:'IEEE 754 单精度的 1.0 编码为 0x3F800000，小端字节为 00 00 80 3F。这是数据定义，不是执行浮点运算。',offset:8,bytes:floatBytes(1,4),label:'single'},
+{src:'        ALIGN 8',title:'把下一个对象放到8字节边界',detail:'当前偏移为12，补4字节来到偏移16。本例数据段的对齐填充值为0。注意 ALIGN 8 与 AREA 中的 ALIGN=3 都表示8字节对齐，但参数写法不同。',offset:12,bytes:[0,0,0,0],label:'对齐填充',kind:'pad'},
+{src:'double  DCFD  2.0',title:'DCFD 生成双精度浮点数据',detail:'双精度占8字节。2.0 的64位编码为 0x4000000000000000，低字节先放。本页不要求 Cortex-M3 有硬件浮点单元。',offset:16,bytes:floatBytes(2,8),label:'double'},
+{src:'buffer  SPACE 4',title:'SPACE 分配一段字节空间',detail:'本例普通已初始化数据段中，SPACE 4 分配4字节并填0。NOINIT 段另有初始化规则，不应据此认为所有RAM在硬件复位时都会自动清零。',offset:24,bytes:[0,0,0,0],label:'buffer'},
+{src:'        END',title:'END 告诉汇编器源文件结束',detail:'它不生成“CPU停止”指令。刚才完成的是构建阶段的数据布局，CPU 还没有执行这些语句。',offset:28,bytes:[],kind:'end'}];
+const addrModes={
+ literal:{code:'LDR R0, =DATA',meaning:'取得 DATA 的地址',result:0x08001020,read:0x08001010,desc:'此例选择文字池展开：文字池存的是 DATA 地址，CPU 读文字池后把这个地址放入 R0。',steps:['汇编器为 =DATA 安排地址常量','按对齐后的 PC + 12 找到文字池','从文字池读出地址，写入 R0']},
+ adr:{code:'ADR R0, DATA',meaning:'算出 DATA 的地址',result:0x08001020,read:null,desc:'用 PC 相对运算得到地址；不会为了取得这个地址而读取 DATA 处的数据。目标必须在可编码范围内，本例与指令同段。',steps:['汇编器计算与 DATA 的相对偏移','对齐后的 PC + 28 = DATA 地址','把计算出来的地址写入 R0']},
+ value:{code:'LDR R0, DATA',meaning:'读取 DATA 处的32位内容',result:0x12345678,read:0x08001020,desc:'这里没有等号。它是 PC 相对加载：读取 DATA 地址上的内容。',steps:['汇编器生成 PC 相对加载指令','按对齐后的 PC + 28 找到 DATA','读取 DATA 的内容，写入 R0']},
+ indirect:{code:'LDR R0, [R1]',meaning:'读取 R1 指向的32位内容',result:0x12345678,read:0x08001020,desc:'R1 中事先保存 DATA 地址。方括号表示按地址访问内存；R1 本身保持不变。',steps:['R1 已保存地址 0x08001020','把 R1 的值送到内存地址端','读取该地址的内容，写入 R0']}};
+
+function options(items,value){return items.map(([v,t])=>'<option value="'+esc(v)+'"'+(String(value)===String(v)?' selected':'')+'>'+esc(t)+'</option>').join('')}
+function head(title,ref,lead){return '<section class="panel"><div class="heading"><h2>'+title+'</h2><small>'+ref+'</small></div><p class="lead">'+lead+'</p>'}
+function explain(title,text){return '<div class="explanation" aria-live="polite"><b>'+title+'</b><p>'+text+'</p></div>'}
+function source(lines,active=-1){const aa=Array.isArray(active)?active:[active];return '<div class="source"><h3>源码 · 当前语句高亮</h3>'+lines.map((l,i)=>'<div class="code-line '+(aa.includes(i)?'now':aa.length&&i<Math.min(...aa)?'done':'')+'">'+esc(l)+'</div>').join('')+'</div>'}
+function stages(labels,step){return '<div class="flow">'+labels.map((l,i)=>'<span class="'+(i+1===step?'now':i+1<step?'done':'')+'">'+(i+1)+' · '+l+'</span>').join('')+'</div>'}
+function svgStart(label,h=340){return '<div class="scroll"><svg class="diagram" viewBox="0 0 960 '+h+'" role="img" aria-label="'+esc(label)+'"><defs><marker id="arrow-'+current+'" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="context-stroke"/></marker></defs>'}
+const svgEnd='</svg></div>';
+function txt(x,y,t,cls='',anchor='start'){return '<text x="'+x+'" y="'+y+'" class="'+cls+'" text-anchor="'+anchor+'">'+esc(t)+'</text>'}
+function integerValues(value){const u=Number(value)>>>0,s=u|0;return {signed:s,unsigned:u,signedText:(s>0?'+':'')+s.toLocaleString('en-US'),unsignedText:u.toLocaleString('en-US')}}
+function integerCaption(value){const n=integerValues(value);return '<div class="int-values" data-signed="'+n.signed+'" data-unsigned="'+n.unsigned+'"><b>真值：'+n.signedText+'</b><small>无符号：'+n.unsignedText+'</small></div>'}
+function box(x,y,w,h,title,value,detail='',hot=false,kind=''){
+ const n=kind==='int32'&&/^0x[0-9a-f]{8}$/i.test(value)?integerValues(value):null;
+ return '<g class="diagram-box" data-kind="'+kind+'" data-value="'+esc(value)+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="9" fill="'+(hot?'#e2f3eb':'#f1f6fa')+'" stroke="'+(hot?'#13816b':'#afc6d5')+'" stroke-width="'+(hot?2:1)+'"/>'+txt(x+15,y+27,title,'title')+txt(x+15,y+58,value,'mono')+(n?'<g class="int32-reading" data-signed="'+n.signed+'" data-unsigned="'+n.unsigned+'">'+txt(x+15,y+82,'真值：'+n.signedText,'signed-reading')+txt(x+15,y+102,'无符号：'+n.unsignedText,'unsigned-reading')+'</g>':'')+(detail?txt(x+15,y+h-14,detail,'small'):'')+'</g>';
+}
+function wire(path,hot=false){return '<path d="'+path+'" class="wire '+(hot?'on':'')+'" marker-end="url(#arrow-'+current+')"/>'}
+function packet(path,value){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return '';return '<g class="packet"><rect x="-59" y="-14" width="118" height="28" rx="7" fill="#176fa6"/><text y="5" text-anchor="middle">'+esc(value)+'</text><animateMotion dur="1.15s" path="'+path+'" fill="freeze"/><animate attributeName="opacity" values="1;1;0" keyTimes="0;0.86;1" dur="1.3s" fill="freeze"/></g>'}
+function reg(name,value,hot=false,kind=''){return '<div class="reg '+(hot?'hot':'')+'">'+name+'<code>'+esc(value)+'</code>'+(kind==='int32'&&/^0x[0-9a-f]{8}$/i.test(value)?integerCaption(value):'')+'</div>'}
+function syntaxView(){
+ const s=state.syntax,k=s.step,[a,b]=cases[s.scenario],calc=add32(a,b),f=flags(s),pass=conds[s.cond].test(f),op=s.setFlags?'ADDS.W':'ADD.W';
+ const notes={label:'SUM 是标号：为该位置命名，方便其他语句引用；标号本身不执行运算。',opcode:'ADD 是加法助记符，不等于机器码位串。实际编码由汇编器生成。',S:'S 后缀要求这条加法更新 N、Z、C、V。此处固定使用宽编码 .W，便于明确比较 ADD 与 ADDS。',width:'.W 要求使用32位指令编码，并不是“把寄存器变成32位”；Cortex-M3 的通用寄存器本来就是32位。',operands:'R3 是此条加法的目的寄存器；R4、R5 是源寄存器。并非所有指令第一个操作数都是目的寄存器，例如 CMP、STR。',comment:'分号后是注释，给人阅读，不进入运行时计算。',cond:'EQ、NE 等是条件后缀。Thumb 下普通条件数据处理指令通常放在 IT 块中；这里 IT 只管紧随其后的一条 MOV。'};
+ let d=svgStart('CPU 内部：源寄存器到 ALU，再到目的寄存器和 APSR；数值下方显示有符号真值与无符号值',435);
+ d+=txt(28,28,'CPU 内部数据通路','title');
+ d+=box(25,50,220,138,'源寄存器 R4',hex(a),'本例预先设置',k===1,'int32');
+ d+=box(25,236,220,138,'源寄存器 R5',hex(b),'本例预先设置',k===1,'int32');
+ d+=box(350,110,230,152,'ALU · 32位加法',k>=1?hex(calc.r):'等待运算','结果截取低32位',k===1,'int32');
+ d+=box(715,68,220,146,'目的寄存器 R3',k>=2?hex(calc.r):hex(0),'写回结果',k===2,'int32');
+ d+=box(655,312,280,101,'APSR · 条件标志','N'+f.N+' Z'+f.Z+' C'+f.C+' V'+f.V,s.setFlags?'S=1：更新 NZCV':'无 S：保留原标志',k===2&&s.setFlags);
+ d+=wire('M245 120 H290 V150 H350',k===1)+wire('M245 330 H310 V225 H350',k===1)+wire('M580 185 H660 V140 H715',k===2)+wire('M465 262 V360 H655',k===2&&s.setFlags);
+ d+=txt(490,347,s.setFlags?'允许更新':'不更新','small');
+ if(k===1)d+=packet('M245 120 H290 V150 H350',hex(a))+packet('M245 330 H310 V225 H350',hex(b));
+ if(k===2){d+=packet('M580 185 H660 V140 H715',hex(calc.r));if(s.setFlags)d+=packet('M465 262 V360 H655','NZCV')}
+ d+=svgEnd;
+ const details=[
+ ['先看初值，再单步执行','选择一组数，点击“下一步”。这里为了对照，人为设定初始 N、Z、C、V 均为0；这不是在承诺芯片复位后的所有标志初值。'],
+ ['① 读源寄存器，送入 ALU',hex(a)+' + '+hex(b)+' 的32位结果为 '+hex(calc.r)+'。这一步把运算过程放慢展示；尚未在画面中提交写回。'],
+ ['② 写回 R3'+(s.setFlags?'，同时更新 NZCV':'，但不改变 NZCV'),s.setFlags?'N='+f.N+'（结果最高位），Z='+f.Z+'（结果是否为0），C='+f.C+'（无符号进位），V='+f.V+'（有符号溢出）。C 和 V 表示不同含义。':'ADD.W 仍然正常算出结果，但保留原 N=Z=C=V=0。结果等于0，也不意味着 Z 自动变为1。'],
+ ['③ IT '+s.cond+'：检查条件',s.cond+' 要求 '+conds[s.cond].rule+'，当前条件'+(pass?'成立':'不成立')+'。IT 建立后续指令的条件执行状态，不重新比较 R3，也不修改 NZCV。'],
+ ['④ MOV'+s.cond+'.W '+(pass?'执行':'跳过'),pass?'条件成立：R2 ← 1。此处 MOV 没有 S 后缀，NZCV 保持不变。':'条件不成立：这条 MOV 没有寄存器写入效果，R2 仍为0。CPU 继续执行后续指令。']
+ ];
+ return head('① 一条加法，怎样影响下一条指令？','对应第24～30页','先辨认语句，再观察 CPU。改变 S 后缀，就能对照“结果相同、标志不同”。')
+ +'<div class="controls"><label>数据 <select id="scenario">'+options([['carry','无符号进位：FFFFFFFF + 1'],['overflow','有符号溢出：7FFFFFFF + 1'],['normal','普通加法：3 + 5']],s.scenario)+'</select></label><label>指令 <select id="setFlags">'+options([['true','ADDS.W · 更新标志'],['false','ADD.W · 保留标志']],s.setFlags)+'</select></label><label>条件 <select id="condition">'+options(Object.keys(conds).map(c=>[c,c+' · '+conds[c].rule]),s.cond)+'</select></label></div>'
+ +'<div class="tokens">'+[['label','SUM'],['opcode','ADD'],['S',s.setFlags?'S':'无 S'],['width','.W'],['operands','R3, R4, R5'],['comment','; 相加'],['cond',s.cond]].map(([id,t])=>'<button data-token="'+id+'" aria-pressed="'+(s.token===id)+'">'+t+'</button>').join('')+'</div><p class="token-note">'+notes[s.token]+'</p>'
+ +'<p class="note">数值读法：上方是32位位型的十六进制表示；下方“真值”按<b>有符号补码</b>解释，“无符号”是同一位型的另一种解释。寄存器本身不区分这两种类型。</p>'
+ +stages(['读取并运算','提交结果与标志','IT 检查条件','执行或跳过 MOV'],k)
+ +'<div class="layout">'+source(['SUM   '+op+' R3, R4, R5','      IT '+s.cond,'      MOV'+s.cond+'.W R2, #1'],k===1||k===2?0:k===3?1:k===4?2:-1)+'<div>'+d+'</div></div>'
+ +'<div class="flagrow">'+[['N','31 · 负号'],['Z','30 · 零'],['C','29 · 进位'],['V','28 · 溢出']].map(([n,t])=>'<div class="flag '+(f[n]?'active':'')+'">'+n+'<b>'+f[n]+'</b><small>bit '+t+'</small></div>').join('')+'<div class="flag">R2<b id="syntax-r2">'+(k===4&&pass?'1':'0')+'</b><small>条件 MOV 的结果</small></div></div>'
+ +explain(...details[k])
+ +'<details><summary>把 APSR、xPSR 和条件码放在一起理解</summary><p>xPSR 是程序状态视图的组合：APSR 保存算术标志（含 NZCV、Q），EPSR 包含 Thumb 状态 T 与 IT 等执行状态，IPSR 表示当前异常号。这里的 ADDS 更新 NZCV，不是把整个 xPSR 重写；也不演示饱和运算的 Q 标志。</p><table><tr><th>条件</th><th>检查的标志</th></tr>'+Object.entries(conds).map(([c,o])=>'<tr><td>'+c+'</td><td>'+esc(o.rule)+'</td></tr>').join('')+'</table><p>AL 表示无条件；此例无需为 AL 建立 IT 块。条件码只检查标志，不自动执行比较。若要表达两个操作数的大小关系，通常先用 CMP 建立对应标志。</p></details></section>';
+}
+function widthView(){
+ const s=state.width,k=s.step,initial=Number(s.input),result=add32(initial,1);
+ const card=(wide)=>{
+ const length=wide?4:2,start=0x08001000,next=start+length;
+ return '<article class="card"><h3>'+ (wide?'32位编码 · .W':'16位编码 · .N')+'</h3><div class="content"><pre>'+ (wide?'ADDS.W R0, R0, #1':'ADDS.N R0, #1')+'</pre><p>指令自身占 <b>'+length+' 字节</b></p><div class="bytes">'+Array.from({length},(_,i)=>'<span class="byte '+(k>=1?'hot':'')+'"><small>'+hex(start+i)+'</small><b>'+(k>=1?'8位':'—')+'</b></span>').join('')+'</div><p class="ref">每格1字节；这里只展示长度，不展示真实机器码。</p><div class="reg '+(k===2?'hot':'')+'">R0 · 始终是32位寄存器<code data-width-result="'+length+'">'+hex(k>=2?result.r:initial)+'</code>'+integerCaption(k>=2?result.r:initial)+'</div><p style="margin-top:12px">下一条指令 <code>MOVS R1,#0</code></p><p class="num">'+(k>=3?hex(next):'待观察')+'</p><p class="ref">上面是下一条指令的存放地址；不是读取 PC 操作数时的值。</p></div></article>';
+ };
+ const info=[['指令有多长，与寄存器有多宽，是两件事','左右使用相同初值、完成相同的加1运算。逐步观察：字节数不同，但结果按同样的32位规则产生。'],['① 汇编器选择编码','左边占2字节，右边占4字节。宽编码通常提供更丰富的操作数组合，但并不意味着每个助记符都同时支持 .N 和 .W。'],['② 执行：同样对32位 R0 加1','两边 R0 都变为 '+hex(result.r)+'，NZCV 也相同：N='+result.N+'，Z='+result.Z+'，C='+result.C+'，V='+result.V+'。16位指令编码并不把结果截成16位。'],['③ 取下一条指令：位置不同','左边下一条位于 0x08001002，右边位于 0x08001004。因此排列代码地址时，不能让所有指令都固定加4。']];
+ return head('② 16位指令，也能操作32位寄存器','对应第31～33页','把同一个“R0 加1”放在两条平行轨道上。不同的是编码长度，不是 CPU 数据宽度。')
+ +'<div class="controls"><label>R0 初值 <select id="widthInput">'+options([['65535','0x0000FFFF · 观察跨过16位'],['4294967295','0xFFFFFFFF · 观察32位回绕'],['5','0x00000005 · 简单加1']],s.input)+'</select></label></div>'+stages(['生成编码','执行加法','定位下一条'],k)+'<div class="twocol">'+card(false)+card(true)+'</div>'+explain(...info[k])
+ +'<div class="alert">课件第31页的统一32位、固定条件域示意不适用于 Cortex-M3 的所有指令。这里应理解为 Thumb 的16／32位混合编码。</div><details><summary>UAL、.N、.W 怎么使用？</summary><p>UAL 是统一汇编语言语法。窄编码适合的寄存器、立即数和寻址方式受限制；例如本例 R0 与立即数1就能使用窄编码。强行指定不支持的 .N，汇编器应报错，而不是偷偷改变运算意义。</p><p>不写宽度后缀时，汇编器依据具体指令、操作数、标志要求和环境选择合法编码。这里两条指令都明确使用 ADDS，均更新标志。不是所有助记符都有两种宽度，也不是所有16位指令都更新标志。</p><p>本模块展示代码布局地址。Thumb 指令读取 PC 作为操作数时，一般以当前指令地址+4为基础；某些地址计算还需要按4字节对齐，详见模块④。</p></details></section>';
+}
+function dataView(){
+ const k=state.data.step,visible=allocations.slice(0,k),used=visible.reduce((n,a)=>n+a.bytes.length,0),a=allocations[k-1];
+ let mem='<div class="card data-memory"><h3>链接后数据映像 · 0x08002000 起</h3><div class="memory">';
+ allocations.forEach((a,i)=>{if(!a.bytes.length)return;mem+='<div class="memory-row '+(k===i+1?'hot':'')+'"><div class="memory-title"><b>'+esc(a.label)+'</b><code>'+hex(0x08002000+a.offset)+'</code></div><div class="bytes">'+a.bytes.map((b,j)=>'<span class="byte '+(k>i?(a.kind==='pad'?'pad':'hot'):'')+'"><small>+'+(a.offset+j)+'</small><b>'+ (k>i?b.toString(16).toUpperCase().padStart(2,'0'):'—')+'</b></span>').join('')+'</div></div>'});
+ mem+='</div></div>';
+ const d=svgStart('源码由汇编器处理，产生符号表和数据映像；CPU 尚未执行',190)+box(25,34,215,110,'汇编源码',k?String(k)+' / 10 行':'尚未处理','这里的语句均在构建时处理',k>0)+box(357,34,220,110,'汇编／链接工具','生成程序映像','不是 CPU 在执行伪指令',k>0)+box(700,34,235,110,'数据映像',used+' 字节','布局示意：固定段地址',k>0)+wire('M240 88 H357',k>0)+wire('M577 88 H700',!!a?.bytes.length)+(a?.bytes.length?packet('M577 88 H700',a.bytes.length+' bytes'):'')+svgEnd;
+ return head('③ 伪指令：在程序运行前布置数据','对应第34、36、39、41页','EQU 负责命名；AREA 负责分段；DCB / DCW / DCD 等才真正生成数据字节。')
+ +'<div class="chips"><span class="chip amber">当前阶段：汇编／链接 · CPU 尚未运行</span><span class="chip">已生成 <b id="data-used">'+used+'</b> 字节</span><span class="chip">VALUE = '+(k>=1?'0x12345678':'尚未定义')+'</span></div>'
+ +'<div class="build-diagram">'+d+'</div><div class="layout">'+source(allocations.map(a=>a.src),k-1)+'<div class="content">'+mem+'</div></div>'
+ +explain(a?(k+' / 10 · '+a.title):'先命名，再划段，再放字节',a?a.detail:'右边的空格是预览位置。每按一次“下一步”，处理一行源语句。EQU、AREA、END 不会凭空向 CPU 写入数值。')
+ +'<details><summary>AREA 属性和小端排列：课堂速查</summary><table><tr><th>写法</th><th>含义</th></tr><tr><td>CODE / DATA</td><td>段的用途：代码或数据。</td></tr><tr><td>READONLY / READWRITE</td><td>告诉工具链该段是否可写；不是一条设置芯片硬件保护的指令。</td></tr><tr><td>ALIGN=3</td><td>AREA 的段对齐要求：2³=8字节，最终地址由链接布局决定。</td></tr><tr><td>NOINIT</td><td>不带初始内容的段属性；初始化行为取决于工程与运行时配置。</td></tr><tr><td>DCB / DCW / DCD</td><td>每项1 / 2 / 4字节；DCW、DCD 还有相应对齐要求。</td></tr><tr><td>DCFS / DCFD</td><td>单精度4字节 / 双精度8字节浮点数据。</td></tr><tr><td>SPACE n</td><td>保留 n 字节空间。本例普通数据段的填充值为0。</td></tr></table><p>小端：一个多字节数的最低有效字节放在最低地址。例如 0x12345678 在连续地址中排列为 78、56、34、12；不是把数值本身改成 0x78563412。</p><p>本例 DATA、READONLY 是为观察程序映像。若要由 CPU 修改 buffer，应另设可写段，并按工程的链接和初始化规则放到 RAM。</p></details></section>';
+}
+function addressView(){
+ const s=state.address,k=s.step,m=addrModes[s.mode],isADR=s.mode==='adr',isIndirect=s.mode==='indirect',isLiteral=s.mode==='literal';
+ const readY=isLiteral?110:270;
+ let d=svgStart('地址计算与内存读取：区分地址和地址中的内容',435);
+ d+=txt(85,26,'CPU','title')+txt(689,26,'Flash 内存：地址 → 内容','title');
+ d+=box(85,50,235,140,isADR||isLiteral?'R0 · DATA 地址':'R0 · 数据内容',k>=3?hex(m.result):'等待写入',isADR||isLiteral?'装入地址，不按补码解释':'按32位整数解释',k===3,isADR||isLiteral?'':'int32');
+ d+=box(85,233,235,105,isIndirect?'源寄存器 R1':'PC 相对寻址基准',isIndirect?'0x08001020':'0x08001004',isIndirect?'预置为 DATA 地址':'Align(指令地址 + 4, 4)',k===2);
+ d+=box(365,230,220,112,'地址计算',k>=2?hex(isADR?m.result:m.read):'等待计算',isIndirect?'直接使用 R1':isLiteral?'基准 + 12':'基准 + 28',k===2);
+ d+=box(685,50,250,115,'文字池 @08001010','0x08001020','这里存着 DATA 的地址',k>=2&&isLiteral);
+ d+=box(685,212,250,148,'DATA @08001020','0x12345678','这里存着真正的数据',k>=2&&!isADR&&!isLiteral,'int32');
+ d+=wire('M320 286 H365',k===2);
+ if(isADR){d+=wire('M465 230 V104 H320',k===3);d+=txt(364,183,'ADR：计算地址，不读数据','small');if(k===3)d+=packet('M465 230 V104 H320',hex(m.result));}
+ else{const addressPath=isLiteral?'M585 285 H630 V130 H685':'M585 285 H685';const dataPath=isLiteral?'M685 80 H320':'M815 360 V408 H60 V104 H85';d+=wire(addressPath,k===2)+wire(dataPath,k===3)+txt(isLiteral?405:393,isLiteral?67:398,'读出 '+(isLiteral?'地址常量':'内存内容'),'small');if(k===3)d+=packet(dataPath,hex(m.result))}
+ d+=svgEnd;
+ const stepInfo=k===0?['先选一条写法，比较 R0 最后装进什么',m.desc]:[k+' · '+m.steps[k-1],k===3?'最终 R0 = '+hex(m.result)+'。'+(isADR||isLiteral?'这是 DATA 的地址，不是 DATA 处的 0x12345678。':'这是 DATA 处的32位内容，而不是 DATA 地址。'):m.desc];
+ return head('④ 等号、方括号：少一个符号，含义大不同','对应第43页','DATA 的地址固定为 0x08001020，那里存放 0x12345678。先说清“地址”和“内容”，再看数据从哪里流入 CPU。')
+ +'<div class="controls"><label>写法 <select id="addressMode">'+options(Object.entries(addrModes).map(([v,a])=>[v,a.code+' · '+a.meaning]),s.mode)+'</select></label></div>'
+ +stages(['确定操作含义','找到地址','写入 R0'],k)
+ +'<div class="chips"><span class="chip"><code>'+esc(m.code)+'</code></span><span class="chip green">'+m.meaning+'</span><span class="chip">本例指令地址：0x08001000</span></div>'
+ +d+'<div class="registers">'+reg(isADR||isLiteral?'R0 · 地址结果':'R0 · 数据结果',k>=3?hex(m.result):'尚未写入',k===3,isADR||isLiteral?'':'int32')+reg('DATA · 地址','0x08001020')+reg('DATA · 内容','0x12345678',false,'int32')+'</div>'+explain(...stepInfo)
+ +'<details><summary>四种写法对照与使用限制</summary><table><tr><th>写法</th><th>R0 得到什么</th><th>本例是否读数据内存</th></tr>'+Object.values(addrModes).map(a=>'<tr><td><code>'+esc(a.code)+'</code></td><td>'+a.meaning+'</td><td>'+(a.read===null?'不需要':a.read===0x08001010?'读文字池里的地址':'读 DATA 的内容')+'</td></tr>').join('')+'</table><p>LDR Rd,=常数／符号 是交给汇编器展开的伪指令。合适时可用 MOV、MVN 等生成常量，否则可采用文字池；并不是每次都走内存。上面的 LDR =DATA 特意选择文字池展开，展示“从池里取地址”。</p><p>ADR 使用 PC 相对地址运算，目标受编码范围约束，并要求与指令在合适的同段范围；不要拿它当任意外部符号地址装载器。图中 PC 相对基准为 Align(0x08001000+4,4)。</p><p>此图只标出与案例相关的数据读通路，不是在说 CPU 无需从 Flash 取指令。</p></details></section>';
+}
+function linkView(){
+ const s=state.link,k=s.step,missing=s.mode==='missing',strong=s.mode==='strong'||s.mode==='override',weak=s.mode==='weak-default'||s.mode==='override',target=strong?0x08000300:0x08000400;
+ const modeLabels=[['strong','A · 普通导入／导出'],['weak-default','B · 没有自定义函数：用弱默认实现'],['override','C · 强定义覆盖弱默认实现'],['missing','D · 缺少定义：链接失败']];
+ let sources='<article class="card"><h3>main.s · 调用者</h3><div class="content"><pre>        IMPORT LedInit\n        ; …\n        BL LedInit</pre><p>我需要一个叫 LedInit 的符号；定义在其他文件中。</p></div></article><article class="card"><h3>实现文件 · 提供者</h3><div class="content">';
+ if(weak)sources+='<pre>; startup.s\n        EXPORT LedInit [WEAK]\nLedInit\n        BX LR</pre><p>默认弱实现：本例地址 0x08000400。</p>';
+ if(strong)sources+='<pre>; led.s\n        EXPORT LedInit\nLedInit\n        ; 自定义功能（省略）\n        BX LR</pre><p>普通强定义：本例地址 0x08000300。</p>';
+ if(missing)sources+='<div class="result-error">没有任何文件提供 LedInit 的定义。</div>';
+ sources+='</div></article>';
+ let d=svgStart('两个目标文件在链接阶段通过符号表连接',235);
+ d+=box(25,45,235,135,'main.o · 符号引用',k>=1?'LedInit → ?':'尚未汇编','IMPORT 不会复制函数代码',k===1);
+ d+=box(364,45,230,135,'链接器',k>=2?'寻找定义':'等待符号表',missing?'找不到所需的强引用目标':'按强／弱定义规则解析',k===2);
+ d+=box(700,45,235,135,k>=3&&missing?'链接错误':'程序映像',k>=3?(missing?'无法生成':hex(target)):'等待链接',k>=3?(missing?'CPU 无可运行的新映像':'BL 的目标已确定'):'地址由本例链接布局决定',k===3&&!missing);
+ d+=wire('M260 112 H364',k>=1)+wire('M594 112 H700',k>=2&&!missing);
+ if(k===3&&!missing)d+=packet('M594 112 H700',hex(target));d+=svgEnd;
+ const info=[['跨文件连接发生在构建阶段','先选择案例，再逐步生成目标文件、解析符号、输出映像。EXPORT / IMPORT 自身都不是 CPU 运行时执行的指令。'],
+ ['① 汇编各文件，留下符号和引用','main.o 记录对 LedInit 的引用；实现文件记录自己的导出定义。此时调用点的最终目标地址还需要链接器处理。'],
+ ['② 链接器按名称查找定义',missing?'普通 IMPORT 对应的 LedInit 必须能被解析，但本例没有定义，因此出现链接错误。':strong&&weak?'同时存在默认弱定义和用户强定义：选择强定义 0x08000300。':weak?'没有用户强定义覆盖，使用默认弱实现 0x08000400。':'找到 led.s 的强定义，绑定到 0x08000300。'],
+ ['③ '+(missing?'链接失败，不能进入运行阶段':'链接完成：调用目标已经确定'),missing?'缺少必要符号不能靠运行时“猜一个地址”。补齐定义或修正符号名后重新构建。':'最终 BL LedInit 将调用 '+hex(target)+' 处的函数。本模块演示的是构建过程，还没有让 CPU 执行这条 BL。']];
+ return head('⑤ IMPORT / EXPORT：不是搬代码，而是接通名字','对应第45页','把调用者、函数实现和链接器分开看。WEAK 让库或启动文件提供一个“可被用户覆盖”的默认实现。')
+ +'<div class="controls"><label>案例 <select id="linkMode">'+options(modeLabels,s.mode)+'</select></label></div>'+stages(['各自汇编','解析符号','输出映像'],k)
+ +'<div class="twocol">'+sources+'</div>'+d
+ +'<div class="content"><div id="link-result" class="'+(k>=2&&missing?'result-error':'result-ok')+'">'+(k<2?'还没有完成符号解析':missing?'未定义符号 LedInit：链接错误':strong&&weak?'采用用户强定义；弱默认实现不再作为本次调用的目标。':weak?'采用默认弱定义。':'采用普通强定义。')+'</div></div>'+explain(...info[k])
+ +'<details><summary>容易混淆的边界</summary><p>IMPORT 声明外部符号引用；EXPORT 让本文件定义可被其他目标文件引用；它们不是“打开另一份源文件并复制内容”。</p><p>WEAK 在本例修饰的是导出的默认定义。多个普通强定义通常导致重定义错误；不要把它和“强覆盖弱”混为一谈。未解析的弱引用另有规则，取决于引用类型和工具链，本模块不把它一概说成0或NOP。</p><p>BL 才是将来由 CPU 执行的调用指令。本例函数实现省略了具体业务；若实际函数内部再调用其他函数，需要按调用约定保护返回信息。</p></details></section>';
+}
+const bootSource=[
+'STACK_TOP EQU 0x20002000',
+'STORE_ADDR EQU 0x20000000',
+'        AREA RESET, DATA, READONLY',
+'        DCD STACK_TOP',
+'        DCD START',
+'        AREA DemoCode, CODE, READONLY',
+'        THUMB',
+'        ENTRY',
+'START',
+'        LDR R0, =STORE_ADDR',
+'        MOVS R1, #0x5A',
+'        STR R1, [R0]',
+'DEADLOOP',
+'        B DEADLOOP',
+'        END'];
+function bootSnapshot(k){return {MSP:k>=4?0x20002000:null,PC:k>=5?[0x08000100,0x08000104,0x08000106,0x08000108,0x08000108][k-5]:null,R0:k>=6?0x20000000:null,R1:k>=7?0x5A:null,RAM:k>=8?0x5A:null,T:k>=5?1:null}}
+function bootView(){
+ const k=state.boot.step,v=bootSnapshot(k),show=n=>n===null?'尚未演示':hex(n),active=[[],[0,1,2,5,6],[3,4],[7,14],[3],[4],[9],[10],[11],[13]][k];
+ let d=svgStart('Flash 中的向量表加载到 CPU，CPU 再向 SRAM 写入数据',590);
+ d+=txt(20,28,'Flash · 已链接的程序映像','title')+txt(364,28,'Cortex-M3 CPU','title')+txt(704,28,'SRAM · 可写存储器','title');
+ d+=box(20,52,275,104,'0x08000000 · 初始栈顶',k>=2?'0x20002000':'等待 DCD 生成','启动别名：0x00000000',k===2||k===4);
+ d+=box(20,178,275,104,'0x08000004 · 复位向量',k>=2?'0x08000101':'等待 DCD 生成','最低位1表示 Thumb 入口',k===2||k===5);
+ d+=box(20,340,275,155,'0x08000100 · START',k>=3?'程序代码':'等待链接','LDR → MOVS → STR → B',k>=6);
+ d+=box(370,52,270,104,'MSP · 主栈指针',show(v.MSP),'本例没有 PUSH，不改变栈顶',k===4);
+ d+=box(370,178,270,104,'PC · 下一条取指地址',show(v.PC),k>=5?'EPSR.T = 1 · Thumb':'从复位向量确定执行入口',k===5||k>=6);
+ d+=box(370,316,270,104,'R0 · 目标地址',show(v.R0),'内存地址，不按补码解释',k===6);
+ d+=box(370,433,270,136,'R1 · 待写入数据',show(v.R1),'',k===7,'int32');
+ d+=box(702,356,238,170,'0x20000000',v.RAM===null?'未写入':'0x0000005A',v.RAM===null?'复位前内容不在本例假定内':'低 → 高：5A 00 00 00',k===8,'int32');
+ d+=wire('M295 103 H370',k===4)+wire('M295 228 H370',k===5);
+ d+=wire('M640 361 H667 V393 H702',k===8)+txt(649,345,'地址','small');
+ d+=wire('M640 479 H702',k===8)+txt(648,466,'数据','small');
+ if(k===4)d+=packet('M295 103 H370','0x20002000');
+ if(k===5)d+=packet('M295 228 H370','0x08000101');
+ if(k===8)d+=packet('M640 479 H702','0x0000005A');
+ d+=svgEnd;
+ const info=[
+ ['从源码到硬件：分清三个阶段','先汇编／链接，再由硬件复位读取向量表，最后 CPU 才开始执行 START 处的指令。按“下一步”走完整过程。'],
+ ['① 定义符号、段属性和 Thumb 代码','EQU 建立常量，AREA 描述段，THUMB 指定后续代码的指令状态。这些都由汇编器处理；MSP、PC、R0、R1 尚未因此被赋值。'],
+ ['② DCD 生成向量表的两个字','本例链接布局把向量表放在 0x08000000。第一个字是初始 MSP=0x20002000；第二个字是 Thumb 入口值 0x08000101。DCD 并不是 CPU 的“赋值指令”。'],
+ ['③ ENTRY / END 完成构建语义','ENTRY 为工具链标记入口；END 结束源文件。它们都不替代 Cortex-M3 硬件读取复位向量的机制。下面才开始讲硬件复位。'],
+ ['④ 复位硬件加载 MSP','从启动地址 0x00000000（本例映射主 Flash）的第一个字读取 0x20002000，送入 MSP。这个动作不是执行 DCD，也不是执行 LDR 指令。'],
+ ['⑤ 复位硬件确定 PC 与 Thumb 状态','第二个向量字是 0x08000101：最低位1用于指示 Thumb，实际指令地址为 0x08000100。因此表内入口值是奇数、取指地址是偶数，并不矛盾。'],
+ ['⑥ 执行 LDR R0,=STORE_ADDR','R0 得到常量 0x20000000，即准备访问的 SRAM 地址。伪指令的最终展开由汇编器决定；本例按4字节展开展示布局，所以下一条位于 0x08000104。'],
+ ['⑦ 执行 MOVS R1,#0x5A','将立即数 0x5A 放进32位 R1，得到 0x0000005A。本例采用2字节编码，下一条 STR 位于 0x08000106。MOVS 也按其指令规则更新标志，本图聚焦地址与数据流。'],
+ ['⑧ 执行 STR R1,[R0]','CPU 将 R0 作为地址，把 R1 的32位内容写入 SRAM。四个连续字节是 5A、00、00、00。STR 不改变这里的 R0、R1，也没有压栈；MSP 仍是 0x20002000。'],
+ ['⑨ B DEADLOOP：一直跳回自身','位于 0x08000108 的 B 跳回同一地址。CPU 仍在取指与执行，不是被 END 停住。教学动画在这里暂停，实际芯片会继续循环。']
+ ];
+ return head('⑥ 课件的完整程序框架，究竟何时开始运行？','对应第35、37、38、40、42、44、46页','把“构建时生成的字节”与“运行时改变的寄存器”放到同一张图里，按阶段慢慢看。')
+ +'<div class="flow"><span class="'+(k>=1&&k<=3?'now':k>3?'done':'')+'">A · 汇编／链接（1～3步）</span><span class="'+(k>=4&&k<=5?'now':k>5?'done':'')+'">B · 硬件复位（4～5步）</span><span class="'+(k>=6?'now':'')+'">C · CPU 执行（6～9步）</span></div>'
+ +'<div class="layout">'+source(bootSource,active)+'<div>'+d+'</div></div>'
+ +explain(...info[k])
+ +'<div class="alert">为避免把“目标数据地址”误当成“栈顶”，这里把课件示例中的写入目标改为 <code>STORE_ADDR = 0x20000000</code>，栈顶仍是 <code>0x20002000</code>；向量数据段与指令代码段也分开声明。</div>'
+ +'<details><summary>示例地址、初始化与上板边界</summary><p>图中段位置由教学用链接布局指定，不是写下 AREA 就会自动放到这些地址。真实代码地址、LDR 伪指令展开、指令长度，应查看汇编列表或反汇编。本例只保留复位所需的两个向量字；完整工程必须按芯片要求提供完整向量表、链接配置及必要初始化。</p><p>PC 卡片表示下一条实际取指地址，不是“读取 PC 作为操作数”的值。本例主 Flash 启动时映射到 0 地址别名；其他启动方式不可直接套用这个映射。</p><p>MSP 是栈指针，普通 STR [R0] 是按 R0 地址写数据，两者并不等价。写入内存不一定意味着进栈，访问 SRAM 也不一定要使用 SP。</p><pre>'+esc(bootSource.join('\n'))+'</pre></details></section>';
+}
+function stop(){if(timer!==null)clearInterval(timer);timer=null;$('play').textContent='自动演示'}
+function render(){
+ const views={syntax:syntaxView,width:widthView,data:dataView,address:addressView,link:linkView,boot:bootView};
+ $('lesson').innerHTML=views[current]();
+ document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===current)));
+ $('progress').textContent='第 '+state[current].step+' / '+limits[current]+' 步';
+ $('back').disabled=state[current].step===0;
+ $('next').disabled=state[current].step===limits[current];
+ $('play').textContent=timer===null?'自动演示':'暂停';
+}
+function advance(delta){const s=state[current];s.step=Math.max(0,Math.min(limits[current],s.step+delta));if(s.step===limits[current])stop();render()}
+function togglePlay(){if(timer!==null){stop();return}if(state[current].step===limits[current])state[current].step=0;timer=setInterval(()=>advance(1),Number($('speed').value));render()}
+$('back').addEventListener('click',()=>{stop();advance(-1)});
+$('next').addEventListener('click',()=>{stop();advance(1)});
+$('reset').addEventListener('click',()=>{stop();state[current].step=0;render()});
+$('play').addEventListener('click',togglePlay);
+$('speed').addEventListener('change',()=>{if(timer!==null){stop();togglePlay()}});
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;stop();current=b.dataset.tab;render()});
+$('lesson').addEventListener('change',e=>{
+ const id=e.target.id,value=e.target.value;
+ if(id==='scenario')state.syntax.scenario=value;
+ else if(id==='setFlags')state.syntax.setFlags=value==='true';
+ else if(id==='condition')state.syntax.cond=value;
+ else if(id==='widthInput')state.width.input=value;
+ else if(id==='addressMode')state.address.mode=value;
+ else if(id==='linkMode')state.link.mode=value;
+ else return;
+ stop();state[current].step=0;render();
+});
+$('lesson').addEventListener('click',e=>{const t=e.target.closest('[data-token]');if(t){state.syntax.token=t.dataset.token;render()}});
+document.addEventListener('keydown',e=>{
+ if(e.altKey||e.ctrlKey||e.metaKey||e.target.closest('input,select,textarea,[contenteditable=true],summary'))return;
+ if(e.key==='ArrowRight'){e.preventDefault();stop();advance(1)}
+ else if(e.key==='ArrowLeft'){e.preventDefault();stop();advance(-1)}
+ else if(e.code==='Space'&&!e.target.closest('button,a')){e.preventDefault();togglePlay()}
+});
+document.querySelectorAll('.quiz').forEach(q=>q.addEventListener('click',e=>{const b=e.target.closest('[data-choice]');if(!b)return;const ok=b.dataset.choice===q.dataset.answer;const feedback=q.querySelector('.feedback');feedback.textContent=ok?'正确。请再用自己的话解释：这一操作发生在构建阶段，还是运行阶段？':'再想一想：先分清指令／数据、地址／内容，以及工具链／CPU 各自的工作。';feedback.style.color=ok?'#13816b':'#a76317'}));
+window.assemblyLab={getState:()=>structuredClone(state),getTab:()=>current,getBoot:()=>bootSnapshot(state.boot.step),stop};
+render();
+</script>
+<footer id="course-credit" style="box-sizing:border-box;position:static;max-width:1480px;margin:24px auto 0;padding:22px 26px 28px;border-top:1px solid #dce4e8;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;font:13px/1.7 -apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif;color:#617785;text-align:left;background:transparent"><a href="./index.html" style="color:#176b58;text-decoration:none">← 返回课程目录</a><span>Designed By Xianyu Wu</span></footer>
+</body></html>

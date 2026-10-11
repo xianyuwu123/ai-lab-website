@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STM32寻址 · 六组演示与七种教材概念</title>
+<style>
+:root{--ink:#19384f;--muted:#5c7486;--blue:#176ca9;--address:#7652a7;--data:#117d62;--gold:#986019;--line:#cbdce7;--bg:#f2f7fa}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "Microsoft YaHei",sans-serif}main{max-width:1480px;margin:auto;padding:24px}h1,h2,h3,p{margin:0}h1{font-size:30px;line-height:1.4}h2{font-size:22px}h3{font-size:18px}small,.muted{color:var(--muted)}a{color:var(--blue)}code,pre,.number{font-family:Consolas,"Microsoft YaHei",monospace}button,select{font:inherit;color:inherit;padding:8px 12px;background:white;border:1px solid var(--line);border-radius:7px}button{cursor:pointer}button:disabled{opacity:.45;cursor:default}button:hover:not(:disabled){background:#edf5fb}button:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #79b8df;outline-offset:3px}.primary,[aria-selected=true]{background:var(--blue);color:white;border-color:var(--blue)}header small{color:var(--blue)}header p{margin-top:8px}.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:20px 0 14px}.tabs button{text-align:left;padding:11px 14px}.tabs b,.tabs small{display:block}.tabs small{font-size:13px}.tabs [aria-selected=true] small{color:#dfedf8}.toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:5;background:white;border:1px solid var(--line);border-radius:9px;padding:12px}.toolbar label,.controls label{display:inline-flex;align-items:center;gap:7px}.toolbar small{margin-left:auto}.panel{margin-top:16px;background:white;border:1px solid var(--line);border-radius:10px;overflow:hidden;scroll-margin-top:92px}.heading{padding:16px 20px;border-bottom:1px solid var(--line)}.heading p{margin-top:5px}.summary-row{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:12px;padding:16px 20px;background:#f7fafc}.summary-card{border-left:3px solid var(--blue);padding:8px 12px;min-width:0}.summary-card b{display:block;font-size:19px;overflow-wrap:anywhere}.summary-card small{display:block}.summary-card.address{border-color:var(--address)}.summary-card.data{border-color:var(--data)}.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--line)}.notice{background:#fff4df;color:#765022;border-left:4px solid #c49542;margin:12px 20px;padding:10px 13px}.cue{padding:13px 20px;background:#e9f3fb;border-block:1px solid #ccdfed;min-height:89px}.cue b{display:block;font-size:19px}.cue p{margin-top:3px}.cue.done{background:#e5f4ec;border-color:#b5d8c8}.legend{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:12px 20px;font-size:14px}.legend span{display:inline-flex;gap:7px;align-items:center}.swatch{width:23px;height:9px;border-radius:3px;background:var(--blue)}.swatch.address{background:var(--address)}.swatch.data{background:var(--data)}.scroll{overflow:auto;max-width:100%}.diagram{display:block;width:100%;min-width:960px;background:#fcfdff}.diagram text{fill:var(--ink);font:16px "Microsoft YaHei",sans-serif}.diagram .title{font-size:18px;font-weight:bold}.diagram .small{font-size:13px;fill:var(--muted)}.diagram .mono{font:700 23px Consolas,"Microsoft YaHei",monospace}.diagram .formula{font:16px Consolas,"Microsoft YaHei",monospace}.diagram .packet-text{font:700 14px Consolas,"Microsoft YaHei",monospace;fill:white}.steps{display:flex;gap:7px;flex-wrap:wrap;padding:14px 20px;border-top:1px solid var(--line)}.steps button{font-size:14px;background:#f4f8fb}.steps .passed{background:#e8f3ed}.steps [aria-current=step]{background:var(--blue);color:white;border-color:var(--blue)}.result{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:15px 20px;background:#f3f7fa;border-top:1px solid var(--line)}.result.complete{background:#e6f5ed}.result .number{font-size:25px;font-weight:bold}.result small{display:block}.content{padding:16px 20px}.content p+p{margin-top:8px}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 20px}.card{border:1px solid var(--line);border-radius:8px;padding:14px;background:#f8fbfd;min-width:0}.card p{margin-top:8px}.card pre{margin-bottom:0}.formula-box{background:#edf3f8;border-radius:7px;padding:12px 15px;font:700 19px/1.7 Consolas,"Microsoft YaHei",monospace;overflow-wrap:anywhere}.address-text{color:var(--address)}.data-text{color:var(--data)}details{padding:15px 20px}summary{font-weight:bold;cursor:pointer}details p{margin-top:9px}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}th{background:#edf4f9}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#edf3f8;padding:13px;border-radius:7px;font:15px/1.8 Consolas,"Microsoft YaHei",monospace}.quiz{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}.quiz button{margin:8px 5px 0 0}.feedback{min-height:50px;margin-top:9px;font-size:14px}.correct{color:var(--data)}.incorrect{color:#a13f44}footer{margin-top:20px;color:var(--muted);font-size:13px}[hidden]{display:none!important}
+.example{margin:14px 20px;border:1px solid #b9d0df;border-radius:9px;background:#f7fafc;overflow:hidden}.example-head{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;padding:10px 14px;background:#eaf2f8}.example-head small{font-size:13px}.example-grid{display:grid;grid-template-columns:1.15fr 1.3fr .7fr;gap:14px;padding:12px 14px}.example-label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px}.case-fact,.case-instruction,.case-answer{border:2px solid transparent;border-radius:6px;padding:5px 8px;overflow-wrap:anywhere}.case-fact code{font-weight:bold}.case-fact.active{border-color:var(--address);background:#eee7f8}.case-fact.data.active,.case-answer.active{border-color:var(--data);background:#e3f4eb}.case-instruction{background:white;font:700 19px/1.7 Consolas,"Microsoft YaHei",monospace}.case-instruction.active{border-color:var(--blue);background:#e9f3fb}.case-answer{font:700 23px/1.7 Consolas,"Microsoft YaHei",monospace;background:white}.case-route{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line);background:white}.case-route button{font-size:14px;padding:4px 8px}.case-route button.active{border-color:var(--blue);background:var(--blue);color:white}.case-route button.passed{background:#e8f3ed}.case-status{padding:7px 14px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}.case-status code{color:var(--address)}
+@media(max-width:1000px){.tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.summary-row{grid-template-columns:1fr 1fr}.summary-card:first-child{grid-column:1/-1}.toolbar small{margin-left:0}.quiz{grid-template-columns:1fr}.twocol{grid-template-columns:1fr}.example-grid{grid-template-columns:1fr 1fr}.example-goal{grid-column:1/-1}.case-answer{display:inline-block}}
+@media(max-width:640px){main{padding:12px}h1{font-size:24px}.tabs{grid-template-columns:1fr 1fr}.tabs button{padding:9px}.tabs small{font-size:12px}.toolbar{position:static}.toolbar button{flex:1 1 auto}.heading,.controls,.cue,.content,.legend,.steps,.result,details{padding:12px}.summary-row,.twocol{padding:12px}.summary-row{grid-template-columns:1fr}.summary-card:first-child{grid-column:auto}.controls label{flex-wrap:wrap;max-width:100%}.controls select{max-width:100%}.notice{margin:12px}.panel{scroll-margin-top:10px}.formula-box{font-size:17px}table{font-size:14px}td{min-width:100px}}
+.example{scroll-margin-top:92px}
+.case-program{border:1px solid var(--line);border-radius:6px;background:white;overflow:hidden}.case-code-line{padding:5px 8px;border-left:3px solid transparent}.case-code-line code{display:block;font-size:16px;font-weight:bold}.case-code-line small{display:block;font-size:12px}.case-code-line.active{border-left-color:var(--blue);background:#e9f3fb}.case-explanation{display:block;margin-top:6px;line-height:1.6}.case-registers{margin-top:8px;font-size:13px;color:var(--address);overflow-wrap:anywhere}
+.base-contrast{margin:14px 20px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:#f7fafc}.base-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}.base-grid>div{padding:8px 10px;border:2px solid transparent;border-radius:6px;background:white}.base-grid .selected{border-color:var(--address);background:#eee7f8}.base-grid code,.base-grid small{display:block}.base-grid code{font-size:17px;font-weight:bold}.base-contrast p{font-size:14px;margin-top:7px}
+.base-contrast{scroll-margin-top:92px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(max-width:640px){.example{margin:12px}.example-grid{grid-template-columns:1fr;gap:10px}.example-goal{grid-column:auto}.case-instruction{font-size:17px}.case-route button{font-size:13px}}
+@media(max-width:640px){.base-contrast{margin:12px}.base-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<header><small>汇编与计算机组成 · 本地离线动态课堂</small><h1>STM32寻址：CPU到哪里找操作数？</h1><p class="muted">六组动态演示，配合七种教材概念对照。固定地址取数已合并到“寄存器间接寻址”；相对与变址重点比较PC基准和普通寄存器基准。</p></header>
+<nav class="tabs" id="tabs" role="tablist" aria-label="六组寻址演示"></nav>
+<div class="toolbar"><button id="back">← 上一步</button><button id="next" class="primary">下一步 →</button><button id="play">自动慢放</button><button id="replay">重放本步</button><button id="reset">从头演示</button><label>速度 <select id="speed"><option value="2800">2.8秒 / 步</option><option value="4500">4.5秒 / 步</option><option value="1800">1.8秒 / 步</option></select></label><span id="progress"></span><small>← / → 单步 · 空格播放/暂停</small></div>
+<section class="panel" id="lesson" role="tabpanel" aria-labelledby="tab-immediate"></section>
+<section class="panel"><div class="heading"><h2>把七种方式放到一起看</h2><p class="muted">M[a]表示“读取地址a处的数据”，EA表示最后用于读取操作数的有效地址。下表访存次数仅统计取操作数的过程，不包含取指令。</p></div><div class="content"><div class="scroll"><table><thead><tr><th>方式</th><th>指令给了什么</th><th>操作数怎么得到</th><th>数据内存读取</th></tr></thead><tbody>
+<tr><td>立即寻址</td><td>操作数本身</td><td><code>操作数 = 立即数</code></td><td>0次</td></tr>
+<tr><td>直接寻址<br><small>保留教材概念，不单独演示</small></td><td>操作数的地址A</td><td><code>操作数 = M[A]</code></td><td>1次</td></tr>
+<tr><td>寄存器寻址</td><td>寄存器名R</td><td><code>操作数 = R的内容</code></td><td>0次</td></tr>
+<tr><td>寄存器间接寻址</td><td>保存地址的寄存器名R</td><td><code>EA = R；操作数 = M[EA]</code></td><td>1次</td></tr>
+<tr><td>间接寻址</td><td>保存地址的内存单元地址A</td><td><code>EA = M[A]；操作数 = M[EA]</code></td><td>2次</td></tr>
+<tr><td>相对寻址</td><td>相对PC基准的偏移d</td><td><code>EA = PC基准 + d</code></td><td>取数示例为1次</td></tr>
+<tr><td>变址寻址</td><td>变址寄存器与偏移d</td><td><code>EA = 变址寄存器内容 + d</code></td><td>取数示例为1次</td></tr>
+</tbody></table></div><p class="muted">这里按教材的通用分类讲解。STM32的“先装入固定地址，再LDR”实现的是固定地址取数需求，最后的LDR仍是寄存器间接寻址，不把它另算直接寻址指令。相对地址也可用于跳转；本页统一演示取操作数。教材“变址”在本例对应ARM的基址寄存器加偏移形式。</p></div></section>
+<section class="panel"><div class="heading"><h2>三个小判断：你能分清地址与数据了吗？</h2></div><div class="content"><p>假设R2 = 0x20000020，该地址处32位数据为42；地址0x20000008处保存指针0x20000020。</p><div id="quiz" class="quiz"></div></div></section>
+<footer>程序案例使用Cortex-M3汇编指令；原理框图的“R0 ← …”与M[ ]是说明记号，不是指令。数据取数案例使用SRAM地址，PC相对取数默认使用Flash地址；教材相对模型仍保留简化地址。上板前需要初始化题目中的寄存器与数据，并确保数据区由工程预留，不能直接覆盖现用SRAM；Flash常量应由链接布局放置，不是在运行中直接写入。参考：<a href="https://documentation-service.arm.com/static/5ea823e69931941038df1af5" target="_blank" rel="noopener">Arm Cortex-M3 Devices Generic User Guide，3.3.6与3.4节</a>。网页可直接双击打开，无需联网。</footer>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),hex=v=>'0x'+(v>>>0).toString(16).toUpperCase().padStart(v>65535?8:4,'0');
+const COLORS={control:'#176ca9',address:'#7652a7',data:'#117d62'};
+const MODES=[
+{id:'immediate',name:'① 立即寻址',hint:'指令里直接带着数据',definition:'操作数就包含在指令中。',source:'操作数本身',location:'指令的立即数字段',reads:0},
+{id:'direct',name:'③ 寄存器间接寻址',hint:'先准备固定地址，再读数据',definition:'先把程序给定的固定地址装入R2，再用LDR R0,[R2]取数。地址的准备方法不同，最终取数仍是寄存器间接寻址。',source:'程序给定的固定地址',location:'R2指向的内存单元',reads:1},
+{id:'register',name:'② 寄存器寻址',hint:'寄存器里面就是数据',definition:'操作数存放在某一寄存器中，指令给出该寄存器的名字。',source:'存有操作数的寄存器名',location:'指定寄存器内部',reads:0},
+{id:'registerIndirect',name:'③ 寄存器间接寻址',hint:'两例对照：地址已知 / 先准备地址',definition:'操作数在内存中，它的地址保存在某个寄存器里。地址可以提前放好，也可以由程序先准备；最后都是按寄存器给出的地址读内存。',source:'保存地址的寄存器名',location:'寄存器内容指向的内存单元',reads:1},
+{id:'indirect',name:'④ 间接寻址 · 两级读取',hint:'先到内存取地址，再取数据',definition:'指令给出“操作数地址的地址”：先读内存中的地址，再按这个地址读操作数。STM32用两条LDR演示这两级读取。',source:'保存指针的内存单元地址',location:'指针所指向的内存单元',reads:2},
+{id:'relative',name:'⑤ 相对寻址',hint:'以PC为基准 · 读取程序附近常量',definition:'也是基准加偏移，但基准来自PC。本例从程序附近的Flash常量取数，具体PC基准按指令规定确定。',source:'相对PC基准的偏移量',location:'计算后的地址对应的内存单元',reads:1},
+{id:'indexed',name:'⑥ 变址寻址',hint:'以R3为基准 · 读取数组元素',definition:'同样做基准加偏移，但基准来自程序可设置的普通寄存器R3。本例演示教材“寄存器＋偏移”形式，对应ARM的基址加偏移取数。',source:'变址寄存器名与偏移量',location:'相加后的地址对应的内存单元',reads:1}
+];
+const TABS=MODES.filter(m=>m.id!=='direct');
+const state={mode:'immediate',operand:42,byMode:Object.fromEntries(TABS.map(m=>[m.id,{step:0,offset:m.id==='indexed'?8:32,sign:1,arch:'arm',variant:'ready'}]))};
+let timer=null;
+function buildCase(id=state.mode,options={}){
+const meta=MODES.find(m=>m.id===id);if(!meta)throw Error('未知寻址方式');
+const value=options.operand??state.operand,offset=options.offset??32,sign=options.sign??1,arm=id==='relative'&&options.arch==='arm';
+const ia=arm?0x08001002:0x1000,pc=arm?ia+4:ia,pcBase=arm?pc&~3:ia,d=id==='relative'?sign*(arm?28:32):offset,base=0x20000010,ptr=0x20000008;
+const target=id==='relative'?pcBase+d:id==='indexed'?base+d:0x20000020;
+const signed=d<0?String(d):'+'+d,add=(a,b)=>hex(a)+(b<0?' − ':' + ')+Math.abs(b)+' = '+hex(a+b);
+const stages=[{kind:'ready',label:'准备',title:'先观察：操作数、地址分别在哪里？',detail:'这次要把操作数'+value+'取到R0。先看指令提供的线索，再按下一步。'}];
+const push=(kind,label,title,detail)=>stages.push({kind,label,title,detail});
+push('decode','识别指令字段','① 识别指令提供的线索。','本条指令给出的是“'+meta.source+'”。目的寄存器R0用于接收最后取到的操作数。');
+let expression,field,formula,code,armNote,pitfall;
+if(id==='immediate'){
+expression='R0 ← #'+value;field='#'+value+' · 立即数';formula='操作数 = '+value;
+push('immediate','取出立即数','② 立即数字段里就是 '+value+'。','#号提示后面是立即数；这里不必再按'+value+'这个数字到数据内存找内容。');
+push('transfer','写入R0','③ 把立即数 '+value+' 写入R0。','结果驻留：R0 = '+value+'。取操作数期间，数据内存读取0次；取指令本身仍有指令访问。');
+code='MOVS R0, #'+value;armNote='本页选择的立即数都能用于这条MOVS指令。';pitfall='立即数也可以是一个地址数值，例如#0x1020。把这个数装入寄存器，并不会自动读取M[0x1020]。';
+}else if(id==='register'){
+expression='R0 ← R1';field='R1 · 寄存器名';formula='操作数 = R1 = '+value;
+push('registerValue','读取R1','② R1中存放的 '+value+' 就是操作数。','寄存器在CPU内部。读R1的内容即可，不必经过数据内存。');
+push('transfer','写入R0','③ 把R1的值 '+value+' 写入R0。','结果驻留：R0 = '+value+'，R1仍为'+value+'。数据内存读取0次。');
+code='MOV R0, R1';armNote='前提：R1已经保存操作数。';pitfall='寄存器名后面没有“读内存”的括号。即使R1里碰巧是一个地址值，MOV也只复制这个数。';
+}else{
+if(id==='direct'){
+expression='R0 ← M[R2]';field='固定地址 '+hex(target)+' → R2';formula='EA = R2 = '+hex(target);
+push('address','先准备R2地址','② 先把固定地址 '+hex(target)+' 装入R2。','MOVW/MOVT准备地址，不读数据内存。接着LDR按照R2里的地址取数，仍然是寄存器间接寻址。');
+code='MOVW R2, #0x0020   ; 写入地址的低16位\nMOVT R2, #0x2000   ; R2得到0x20000020\nLDR R0, [R2]       ; 与“地址已知”案例使用同一种取数方式';
+armNote='两例最终都是LDR R0,[R2]。区别只在执行前R2是否已经装好地址；MOVW/MOVT准备地址不访问数据内存。这不是额外的一种直接寻址指令。';
+pitfall='地址0x20000020与这个地址里面的数据'+value+'是两件事。固定地址取数只需一次数据内存读取；准备地址不算读取数据。';
+}else if(id==='registerIndirect'){
+expression='R0 ← M[R2]';field='R2 · 保存地址的寄存器';formula='EA = R2 = '+hex(target);
+push('registerAddress','从R2取地址','② R2给出的是地址 '+hex(target)+'。','先读CPU内部R2，再用它的内容选择内存。读取寄存器不计入数据内存读取次数。');
+code='LDR R0, [R2]';armNote='前提：R2 = 0x20000020，该SRAM地址保存操作数。';pitfall='MOV R0,R2会取得地址数值；LDR R0,[R2]会取得这个地址中的数据。方括号表示一次内存读取。';
+}else if(id==='indirect'){
+expression='R0 ← M[M['+hex(ptr)+']]';field=hex(ptr)+' · 指针的存放地址';formula='EA = M['+hex(ptr)+'] = '+hex(target);
+push('address','取得指针位置','② 指令给出 '+hex(ptr)+'，这里保存的是指针。','这个地址还不是操作数的有效地址。需要先把里面保存的另一个地址取出来。');
+push('requestPointer','第一次选内存','③ 先把 '+hex(ptr)+' 送到内存。','内存选中指针单元M['+hex(ptr)+']。此时还没有取得操作数。');
+push('pointer','读出指针','④ 第一次内存读取：得到地址 '+hex(target)+'。','M['+hex(ptr)+'] = '+hex(target)+'。紫色返回的是地址，需要再用它访问一次内存。');
+code='MOVW R4, #0x0008   ; 准备指针单元地址的低16位\nMOVT R4, #0x2000   ; R4得到0x20000008\nLDR R5, [R4]       ; 第一次读取：得到指针0x20000020\nLDR R0, [R5]       ; 第二次读取：得到操作数';
+armNote='前提：M[0x20000008]保存完整指针0x20000020，M[0x20000020]保存操作数。Cortex-M3没有一次完成M[M[地址]]的单条LDR；这里用两条LDR实现两级读取，每条LDR本身都是寄存器间接寻址。';pitfall='第一次读出的0x20000020是“下一次访问的地址”，还需要第二次读取，才得到操作数。';
+}else if(id==='relative'){
+expression='R0 ← M[PC基准 '+signed+']';field='偏移 d = '+signed+' 字节';formula='EA = '+add(pcBase,d);
+push('pc','取得PC基准',arm?'② 读PC并确定LDR的对齐基准。':'② 取得本例的PC基准 '+hex(pcBase)+'。',arm?'本条指令地址为'+hex(ia)+'；读取PC得到指令地址+4，即'+hex(pc)+'。本例LDR literal再向下对齐到4字节边界，基准为'+hex(pcBase)+'。':'本教材概念示例取“本条指令地址”'+hex(ia)+'作为基准。实际处理器使用哪个PC基准，要看该条指令的规定。');
+push('calculate','基准加偏移','③ 计算有效地址：'+add(pcBase,d),'偏移量以字节表示，可以为正，也可以为负。本例结果是'+hex(target)+'，随后按这个地址读取操作数。');
+code=arm?'LDR.W R0, [PC, #'+d+']':'LDR R0, data_value   ; 汇编器按标签计算PC相对偏移\n; data_value处放置一个32位操作数';
+armNote='Cortex-M3的LDR literal以Align(本条指令地址+4,4)为基准。B/BL等跳转的PC基准为指令地址+4，不能把所有PC相对指令都套成同一公式。';pitfall='偏移不是最终地址。更不能在真实STM32上不加区分地使用“本条指令地址+d”：要先确定PC基准，再加偏移。';
+}else{
+expression='R0 ← M[R3 '+signed+']';field='R3 与偏移 d = '+signed;formula='EA = '+add(base,d);
+push('index','取得R3和偏移','② 从R3取基准 '+hex(base)+'，从指令取偏移 '+signed+'。','这里R3保存变址计算用的地址值。寄存器与偏移相加后，才得到本次要访问的内存地址。');
+push('calculate','寄存器加偏移','③ 计算有效地址：'+add(base,d),d===8?'如果R3指向32位数组首元素，偏移8字节对应下标2，因为每个元素占4字节。':'这里偏移按字节计算；R3没有写回标记，执行后仍保持'+hex(base)+'。');
+code='LDR.W R0, [R3, #'+d+']\n; R3预先指向SRAM中的数组/数据区；这里假设R3=0x20000010\n\n; 数组下标2的另一种写法，每个元素4字节：\nMOVS R2, #2\nLDR R0, [R3, R2, LSL #2]';
+armNote='Cortex-M3可使用基址寄存器加立即偏移，或加寄存器偏移。数组下标乘以4需明确编码，例如LSL #2。';pitfall='“偏移2字节”和“数组下标2”不一样。32位数组的下标2对应8字节；CPU按指令里的偏移与移位规则计算。';
+}
+push('request','按有效地址选内存',(id==='indirect'?'再次':'按有效地址')+'访问操作数地址 '+hex(target)+'。','紫色地址用于选择M['+hex(target)+']。选中单元后，下一步才能读出里面的操作数。');
+push('data','读出操作数','读取操作数：M['+hex(target)+'] = '+value+'。','绿色返回的是操作数'+value+'。'+(id==='indirect'?'这是第二次数据内存读取，第一次取得的是地址。':'这是本次唯一一次数据内存读取。'));
+push('transfer','写入R0','把操作数 '+value+' 写入R0。','结果驻留：R0 = '+value+'。本例取操作数共读取数据内存'+meta.reads+'次；计算地址和读取CPU寄存器不增加这个次数。');
+}
+let addresses=id==='relative'?Array.from({length:7},(_,i)=>target+(i-2)*4):[0x20000000,0x20000004,ptr,base,0x20000018,0x20000020,0x20000030];
+if(!addresses.includes(target)){addresses=addresses.filter(a=>a!==0x20000030);addresses.push(target);addresses.sort((a,b)=>a-b)}
+const memory=addresses.map((address,i)=>({address,value:address===target?value:id==='indirect'&&address===ptr?target:11+i*7,pointer:id==='indirect'&&address===ptr,target:address===target}));
+return {id,meta,value,ia,pc,pcBase,base,ptr,target,d,arm,expression,field,formula,code,armNote,pitfall,stages,memory};
+}
+function currentModel(){const options=state.byMode[state.mode],id=state.mode==='registerIndirect'&&options.variant==='fixed'?'direct':state.mode,c=buildCase(id,{...options,operand:state.operand}),step=Math.min(options.step,c.stages.length-1),stage=c.stages[step],complete=step===c.stages.length-1;
+const reads=c.stages.slice(0,step+1).filter(s=>s.kind==='data'||s.kind==='pointer').length,eaReady=!(c.id==='immediate'||c.id==='register')&&(c.id==='indirect'?step>=4:['relative','indexed'].includes(c.id)?step>=3:step>=2);
+return {...c,step,stage,complete,reads,eaReady};
+}
+function selectHtml(id,options,value){return '<select id="'+id+'">'+options.map(([v,label])=>'<option value="'+v+'" '+(String(value)===String(v)?'selected':'')+'>'+esc(label)+'</option>').join('')+'</select>'}
+function programHtml(m){
+const k=m.stage.kind,line=(code,note,kinds)=>({code,note,kinds});let lines;
+if(m.id==='direct'||m.id==='indirect'){
+const pointer=m.id==='indirect';
+const reg=pointer?'R4':'R2';
+lines=[line('MOVW '+reg+', #'+(pointer?'0x0008':'0x0020'),'地址准备①：写低16位，不读数据内存',['decode','address']),line('MOVT '+reg+', #0x2000','地址准备②：'+reg+' = '+hex(pointer?m.ptr:m.target),['decode','address'])];
+if(pointer)lines.push(line('LDR R5, [R4]','第1次读内存：把指针读入R5',['requestPointer','pointer']),line('LDR R0, [R5]','第2次读内存：按指针取数据，放入R0',['request','data','transfer']));
+else lines.push(line('LDR R0, [R2]','与案例A相同：按R2地址读32位数据',['request','data','transfer']));
+}else{
+const code=m.id==='immediate'?'MOVS R0, #'+m.value:m.id==='register'?'MOV R0, R1':m.id==='registerIndirect'?'LDR R0, [R2]':m.id==='indexed'?'LDR.W R0, [R3, #'+m.d+']':m.arm?'LDR.W R0, [PC, #'+m.d+']':'LDR R0, sample_value';
+const note=m.id==='immediate'?'把立即数写入R0':m.id==='register'?'把R1中的数据复制到R0':m.id==='registerIndirect'?'按R2给出的地址读32位数据':m.id==='indexed'?'按R3加字节偏移后的地址读32位数据':m.arm?'本例指令位于 '+hex(m.ia)+'，按实际PC基准取数':'真实ARM标签写法；汇编器按实际PC计算偏移';
+lines=[line(code,note,m.stages.slice(1).map(s=>s.kind))];
+}
+return '<div class="case-program" aria-label="实际汇编程序">'+lines.map(l=>'<div class="case-code-line '+(l.kinds.includes(k)?'active':'')+'"><code>'+esc(l.code)+'</code><small>'+esc(l.note)+'</small></div>').join('')+'</div>';
+}
+function exampleHtml(m){
+const k=m.stage.kind,v=m.value,a=hex(m.target),p=hex(m.ptr),signed=(m.d>=0?'+':'')+m.d;
+const fact=(text,type,kinds)=>({text,type,kinds}),point=(text,step)=>({text,step});
+let title,facts,route,notation='蓝色代码行对应当前动画阶段；动画拆解取数原理，不代表每步是一条指令或一个时钟周期。';
+if(m.id==='immediate'){
+title='给R0赋一个常数';facts=[fact('常数 = '+v,'data',['decode','immediate'])];notation='#表示立即数；直接赋值，不读数据内存。';route=[point('看见 #'+v,1),point('取出数字 '+v,2),point('写入R0',3)];
+}else if(m.id==='register'){
+title='把R1里的计算结果复制到R0';facts=[fact('执行前 R1 = '+v,'data',['registerValue'])];notation='R1里已经是数据；MOV复制它的内容，不读内存。';route=[point('指令指定R1',1),point('读R1得到 '+v,2),point('写入R0',3)];
+}else if(m.id==='direct'){
+title='B · 地址未准备：先给R2赋地址，再读sample';facts=[fact('sample 的地址 = '+a,'address',['decode','address']),fact('该地址处32位数据 = '+v,'data',['request','data'])];notation='和案例A最后的LDR完全一样。前两行只是先准备R2里的地址，不把它另算“直接寻址”。蓝色前两行对应地址准备阶段。';route=[point('把固定地址装入R2',2),point('LDR读出 '+v,4),point('写入R0',5)];
+}else if(m.id==='registerIndirect'){
+title='A · 地址已准备：直接按R2读取sample';facts=[fact('执行前 R2 = '+a,'address',['registerAddress']),fact('该地址处32位数据 = '+v,'data',['request','data'])];notation='执行前已把地址放在R2里。[R2]表示按这个地址读内存，不是直接复制R2；也不表示直接寻址。';route=[point('从R2取地址 '+a,2),point('按该地址读出 '+v,4),point('写入R0',5)];
+}else if(m.id==='indirect'){
+title='指针变量 p 指向 sample：读取 *p';facts=[fact('指针变量 p 位于 '+p,'address',['address','requestPointer']),fact('p 保存地址 '+a,'address',['pointer']),fact('sample 在 '+a+'，值 = '+v,'data',['request','data'])];notation='第一条LDR读“指针变量”，第二条LDR读“指针所指的数据”。STM32用两条指令实现两级读取，不存在M[M[地址]]这样的单条指令。';route=[point('先访问指针变量p',3),point('R5得到地址 '+a,4),point('再读sample = '+v,6),point('写入R0',7)];
+}else if(m.id==='relative'){
+title='读取程序附近的常量 sample_value';facts=[fact('PC基准 = '+hex(m.pcBase),'address',['pc']),fact('偏移 = '+signed+' 字节','address',['calculate']),fact('常量在 '+a+'，值 = '+v,'data',['request','data'])];notation=m.arm?'本例预先在该Flash地址放置32位常量。读取PC为指令地址+4，LDR再向下4字节对齐；本例偏移为'+signed+'。':'当前选择教材概念模型；代码给出真实标签写法，但实际ARM的PC基准与偏移需按“STM32”选项计算，不能照搬本模型的偏移。';route=[point('取PC基准',2),point('加偏移得到 '+a,3),point('读出 '+v,5),point('写入R0',6)];
+}else{
+title=m.d===8?'读取32位数组的第3个元素（下标2）':m.d>=0?'读取32位数组的第'+(m.d/4+1)+'个元素':'读取R3所指位置之前的32位数据';facts=[fact('执行前 R3 = '+hex(m.base),'address',['index']),fact('偏移 = '+signed+' 字节','address',['index','calculate']),fact('数据在 '+a+'，值 = '+v,'data',['request','data'])];route=[point('取R3和偏移',2),point('相加得到 '+a,3),point('读出 '+v,5),point('写入R0',6)];
+}
+const activeRoute=m.step===0?-1:Math.max(0,route.findLastIndex(r=>r.step<=m.step));
+const ea=m.meta.reads===0?'本例不需要内存地址EA':m.eaReady?'已确定有效地址 EA = '+a:m.id==='indirect'&&m.step>=2?'当前先访问指针单元 '+p+'，还未得到最终EA':'有效地址EA：等待从指令或寄存器中取得';
+const registers=m.id==='direct'||m.id==='indirect'?'<div class="case-registers">'+(m.id==='direct'?'R2':'R4')+' = '+(m.step>=2?hex(m.id==='indirect'?m.ptr:m.target):'等待准备')+(m.id==='indirect'?'<br>R5 = '+(m.step>=4?a:'等待读出指针'):'')+'</div>':'';
+return '<section class="example" id="worked-example" aria-label="与动画同步的案例"><div class="example-head"><h3>程序案例 · '+esc(title)+'</h3><small>先看题目与程序，再用下一步验证。</small></div><div class="example-grid"><div><span class="example-label">① 执行前 · 已知条件</span>'+facts.map(f=>'<div class="case-fact '+f.type+(f.kinds.includes(k)?' active':'')+'"><code class="'+f.type+'-text">'+esc(f.text)+'</code></div>').join('')+'</div><div><span class="example-label">② 实际汇编代码 · 蓝色对应当前阶段</span>'+programHtml(m)+'<small class="case-explanation">'+esc(notation)+'</small></div><div class="example-goal"><span class="example-label">③ 求程序执行后的R0</span><div class="case-answer '+(m.complete?'active':'')+'" id="case-answer">R0 = '+(m.complete?v:'?')+'</div><small>'+(m.complete?'已完成，结果保留。':'下方动画是原理分解，不是指令周期。')+'</small>'+registers+'</div></div><div class="case-route" aria-label="案例取数路线"><small>取数路线：</small>'+route.map((r,i)=>(i?'<span aria-hidden="true">→</span>':'')+'<button data-step="'+r.step+'" class="'+(i===activeRoute?'active':i<activeRoute?'passed':'')+'"'+(i===activeRoute?' aria-current="step"':'')+'>'+esc(r.text)+'</button>').join('')+'</div><div class="case-status">'+esc(ea)+' · 原理框图中的M[地址]是记号，不是汇编指令。</div></section>';
+}
+function detailHtml(m){return '<div class="twocol"><div class="card"><h3>这一次是怎样找到操作数的？</h3><div class="formula-box">'+esc(m.formula)+'</div><p>'+esc(m.pitfall)+'</p></div><div class="card"><h3>放到STM32 / Cortex-M3中怎样写？</h3><pre>'+esc(m.code)+'</pre><p class="muted">'+esc(m.armNote)+'</p></div></div>'}
+function baseContrastHtml(m){
+if(!['relative','indexed'].includes(m.id))return '';
+const relative=buildCase('relative',{...state.byMode.relative,operand:state.operand}),indexed=buildCase('indexed',{...state.byMode.indexed,operand:state.operand});
+return '<section class="base-contrast" aria-label="相对与变址的区别"><h3>都是“基准＋偏移”，为什么保留两种？</h3><div class="base-grid"><div class="'+(m.id==='relative'?'selected':'')+'"><b>相对：程序位置作基准</b><code>EA = PC基准 + 偏移</code><small>本例PC基准 '+hex(relative.pcBase)+'；读取程序附近的常量。</small></div><div class="'+(m.id==='indexed'?'selected':'')+'"><b>变址：数据位置作基准</b><code>EA = R3 + 偏移</code><small>本例R3 = '+hex(indexed.base)+'；读取数组元素，R3由程序设置。</small></div></div><p>计算动作相似，不代表基准可互换。PC基准随指令位置变化；R3可以指向不同数组，与当前指令放在哪里无关。这里两例分别用Flash常量和SRAM数组帮助区分，但Flash/SRAM不是寻址方式的判定标准。</p></section>';
+}
+function st(x,y,s,cls='',anchor='start',fill=''){return '<text x="'+x+'" y="'+y+'" class="'+cls+'" text-anchor="'+anchor+'"'+(fill?' style="fill:'+fill+'"':'')+'>'+esc(s)+'</text>'}
+function frame(x,y,w,h,color='',fill=''){return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="9" fill="'+(fill||'#eff5f9')+'" stroke="'+(color||'#bad0df')+'" stroke-width="'+(color?2:1)+'"/>'}
+function wire(d,type='control',active=false){return '<path d="'+d+'" fill="none" stroke="'+(active?COLORS[type]:'#a1b7c5')+'" stroke-width="'+(active?3.5:2)+'" marker-end="url(#arrow-'+type+')"/>'}
+function packet(d,label,type,x,y,width=100){
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+return '<g class="packet"'+(reduced?' transform="translate('+x+','+y+')"':'')+'>'+(reduced?'':'<animateMotion dur="1.2s" path="'+d+'" fill="freeze"/>')
++'<rect x="'+(-width/2)+'" y="-14" width="'+width+'" height="28" rx="7" fill="'+COLORS[type]+'"/>'
++st(0,5,label,'packet-text','middle')+'</g>';
+}
+function diagram(m){
+const k=m.stage.kind,memUsed=m.meta.reads>0,targetIndex=m.memory.findIndex(r=>r.target),pointerIndex=m.memory.findIndex(r=>r.pointer),dataY=140+targetIndex*62,pointerY=140+pointerIndex*62;
+const pointerPhase=['requestPointer','pointer'].includes(k),selected=(pointerPhase?m.ptr:m.target),requestPath='M695,392 H741 V'+(pointerPhase?pointerY:dataY)+' H800',returnPath='M800,'+dataY+' H765 V581 H695',pointerPath='M800,'+pointerY+' H765 V464 H560 V440';
+const addressColor=COLORS.address,dataColor=COLORS.data,operandReady=['immediate','registerValue','data','transfer'].includes(k);
+let g=wire('M350,90 H420','control',m.step>=1);
+if(memUsed)g+=wire(requestPath,'address',['request','requestPointer'].includes(k))+wire(returnPath,'data',['data','transfer'].includes(k));
+if(m.id==='indirect')g+=wire(pointerPath,'address',k==='pointer');
+const addressSource=['direct','registerIndirect','relative','indexed'].includes(m.id);
+const regY=['direct','registerIndirect'].includes(m.id)?331:m.id==='relative'?443:387;
+const sourcePath=addressSource?'M350,'+regY+' H388 V378 H420':'M350,115 H380 V378 H420';
+if(memUsed)g+=wire(sourcePath,'address',['address','registerAddress','pc','index','calculate'].includes(k));
+if(m.id==='direct')g+=wire('M350,115 H380 V331 H350','address',k==='address');
+if(['relative','indexed'].includes(m.id))g+=wire('M350,115 H371 V318 H420','address',k==='calculate'||k==='index');
+const operandPath=m.id==='immediate'?'M350,110 H382 V581 H420':'M350,275 H378 V581 H420';
+if(!memUsed)g+=wire(operandPath,'data',m.complete);
+g+=frame(30,25,320,150,m.step===1?COLORS.control:'')+st(49,55,'取数原理 · 非汇编指令','title')+st(49,88,m.expression,'formula')+st(49,118,m.field,'small')+st(49,151,'R0是目的寄存器；M[ ]表示读内存','small');
+g+=frame(420,25,275,150,m.step===1?COLORS.control:'')+st(441,55,'CPU · 译码 / 控制','title')+st(441,96,m.stage.label,'mono')+st(441,151,'当前第 '+m.step+' / '+(m.stages.length-1)+' 步','small');
+g+=frame(30,220,320,295)+st(49,248,'CPU内部 · 寄存器','title');
+const registers=[
+{name:'R1',value:String(m.value),sub:'内容是操作数',type:'data',active:m.id==='register'&&m.step>=2},
+{name:'R2',value:m.id==='direct'&&m.step<2?'尚未准备':hex(0x20000020),sub:m.id==='direct'?'程序先把地址装入R2':'内容是操作数的地址',type:'address',active:['direct','registerIndirect'].includes(m.id)&&m.step>=2},
+{name:'R3',value:hex(m.base),sub:'变址计算用的寄存器',type:'address',active:m.id==='indexed'&&m.step>=2},
+{name:'PC',value:hex(m.pc),sub:m.arm?'读取值＝指令地址＋4':'教材相对示例的基准',type:'address',active:m.id==='relative'&&m.step>=2}
+];
+registers.forEach((r,i)=>{const y=275+i*56;if(r.active)g+=frame(40,y-22,300,50,COLORS[r.type],r.type==='data'?'#e4f4ec':'#eee7f8');g+=st(49,y,r.name,'title')+st(123,y,r.value,'mono','start',COLORS[r.type])+st(123,y+20,r.sub,'small')});
+g+=frame(420,235,275,205,['calculate','pointer'].includes(k)?addressColor:'')+st(441,263,memUsed?'CPU · 有效地址计算':'CPU · 直接取得操作数','title');
+let calc1,calc2;
+if(!memUsed){calc1=m.id==='immediate'?'指令中的立即数':'R1中的内容';calc2=operandReady?'操作数 = '+m.value:'等待取出操作数'}
+else if(m.id==='indirect'){calc1='先访问 A = '+hex(m.ptr);calc2=m.step>=4?'M[A] = '+hex(m.target):'第一次读取会得到另一个地址'}
+else if(m.id==='relative'){calc1='PC基准 = '+hex(m.pcBase);calc2='偏移 d = '+(m.d>=0?'+':'')+m.d+' 字节'}
+else if(m.id==='indexed'){calc1='R3 = '+hex(m.base);calc2='偏移 d = '+(m.d>=0?'+':'')+m.d+' 字节'}
+else{calc1='从R2中读取地址';calc2='R2 = '+(m.id==='direct'&&m.step<2?'等待准备':hex(m.target))}
+g+=st(441,295,calc1,'formula')+st(441,321,calc2,'small')+st(441,358,memUsed?'有效地址 EA':'操作数所在位置','small')
++st(441,395,memUsed?(m.eaReady?hex(m.target):'尚未得到EA'):(m.id==='immediate'?'指令内部':'寄存器内部'),'mono','start',memUsed?addressColor:dataColor)
++st(441,425,memUsed?'EA用来选择数据内存单元':'数据内存读取：0次','small');
+g+='<g'+(!memUsed?' opacity=".48"':'')+'>'+frame(800,25,330,580)+st(818,55,'内存 · 数据单元视图','title')+st(818,83,'地址','small')+st(1033,83,'存放的内容','small');
+m.memory.forEach((r,i)=>{const y=140+i*62,hit=memUsed&&['requestPointer','pointer','request','data','transfer'].includes(k)&&r.address===selected,returned=hit&&['pointer','data','transfer'].includes(k),color=r.pointer?addressColor:dataColor;
+g+=frame(811,y-26,308,52,hit?returned?color:addressColor:'',hit?returned?r.pointer?'#eee7f8':'#e3f4eb':'#eee7f8':'#f9fbfd')
++st(818,y-2,hex(r.address),'formula','start',addressColor)+st(1004,y-2,r.pointer?hex(r.value):r.value,r.pointer?'formula':'mono','start',r.pointer?addressColor:dataColor)
++st(818,y+17,r.pointer?'指针单元：内容仍是地址':r.target?'操作数单元：内容是数据':'其他数据单元','small');
+});
+g+=st(818,570,memUsed?'当前已读数据内存 '+m.reads+' 次':'本方式无须读取数据内存','small')+st(818,590,'不包含取指令的访问','small')+'</g>';
+g+=frame(420,530,275,100,m.complete?dataColor:'',m.complete?'#e3f4eb':'')+st(441,558,'R0 · 最后接收操作数','title')+st(441,594,m.complete?String(m.value):'等待写入','mono','start',m.complete?dataColor:'')+st(441,615,m.complete?'结果驻留，直到切换步骤':'当前还没有完成这条取数操作','small');
+if(k==='decode')g+=packet('M359,90 H393','译码','control',393,90,50);
+if(k==='address')g+=packet(m.id==='direct'?'M360,115 H380 V331 H360':'M360,115 H380 V378',hex(m.id==='indirect'?m.ptr:m.target),'address',m.id==='direct'?360:380,m.id==='direct'?331:378,126);
+if(['registerAddress','pc','index'].includes(k))g+=packet('M360,'+regY+' H380 V378',hex(m.id==='registerIndirect'?m.target:m.id==='relative'?m.pc:m.base),'address',380,378,m.target>65535?126:100);
+if(k==='calculate')g+=packet('M358,115 H371 V318',(m.d>=0?'+':'')+m.d+' B','address',371,318,70);
+if(['request','requestPointer'].includes(k))g+=packet('M706,392 H741 V'+(pointerPhase?pointerY:dataY),hex(pointerPhase?m.ptr:m.target),'address',741,pointerPhase?pointerY:dataY,m.target>65535?126:100);
+if(k==='pointer')g+=packet('M788,'+pointerY+' H765 V464 H560',hex(m.target),'address',560,464,126);
+if(k==='data')g+=packet('M788,'+dataY+' H765 V581 H715',String(m.value),'data',715,581,56);
+if(k==='transfer')g+=packet(memUsed?'M788,'+dataY+' H765 V581 H715':m.id==='immediate'?'M360,110 H382 V581 H403':'M360,275 H378 V581 H403',String(m.value),'data',memUsed?715:403,581,56);
+const defs=Object.entries(COLORS).map(([id,c])=>'<marker id="arrow-'+id+'" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9" fill="'+c+'"/></marker>').join('');
+return '<div class="scroll"><svg class="diagram" viewBox="0 0 1160 650" role="img" aria-label="'+esc(m.meta.name+'：'+m.stage.title+' '+m.stage.detail)+'"><defs>'+defs+'</defs>'+g+'</svg></div>';
+}
+function lessonHtml(m){
+let controls='<label>本次操作数 '+selectHtml('operand',[[42,'42 · 默认'],[7,'7'],[99,'99']],state.operand)+'</label>';
+if(state.mode==='registerIndirect')controls+='<label>案例对照 '+selectHtml('address-case',[['ready','A · R2已装好地址'],['fixed','B · 程序先准备固定地址']],state.byMode.registerIndirect.variant)+'</label>';
+if(m.id==='relative')controls+='<label>PC基准 '+selectHtml('relative-arch',[['textbook','教材概念 · 当前指令地址'],['arm','STM32 · Cortex-M3 LDR']],state.byMode.relative.arch)+'</label><label>偏移方向 '+selectHtml('relative-sign',[[1,'向后面的地址 · 正偏移'],[-1,'向前面的地址 · 负偏移']],state.byMode.relative.sign)+'</label>';
+if(m.id==='indexed')controls+='<label>字节偏移 '+selectHtml('indexed-offset',[[8,'+8 B · 默认 · 数组下标2'],[32,'+32 B · 数组下标8'],[-16,'−16 B · 负偏移']],state.byMode.indexed.offset)+'</label>';
+return '<div class="heading"><h2>'+m.meta.name+'：'+m.meta.hint+'</h2><p>'+m.meta.definition+'</p></div>'
++'<div class="controls">'+controls+'<small>改变示例参数后，从头演示。</small></div>'
++(m.id==='relative'?'<div class="notice">'+(m.arm?'STM32对照：本例指令位于'+hex(m.ia)+'；读取PC为'+hex(m.pc)+'；LDR literal使用对齐后的'+hex(m.pcBase)+'作基准。':'教材示例：为便于理解，先用当前指令地址作相对基准。选择“STM32 · Cortex-M3 LDR”可看实际PC与对齐规则。')+'</div>':'')
++baseContrastHtml(m)+exampleHtml(m)
++'<div class="cue '+(m.complete?'done':'')+'" aria-live="polite"><b>'+esc(m.stage.title)+'</b><p>'+esc(m.stage.detail)+'</p></div>'
++'<div class="legend"><span><i class="swatch address"></i>A · 地址：用于选择内存单元</span><span><i class="swatch data"></i>D · 操作数：最后写入R0的数据</span><span><i class="swatch"></i>指令控制</span><span class="muted">动画慢放；数值到达后驻留</span></div>'
++diagram(m)+'<div class="steps" aria-label="执行步骤">'+m.stages.map((s,i)=>'<button data-step="'+i+'" class="'+(i<m.step?'passed':'')+'" '+(i===m.step?'aria-current="step"':'')+'>'+i+' · '+s.label+'</button>').join('')+'</div>'
++'<div class="result '+(m.complete?'complete':'')+'"><div><small>目的寄存器R0</small><span class="number" id="result-value">'+(m.complete?m.value:'—')+'</span></div><div><small>已完成 / 本例所需数据内存读取</small><span class="number" id="read-count">'+m.reads+' / '+m.meta.reads+' 次</span></div><p class="muted">'+(m.complete?'操作数已取到；可以重放、回退或切换寻址方式。':'地址传送、地址相加、CPU寄存器读取，都不计为数据内存读取。')+'</p></div>'
++detailHtml(m);
+}
+function stop(){if(timer!==null){clearTimeout(timer);timer=null}$('play').textContent='自动慢放'}
+function render(){
+const m=currentModel();$('lesson').innerHTML=lessonHtml(m);$('lesson').setAttribute('aria-labelledby','tab-'+state.mode);
+document.querySelectorAll('[data-mode]').forEach(b=>{const selected=b.dataset.mode===state.mode;b.setAttribute('aria-selected',String(selected));b.tabIndex=selected?0:-1});
+$('progress').textContent='第 '+m.step+' / '+(m.stages.length-1)+' 步';$('back').disabled=m.step===0;$('next').disabled=m.complete;$('replay').disabled=m.step===0;
+}
+function move(delta){stop();const m=currentModel();state.byMode[state.mode].step=Math.max(0,Math.min(m.stages.length-1,m.step+delta));render()}
+function choose(id){stop();state.mode=id;render()}
+function play(){
+if(timer!==null){stop();return}if(currentModel().complete){state.byMode[state.mode].step=0;render()}
+$('play').textContent='暂停';const schedule=()=>{timer=setTimeout(()=>{const m=currentModel();state.byMode[state.mode].step=Math.min(m.stages.length-1,m.step+1);render();if(currentModel().complete)stop();else schedule()},Number($('speed').value))};schedule();
+}
+$('tabs').innerHTML=TABS.map(m=>'<button id="tab-'+m.id+'" role="tab" aria-controls="lesson" aria-selected="'+(state.mode===m.id)+'" tabindex="'+(state.mode===m.id?0:-1)+'" data-mode="'+m.id+'"><b>'+m.name+'</b><small>'+m.hint+'</small></button>').join('');
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)choose(b.dataset.mode)});
+$('tabs').addEventListener('keydown',e=>{if(!((e.ctrlKey&&['ArrowLeft','ArrowRight'].includes(e.key))||['Home','End'].includes(e.key)))return;e.preventDefault();e.stopPropagation();const i=TABS.findIndex(m=>m.id===state.mode),next=e.key==='Home'?0:e.key==='End'?TABS.length-1:(i+(e.key==='ArrowRight'?1:-1)+TABS.length)%TABS.length;choose(TABS[next].id);$('tab-'+state.mode).focus()});
+$('back').onclick=()=>move(-1);$('next').onclick=()=>move(1);$('play').onclick=play;$('replay').onclick=()=>{stop();render()};$('reset').onclick=()=>{stop();state.byMode[state.mode].step=0;render()};$('speed').onchange=stop;
+$('lesson').addEventListener('click',e=>{const b=e.target.closest('[data-step]');if(b){stop();state.byMode[state.mode].step=Number(b.dataset.step);render()}});
+$('lesson').addEventListener('change',e=>{
+stop();const v=e.target.value;if(e.target.id==='operand'){state.operand=Number(v);Object.values(state.byMode).forEach(s=>s.step=0)}
+else if(e.target.id==='relative-arch'){state.byMode.relative.arch=v;state.byMode.relative.step=0}
+else if(e.target.id==='relative-sign'){state.byMode.relative.sign=Number(v);state.byMode.relative.step=0}
+else if(e.target.id==='indexed-offset'){state.byMode.indexed.offset=Number(v);state.byMode.indexed.step=0}
+else if(e.target.id==='address-case'){state.byMode.registerIndirect.variant=v;state.byMode.registerIndirect.step=0}
+else return;render();
+});
+const QUESTIONS=[
+{title:'A · 寄存器里的地址',expr:'MOV R0, R2',answers:['0x20000020','42'],correct:0,detail:'MOV复制R2的内容，所以R0得到地址数值0x20000020。'},
+{title:'B · 地址所指的数据',expr:'LDR R0, [R2]',answers:['0x20000020','42'],correct:1,detail:'方括号表示按R2给出的地址读内存，所以R0得到42。'},
+{title:'C · 两级读取',expr:'; R4已准备为0x20000008\nLDR R5, [R4]\nLDR R0, [R5]',answers:['1次数据内存读取','2次数据内存读取'],correct:1,detail:'先按R4读取指针0x20000020到R5，再按R5读取数据42到R0，共两次。'}
+];
+$('quiz').innerHTML=QUESTIONS.map((q,i)=>'<div class="card"><h3>'+q.title+'</h3><pre>'+q.expr+'</pre>'+q.answers.map((a,j)=>'<button data-question="'+i+'" data-answer="'+j+'">'+a+'</button>').join('')+'<div id="feedback-'+i+'" class="feedback" aria-live="polite"></div></div>').join('');
+$('quiz').onclick=e=>{const b=e.target.closest('[data-question]');if(!b)return;const i=Number(b.dataset.question),q=QUESTIONS[i],ok=Number(b.dataset.answer)===q.correct;$('feedback-'+i).className='feedback '+(ok?'correct':'incorrect');$('feedback-'+i).textContent=(ok?'正确。':'再想一下。')+q.detail};
+document.addEventListener('keydown',e=>{if(e.ctrlKey||e.target.closest('input,select,textarea,summary')||e.target.isContentEditable)return;if(e.key==='ArrowLeft'){e.preventDefault();move(-1)}else if(e.key==='ArrowRight'){e.preventDefault();move(1)}else if(e.code==='Space'&&e.target.tagName!=='BUTTON'){e.preventDefault();play()}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stop()});window.addEventListener('pagehide',stop);
+window.addressingLab={getState:()=>structuredClone(state),buildCase,currentModel};
+render();
+</script>
+<footer id="course-credit" style="box-sizing:border-box;position:static;max-width:1480px;margin:24px auto 0;padding:22px 26px 28px;border-top:1px solid #dce4e8;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;font:13px/1.7 -apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif;color:#617785;text-align:left;background:transparent"><a href="./index.html" style="color:#176b58;text-decoration:none">← 返回课程目录</a><span>Designed By Xianyu Wu</span></footer>
+</body></html>

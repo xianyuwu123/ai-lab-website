@@ -1,0 +1,191 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>STM32F1 GPIO 内部结构动态课堂</title>
+<style>
+:root{--ink:#183047;--muted:#607487;--line:#cbd9e5;--bg:#f4f7fb;--blue:#146ca7;--orange:#b05c16;--green:#167353}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Microsoft YaHei",sans-serif}main{max-width:1300px;margin:auto;padding:22px 26px 45px}h1,h2,h3,p{margin:0}header{display:flex;justify-content:space-between;gap:16px;margin-bottom:16px}h1{font-size:29px}.sub,.hint,.note{color:var(--muted)}.kicker{font-size:12px;font-weight:700;color:var(--blue);letter-spacing:.12em}.offline{font-size:13px;color:var(--green);white-space:nowrap}button,select{font:inherit}button{border:1px solid var(--line);border-radius:7px;background:white;color:var(--ink);padding:8px 12px;cursor:pointer}button:hover:not(:disabled){background:#edf5fa}button:disabled{opacity:.45;cursor:default}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #91c1e5;outline-offset:2px}.primary,.tabs button[aria-selected=true],.choices button[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:white}.tabs,.bar,.choices{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.tabs{margin-bottom:12px}.bar{background:white;border:1px solid var(--line);border-radius:8px;padding:9px 11px;margin-bottom:14px}.bar .hint{font-size:13px}.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,.75fr);gap:15px;align-items:start}.panel,.lesson,.reference{background:white;border:1px solid var(--line);border-radius:9px;overflow:hidden}.panel-head{padding:11px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:baseline}.panel-head h2{font-size:18px}.panel-head small{color:var(--muted);font-size:12px}.diagram-scroll{overflow-x:auto}.diagram{width:100%;min-width:780px;height:auto;display:block;background:#fbfdff}.diagram text{font-family:"Microsoft YaHei",sans-serif;fill:var(--ink)}.diagram .small{font-size:12px;fill:var(--muted)}.diagram .title{font-size:16px;font-weight:700}.diagram .mono{font:14px Consolas,monospace}.zone{fill:#f8fafc;stroke:#d6e1ea;stroke-width:1.5}.block{fill:white;stroke:#9aafc1;stroke-width:2}.line{fill:none;stroke:#9dabb7;stroke-width:3}.line.ctrl{stroke-dasharray:5 4;stroke-width:2}.line.high{stroke:var(--orange);stroke-width:5}.line.low{stroke:var(--blue);stroke-width:5}.line.pull{stroke:var(--green);stroke-width:4}.mos rect,.res rect{fill:#eef3f6;stroke:#9caebe;stroke-width:2;transition:fill .25s}.mos.on rect,.res.on rect{fill:#e3f6eb;stroke:var(--green);stroke-width:3}.mos.off{opacity:.65}.res.off{opacity:.25}.pin{fill:#d6dfe7;stroke:#8ca2b3;stroke-width:3}.pin.high{fill:#ffc76d;stroke:var(--orange)}.pin.low{fill:#9acafa;stroke:var(--blue)}.diagram-caption{padding:9px 14px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}.controls{padding:13px 15px}.field{margin-bottom:11px}.field label{display:block;color:var(--muted);font-size:13px;margin-bottom:4px}.field select{width:100%;border:1px solid var(--line);border-radius:6px;padding:7px;background:white}.check{display:flex;gap:8px;align-items:center;margin:10px 0;font-size:14px}.check input{width:18px;height:18px}.choices button{min-width:72px}.regs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:13px}.reg{background:#f2f6fa;padding:8px;border-radius:5px}.reg span{display:block;color:var(--muted);font-size:12px}.reg b{font:700 18px Consolas,monospace}.reg small{display:block;color:var(--muted);font-size:12px}.result{background:#e8f3fb;border-left:4px solid var(--blue);padding:9px 11px;margin-top:12px;font-size:14px}.result strong{display:block}.lesson{padding:13px 16px;margin-top:15px}.lesson h3{font-size:17px;margin-bottom:4px}.reference{padding:13px 16px;margin-top:15px}.reference h3{font-size:16px;margin-bottom:6px}.reference p{font-size:14px;margin-top:5px}.reference b{color:var(--ink)}.note{font-size:13px;margin-top:15px}.note a{color:var(--blue)}.truth{border-collapse:collapse;width:100%;font-size:14px}.truth td,.truth th{padding:7px;border-bottom:1px solid var(--line);text-align:left}.truth tr.active{background:#e8f3fb;font-weight:700}
+@media(max-width:960px){.layout{grid-template-columns:1fr}}@media(max-width:600px){main{padding:13px 10px 35px}header{display:block}h1{font-size:23px}.offline{display:block;margin-top:7px}.bar .hint{width:100%}.panel-head{display:block}.panel-head small{display:block}.tabs button{flex:1}}[hidden]{display:none!important}
+.gpio-diagram .small{font-size:13px}.gpio-diagram .section-label{font-size:13px;font-weight:700;fill:#607487}.gpio-diagram .junction{fill:#607487}
+.current-info{margin-top:12px;padding:10px 11px;background:#fff7e8;border-left:4px solid #e7a227;font-size:13px}.current-info strong{display:block;margin-bottom:4px}.current-key{display:block;margin-top:4px}.current-dot{display:inline-block;width:9px;height:9px;margin-right:5px;border-radius:50%;background:#e7a227;border:1px solid #a76208}
+.gpio-diagram .mos.off{opacity:1}.gpio-diagram .mos.off rect{fill:#f1f4f7;stroke:#a5b5c4}.gpio-diagram .channel{fill:none;stroke:#6e8396;stroke-width:2.5;stroke-linecap:round}.gpio-diagram .mos.on .channel{stroke:#167353;stroke-width:3.5}.gpio-diagram .contact{fill:white;stroke:#6e8396;stroke-width:2}.gpio-diagram .line.ctrl.high,.gpio-diagram .line.ctrl.low{stroke-width:2.5}.gate-info{fill:#eef5fb;stroke:#c9dceb;stroke-width:1.5}
+</style></head><body><main>
+<header><div><div class="kicker">STM32F103 · 第 6 章 GPIO</div><h1>一根 GPIO 引脚，内部怎样工作？</h1><p class="sub">看清上下管、上拉电阻和输入缓冲器，再理解推挽与开漏。</p></div><span class="offline">● 本地离线 · 无网络依赖</span></header>
+<nav class="tabs"><button id="tab-one" aria-selected="true">单引脚结构</button><button id="tab-bus" aria-selected="false">双开漏共线</button></nav>
+<div id="one">
+<div class="bar"><button id="prev" aria-keyshortcuts="ArrowLeft">← 上一步</button><button id="next" class="primary" aria-keyshortcuts="ArrowRight">下一步 →</button><button id="play">播放</button><button id="reset">重置</button><span id="count"></span><span class="hint">← / → 可翻步，也可直接修改右侧配置</span></div>
+<div class="layout"><section class="panel"><div class="panel-head"><h2>PA0 内部结构 · 开关等效图</h2><small>亮线＝导通通路，并非始终有电流</small></div><div class="diagram-scroll">
+<svg class="diagram gpio-diagram" viewBox="0 0 900 700" role="img" aria-labelledby="diagram-title diagram-desc">
+<title id="diagram-title">STM32F1 GPIO 单引脚输入输出结构</title><desc id="diagram-desc">GPIOA 的输出数据位经源选择和输出控制连接 P-MOS 与 N-MOS 等效开关，分别通向 3.3V 和地。引脚另有内部弱上拉、弱下拉及可选外部上拉，并经施密特触发器进入输入数据寄存器。</desc>
+<defs><marker id="control-arrow" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#7b91a4"/></marker></defs>
+<rect class="zone" x="14" y="16" width="668" height="666" rx="10"/><text x="30" y="48" class="title">芯片内部</text>
+<rect class="zone" x="692" y="16" width="194" height="666" rx="10"/><text x="710" y="48" class="title">外部电路</text>
+<text x="35" y="90" class="section-label">① 输出数据与控制</text><text x="458" y="78" class="section-label">② 输出级与上下拉</text>
+<text x="560" y="105" text-anchor="middle" class="title">V<tspan baseline-shift="sub" font-size="11">DD</tspan> 3.3 V</text>
+<path class="line" d="M510 122 H610"/><path id="p1" class="line" d="M510 122 V180"/><path id="p2" class="line" d="M510 284 V330"/>
+<g id="pmos" class="mos off"><rect x="458" y="180" width="108" height="104" rx="7"/><text x="468" y="202" class="title">P</text><text x="468" y="220" class="small">MOS</text><text x="468" y="241" class="small">G</text><text id="ptext" x="468" y="267" class="small">关断</text><path class="channel" d="M510 180 H530 V208 M530 246 V284 H510"/><path id="p-switch" class="channel" d="M530 246 L516 214"/><circle class="contact" cx="530" cy="208" r="3"/><circle class="contact" cx="530" cy="246" r="3"/><text x="541" y="212" class="small">S</text><text x="541" y="250" class="small">D</text><path class="line ctrl" d="M487 236 H505"/></g>
+<path id="n1" class="line" d="M510 330 V395"/><path id="n2" class="line" d="M510 499 V535"/>
+<g id="nmos" class="mos off"><rect x="458" y="395" width="108" height="104" rx="7"/><text x="468" y="417" class="title">N</text><text x="468" y="435" class="small">MOS</text><text x="468" y="452" class="small">G</text><text id="ntext" x="468" y="482" class="small">关断</text><path class="channel" d="M510 395 H530 V421 M530 459 V499 H510"/><path id="n-switch" class="channel" d="M530 459 L516 427"/><circle class="contact" cx="530" cy="421" r="3"/><circle class="contact" cx="530" cy="459" r="3"/><text x="541" y="425" class="small">D</text><text x="541" y="463" class="small">S</text><path class="line ctrl" d="M487 447 H505"/></g>
+<path class="line" d="M510 535 H610 M560 535 V545 M536 545 H584 M542 553 H578 M549 561 H571"/><text x="590" y="561" class="small">GND</text>
+<path id="padline" class="line" d="M510 330 H792"/><circle id="pin" class="pin" cx="700" cy="330" r="12"/><text x="700" y="305" text-anchor="middle" class="title">PA0</text><text id="pin-text" x="710" y="361" text-anchor="middle" class="small">不确定</text>
+<text x="626" y="151" class="small">内部<tspan x="626" dy="17">弱上拉</tspan></text><path id="pu1" class="line" d="M610 122 V180"/><g id="pu" class="res off"><rect x="590" y="180" width="40" height="64" rx="4"/><text x="610" y="219" text-anchor="middle" class="small">R<tspan baseline-shift="sub" font-size="9">PU</tspan></text></g><path id="pu2" class="line" d="M610 244 V330"/>
+<text x="626" y="365" class="small">内部<tspan x="626" dy="17">弱下拉</tspan></text><path id="pd1" class="line" d="M610 330 V395"/><g id="pd" class="res off"><rect x="590" y="395" width="40" height="64" rx="4"/><text x="610" y="434" text-anchor="middle" class="small">R<tspan baseline-shift="sub" font-size="9">PD</tspan></text></g><path id="pd2" class="line" d="M610 459 V535"/>
+<text x="792" y="105" text-anchor="middle" class="title">3.3 V</text><text x="805" y="162" class="small">外部上拉</text><path id="ep1" class="line" d="M792 122 V180"/><g id="ep" class="res off"><rect x="763" y="180" width="58" height="64" rx="4"/><text x="792" y="219" text-anchor="middle" class="small">4.7 kΩ</text></g><path id="ep2" class="line" d="M792 244 V330"/>
+<path id="source-line" class="line" d="M792 330 V415"/><g id="source-box"><rect class="block" x="728" y="415" width="128" height="64" rx="6"/><text x="792" y="441" text-anchor="middle" class="small">外部测试源</text><text id="source-text" x="792" y="465" text-anchor="middle" class="title">未连接</text></g><text x="792" y="510" text-anchor="middle" class="small">仅输入模式使用</text>
+<rect class="block" x="35" y="135" width="145" height="68" rx="6"/><text x="107" y="163" text-anchor="middle" class="title">GPIOx_ODR</text><text id="odr-svg" x="107" y="187" text-anchor="middle" class="mono">bit0 = 1</text>
+<rect class="block" x="35" y="258" width="145" height="60" rx="6"/><text x="107" y="282" text-anchor="middle" class="title">复用外设</text><text x="107" y="305" text-anchor="middle" class="small">本例未选</text>
+<path class="line ctrl" d="M180 169 H235" marker-end="url(#control-arrow)"/><path class="line ctrl" d="M180 288 H208 V211 H235" marker-end="url(#control-arrow)"/>
+<rect class="block" x="235" y="145" width="130" height="90" rx="6"/><text x="300" y="178" text-anchor="middle" class="title">输出源选择</text><text x="300" y="205" text-anchor="middle" class="small">GPIO / AF</text>
+<path class="line ctrl" d="M300 235 V284" marker-end="url(#control-arrow)"/><rect class="block" x="235" y="284" width="130" height="75" rx="6"/><text x="300" y="313" text-anchor="middle" class="title">输出控制</text><text x="300" y="340" text-anchor="middle" class="small">控制两管通断</text>
+<path id="p-gate-line" class="line ctrl" d="M365 303 H394 V236 H458" marker-end="url(#control-arrow)"/><path id="n-gate-line" class="line ctrl" d="M365 340 H394 V447 H458" marker-end="url(#control-arrow)"/>
+<text id="p-gate-value" x="427" y="221" text-anchor="middle" class="mono">0 V</text><text id="n-gate-value" x="427" y="430" text-anchor="middle" class="mono">0 V</text>
+<rect class="gate-info" x="35" y="381" width="330" height="146" rx="7"/><text x="49" y="405" class="title">内部栅极驱动（等效）</text>
+<text x="49" y="428" class="small">V<tspan baseline-shift="sub" font-size="10">GS</tspan> = V<tspan baseline-shift="sub" font-size="10">G</tspan> − V<tspan baseline-shift="sub" font-size="10">S</tspan>，看栅极相对源极的电压</text>
+<text id="p-gate-detail" x="49" y="455" class="small"></text><text id="n-gate-detail" x="49" y="480" class="small"></text><text x="49" y="510" class="small">G 栅极 · S 源极 · D 漏极</text>
+<text x="35" y="571" class="section-label">③ 输入回读 ←</text><path id="input-line" class="line" d="M670 330 V623 H365"/>
+<g id="schmitt"><rect class="block" x="235" y="591" width="130" height="66" rx="6"/><text x="300" y="616" text-anchor="middle" class="title">施密特触发</text><text id="input-text" x="300" y="641" text-anchor="middle" class="small">数字输入</text></g>
+<path id="idr-line" class="line" d="M235 623 H180"/><rect class="block" x="35" y="591" width="145" height="66" rx="6"/><text x="107" y="616" text-anchor="middle" class="title">GPIOx_IDR</text><text id="idr-svg" x="107" y="641" text-anchor="middle" class="mono">bit0 = 1</text>
+<text x="484" y="653" text-anchor="middle" class="small">← 读取 PA0 的实际电平</text>
+<g class="junction"><circle cx="510" cy="330" r="4"/><circle cx="610" cy="330" r="4"/><circle cx="670" cy="330" r="4"/><circle cx="792" cy="330" r="4"/><circle cx="560" cy="535" r="4"/></g>
+<g id="current-animation" aria-hidden="true"></g>
+</svg>
+</div><p class="diagram-caption">本图中 P-MOS 的 S 接 3.3 V：G 低时导通；N-MOS 的 S 接 GND：G 高时导通。内部小开关表示源漏通道的通断，不是机械触点。<span class="current-key">虚线箭头表示控制；实线与圆点表示电气连接。ODR 经内部控制器生成两路栅极驱动，不能把 ODR 位值直接当作 G 的电平。窄屏可横向滑动。</span><span class="current-key"><i class="current-dot" aria-hidden="true"></i>黄点：约定电流方向，速度不代表电流大小。只演示稳态通路，忽略漏电和切换瞬态。</span></p></section>
+<aside class="panel"><div class="panel-head"><h2>改变配置</h2><small>3.3 V 示例</small></div><div class="controls"><div class="field"><label for="mode">工作模式</label><select id="mode"><option value="pp">普通推挽输出</option><option value="od">普通开漏输出</option><option value="float">浮空输入</option><option value="up">上拉输入</option><option value="down">下拉输入</option><option value="analog">模拟输入</option></select></div><div id="output-controls"><div class="field"><label>写 GPIOA_ODR[0]</label><div class="choices"><button id="write0" aria-pressed="false">写 0</button><button id="write1" aria-pressed="true">写 1</button></div></div><label class="check"><input id="external-pull" type="checkbox">接外部 3.3 V 上拉电阻</label></div><div id="input-controls" class="field" hidden><label for="external-source">外部测试电平</label><select id="external-source"><option value="none">未连接</option><option value="high">接 3.3 V</option><option value="low">接 GND</option></select></div><div class="regs"><div class="reg"><span>GPIOA_CRL[3:0]</span><b id="crl"></b><small id="bits"></small></div><div class="reg"><span>GPIOA_ODR[0]</span><b id="odr"></b><small id="odr-note"></small></div><div class="reg"><span>GPIOA_IDR[0]</span><b id="idr"></b><small>采样实际引脚</small></div><div class="reg"><span>PA0 电压</span><b id="voltage"></b><small id="voltage-note"></small></div></div><div class="result" aria-live="polite"><strong id="state"></strong><p id="state-detail"></p></div></div></aside></div>
+<section class="lesson" aria-live="polite"><h3 id="lesson-title"></h3><p id="lesson-text"></p></section>
+<section class="reference"><h3>记住这三个区别</h3><p><b>推挽：</b>内部上管接高电源、下管接地；写 1 / 0 时分别由其中一只驱动。两管同时导通会形成电源到地的低阻通路。</p><p><b>开漏：</b>上管始终关闭；写 0 才由下管拉低，写 1 只是释放引脚。若要稳定的高电平，需由合适的外部电路提供上拉。</p><p><b>ODR 与 IDR：</b>ODR 是输出锁存位，IDR 采样引脚。开漏 ODR=1、无上拉时，不能由 ODR 推断 IDR 必定为 1。</p></section>
+</div>
+<div id="bus" hidden>
+<section class="panel"><div class="panel-head"><h2>两只开漏输出共用一根线</h2><small>只有上拉电阻能提供高电平</small></div><div class="diagram-scroll"><svg class="diagram" viewBox="0 0 900 370" role="img" aria-labelledby="bus-title bus-desc">
+<title id="bus-title">两个开漏输出共享总线</title><desc id="bus-desc">总线经电阻连接 3.3V。设备 A 和 B 各有一只可接地的 N-MOS。任一输出 0，线被拉低；两者均输出 1，则都释放，总线被上拉。</desc>
+<text x="396" y="42" class="title">外部 3.3 V</text><path id="bpu1" class="line" d="M450 52 V85"/><g class="res on"><rect x="428" y="85" width="44" height="65" rx="4"/><text x="450" y="123" text-anchor="middle" class="small">R<tspan baseline-shift="sub" font-size="9">PU</tspan></text></g><path id="bpu2" class="line" d="M450 150 V188"/><path id="bus-line" class="line" d="M200 188 H700"/><circle id="bus-pin" class="pin high" cx="450" cy="188" r="12"/><text id="bus-voltage" x="470" y="178" class="title">总线高电平</text>
+<path id="ba1" class="line" d="M270 188 V245"/><g id="ba" class="mos off"><rect x="226" y="245" width="88" height="60" rx="6"/><text x="270" y="270" text-anchor="middle" class="title">A：N-MOS</text><text id="ba-text" x="270" y="292" text-anchor="middle" class="small">关断</text></g><path id="ba2" class="line" d="M270 305 V335"/><text x="245" y="358" class="small">GND</text>
+<path id="bb1" class="line" d="M630 188 V245"/><g id="bb" class="mos off"><rect x="586" y="245" width="88" height="60" rx="6"/><text x="630" y="270" text-anchor="middle" class="title">B：N-MOS</text><text id="bb-text" x="630" y="292" text-anchor="middle" class="small">关断</text></g><path id="bb2" class="line" d="M630 305 V335"/><text x="605" y="358" class="small">GND</text><g id="bus-current" aria-hidden="true"></g>
+</svg></div><p class="diagram-caption"><i class="current-dot" aria-hidden="true"></i>黄点表示约定电流方向。A、B 都拉低时，两条接地支路都有电流；两者都释放时，不显示稳态电流。动画速度、黄点个数不表示电流大小或分流比例。</p></section>
+<section class="reference"><div class="bar"><span>A 写 ODR：</span><div class="choices"><button id="a0" aria-pressed="false">0 · 拉低</button><button id="a1" aria-pressed="true">1 · 释放</button></div><span>B 写 ODR：</span><div class="choices"><button id="b0" aria-pressed="false">0 · 拉低</button><button id="b1" aria-pressed="true">1 · 释放</button></div></div><h3 id="bus-result"></h3><p id="bus-detail"></p><table class="truth"><thead><tr><th>A</th><th>B</th><th>线电平</th><th>导通的下管</th></tr></thead><tbody id="truth"></tbody></table><p>这常称作“线与”：两个输出都释放，线才被电阻拉高；任意一个输出拉低，整根线变低。推挽输出不可这样直接并联，因一端驱高、另一端驱低时会产生输出争用。</p></section>
+</div>
+<p class="note">依据本课程第 6 章课件第 8–53、55–60 页及 <a href="https://www.st.com/resource/en/reference_manual/cd00171190.pdf">ST RM0008 第 9 章</a>。外部上拉在本页固定为 3.3 V；是否可接更高电压须逐引脚查数据手册，不能把所有 STM32F1 引脚一概视为 5 V 容忍。图仅用于教学，省略导通电阻、寄生电容、漏电与负载细节。</p>
+</main><script>
+'use strict';
+const $=id=>document.getElementById(id);
+const lessons=[
+ {mode:'pp',odr:1,pull:false,source:'none',title:'① 推挽写 1：主动输出高',text:'上侧 P-MOS 导通，下侧 N-MOS 关断。PA0 由内部接向 3.3 V，无需外部上拉。'},
+ {mode:'pp',odr:0,pull:false,source:'none',title:'② 推挽写 0：主动输出低',text:'P-MOS 关断，N-MOS 导通。PA0 由内部接向地。两只管不会同时导通。'},
+ {mode:'od',odr:1,pull:false,source:'none',title:'③ 开漏写 1：释放，不等于输出高',text:'P-MOS 始终关断，N-MOS 此时也关断。没有上拉时 PA0 高阻悬空，ODR=1 不能保证 IDR=1。'},
+ {mode:'od',odr:1,pull:true,source:'none',title:'④ 开漏释放＋外部上拉：线变高',text:'两只输出管都关断。外部电阻把 PA0 拉向 3.3 V；稳态无负载时几乎没有持续电流，上升过程受电阻与线路电容影响。'},
+ {mode:'od',odr:0,pull:true,source:'none',title:'⑤ 开漏写 0：下管拉低',text:'N-MOS 导通，PA0 接近 0 V。电流从外部 3.3 V 经上拉电阻和 N-MOS 流向地；4.7 kΩ 的理想估算约为 0.70 mA。'},
+ {mode:'up',odr:1,pull:false,source:'none',title:'⑥ 输入上拉：未按键时读 1',text:'输出两管关断，内部弱上拉接入。F1 的 ODR=1 此时选择上拉，不是主动推高引脚；IDR 通过输入通道读到 1。'},
+ {mode:'up',odr:1,pull:false,source:'low',title:'⑦ 外部接地：上拉输入读 0',text:'外部低电平覆盖内部弱上拉；PA0 接近 0 V，IDR=0。弱上拉只提供小电流，不会与强驱动硬碰硬。'},
+ {mode:'analog',odr:0,pull:false,source:'high',title:'⑧ 模拟输入：数字输入通道关闭',text:'输出管、内部上下拉、施密特数字输入通道都关闭。外部可以给 PA0 模拟电压；IDR 读 0 不代表引脚电压为 0 V。'}
+];
+let state={...lessons[0]},index=0,timer=null,view='one',bus={a:1,b:1};
+function model(){
+ const s=state,output=s.mode==='pp'||s.mode==='od',analog=s.mode==='analog';
+ const p=s.mode==='pp'&&s.odr===1,n=output&&s.odr===0,pu=s.mode==='up',pd=s.mode==='down',ep=output&&s.pull,source=!output&&s.source!=='none';
+ let pad='Z',why='没有确定电平的驱动通路';
+ if(p){pad='H';why='P-MOS 导通，内部主动拉高'}
+ else if(n){pad='L';why='N-MOS 导通，内部主动拉低'}
+ else if(source){pad=s.source==='high'?'H':'L';why='外部测试源决定引脚电平'}
+ else if(ep||pu){pad='H';why=(ep?'外部上拉':'内部弱上拉')+'决定引脚电平'}
+ else if(pd){pad='L';why='内部弱下拉决定引脚电平'}
+ const idr=analog?'0':pad==='H'?'1':pad==='L'?'0':'?';
+ const cnf=s.mode==='pp'||analog?'00':s.mode==='od'||s.mode==='float'?'01':'10',mode=output?'10':'00';
+ return {output,analog,p,n,pu,pd,ep,source,pad,idr,why,cnf,mode,pGate:p?0:3.3,nGate:n?3.3:0,crl:(parseInt(cnf,2)<<2)|parseInt(mode,2)};
+}
+function setClass(id,name,on){$(id).classList.toggle(name,!!on)}
+function setLine(id,type){const x=$(id);x.classList.remove('high','low','pull');if(type)x.classList.add(type)}
+function stop(){if(timer){clearInterval(timer);timer=null}$('play').textContent='播放'}
+function syncControls(){$('mode').value=state.mode;$('external-pull').checked=state.pull;$('external-source').value=state.source;for(const b of [0,1])$('write'+b).setAttribute('aria-pressed',String(state.odr===b))}
+function setStep(n){stop();index=Math.max(0,Math.min(lessons.length-1,n));state={...lessons[index]};syncControls();render()}
+function freeEdit(){stop();index=-1;render()}
+function currentFlow(m){
+ const s=state;
+ if(m.n&&m.ep)return {route:'external-pull-nmos',path:'M792 122 V330 H510 V395 H530 V499 H510 V535 H560 V545',title:'有稳态电流 · 约 0.70 mA',text:'外部 3.3 V → 4.7 kΩ 上拉电阻 → PA0 → N-MOS → GND。推挽和开漏拉低时都有这条通路。'};
+ if(m.pu&&m.source&&s.source==='low')return {route:'internal-pullup-source',path:'M610 122 V330 H792 V415',title:'有稳态电流 · 内部弱上拉供电流',text:'内部 VDD → 弱上拉电阻 → PA0 → 外部 GND。输出两管均关断，电流经上拉支路流动。'};
+ if(m.pd&&m.source&&s.source==='high')return {route:'source-internal-pulldown',path:'M792 415 V330 H610 V535 H560 V545',title:'有稳态电流 · 内部弱下拉流向地',text:'外部 3.3 V → PA0 → 弱下拉电阻 → GND。黄点从下方的外部测试源出发，经过引脚流入下拉支路。'};
+ let text='本图未连接消耗电流的负载，稳态时近似无直流电流；有电平不等于有持续电流。';
+ if(m.pad==='Z')text='引脚悬空，没有完整的稳态电流通路，电平也不确定。';
+ else if(m.n)text='N-MOS 虽然导通，但未接上拉或其他供电负载，没有从电源流向地的完整通路。';
+ else if(m.pu&&m.source||m.pd&&m.source||m.p&&m.ep)text='电阻两端处于相同电位，理想稳态电流为零，因此不显示流动黄点。';
+ else if(m.pu||m.pd||m.ep)text='上下拉使引脚电平稳定后，近似无持续直流电流；本页未演示引脚电容的充放电瞬态。';
+ else if(m.analog)text='数字输入通道已关闭，本图未建模 ADC 等模拟负载；不显示持续电流。';
+ return {route:'none',title:'无持续电流 · 不显示黄点',text};
+}
+function drawCurrent(id,paths){
+ const g=$(id),ns='http://www.w3.org/2000/svg';g.replaceChildren();
+ paths.forEach((entry,i)=>{const dot=document.createElementNS(ns,'circle'),motion=document.createElementNS(ns,'animateMotion');dot.setAttribute('r','5');dot.setAttribute('fill','#e7a227');dot.setAttribute('stroke','#a76208');dot.setAttribute('stroke-width','1');dot.setAttribute('data-route',entry.route);motion.setAttribute('dur','4s');motion.setAttribute('begin',i?'-1.1s':'0s');motion.setAttribute('repeatCount','indefinite');motion.setAttribute('path',entry.path);dot.append(motion);g.append(dot)});
+}
+function render(){
+ const m=model(),s=state;
+ $('output-controls').hidden=!m.output;$('input-controls').hidden=m.output;
+ $('count').textContent=index<0?'自由实验':String(index+1)+' / '+lessons.length;
+ $('prev').disabled=index<=0;$('next').disabled=index===lessons.length-1;
+ for(const [id,yes] of [['pmos',m.p],['nmos',m.n],['pu',m.pu],['pd',m.pd],['ep',m.ep]]){setClass(id,'on',yes);setClass(id,'off',!yes)}
+ $('ptext').textContent=m.p?'导通':'关断';$('ntext').textContent=m.n?'导通':'关断';
+ $('p-switch').setAttribute('d',m.p?'M530 246 V208':'M530 246 L516 214');$('n-switch').setAttribute('d',m.n?'M530 459 V421':'M530 459 L516 427');
+ $('p-gate-value').textContent=m.pGate+' V';$('n-gate-value').textContent=m.nGate+' V';
+ setLine('p-gate-line',m.pGate?'high':'low');setLine('n-gate-line',m.nGate?'high':'low');
+ $('p-gate-detail').textContent='P：'+m.pGate+' − 3.3 = '+(m.p?'−3.3':'0')+' V → '+(m.p?'导通':'关断');
+ $('n-gate-detail').textContent='N：'+m.nGate+' − 0 = '+m.nGate+' V → '+(m.n?'导通':'关断');
+ for(const id of ['p1','p2'])setLine(id,m.p?'high':null);
+ for(const id of ['n1','n2'])setLine(id,m.n?'low':null);
+ for(const id of ['pu1','pu2'])setLine(id,m.pu?'pull':null);
+ for(const id of ['pd1','pd2'])setLine(id,m.pd?'pull':null);
+ for(const id of ['ep1','ep2'])setLine(id,m.ep?'pull':null);
+ setLine('padline',m.pad==='H'?'high':m.pad==='L'?'low':null);
+ setLine('source-line',m.source?m.pad==='H'?'high':'low':null);
+ setLine('input-line',!m.analog&&m.idr!=='?'?'pull':null);
+ setLine('idr-line',!m.analog&&m.idr!=='?'?'pull':null);
+ $('pin').setAttribute('class','pin '+(m.pad==='H'?'high':m.pad==='L'?'low':''));
+ $('pin-text').textContent=m.pad==='H'?'约 3.3 V':m.pad==='L'?'约 0 V':'悬空 / 不确定';
+ $('source-box').style.opacity=m.source?'1':'.28';
+ $('source-text').textContent=m.source?(s.source==='high'?'3.3 V':'GND'):'未连接';
+ $('schmitt').style.opacity=m.analog?'.3':'1';
+ $('input-text').textContent=m.analog?'已关闭':m.idr==='?'?'读值未定义':'读到 '+m.idr;
+ $('odr-svg').textContent='bit0 = '+s.odr;$('idr-svg').textContent='bit0 = '+m.idr;
+ $('crl').textContent='0x'+m.crl.toString(16).toUpperCase();$('bits').textContent='CNF='+m.cnf+'，MODE='+m.mode;
+ $('odr').textContent=String(s.odr);$('odr-note').textContent=s.mode==='up'?'此时选内部上拉':s.mode==='down'?'此时选内部下拉':m.output?'控制输出级':'不驱动引脚';
+ $('idr').textContent=m.idr;$('voltage').textContent=m.pad==='H'?'≈3.3 V':m.pad==='L'?'≈0 V':'高阻';
+ $('voltage-note').textContent=m.pad==='Z'?'不能由 ODR 判定':'由导通路径决定';
+ $('state').textContent='PA0 '+(m.pad==='H'?'高':m.pad==='L'?'低':'不确定')+'；IDR='+m.idr;
+ $('state-detail').textContent=m.why+(s.mode==='od'&&s.odr===1?'；ODR=1 仅表示释放 N-MOS。':'。');
+ $('lesson-title').textContent=index<0?'自由实验：'+$('mode').selectedOptions[0].textContent:lessons[index].title;
+ $('lesson-text').textContent=index<0?describe(m):lessons[index].text;
+ const flow=currentFlow(m);
+ let info=$('current-info');if(!info){info=document.createElement('div');info.id='current-info';info.className='current-info';info.setAttribute('aria-live','polite');info.innerHTML='<strong id="current-title"></strong><p id="current-detail"></p>';$('state').closest('.result').after(info)}
+ $('current-title').textContent=flow.title;$('current-detail').textContent=flow.text;
+ drawCurrent('current-animation',flow.path?[flow]:[]);
+}
+function describe(m){
+ const s=state;
+ if(s.mode==='pp')return s.odr?'推挽写 1：P-MOS 导通、N-MOS 关断，内部主动把引脚拉向 3.3 V。':'推挽写 0：P-MOS 关断、N-MOS 导通，内部主动把引脚拉向地。';
+ if(s.mode==='od')return s.odr?(s.pull?'开漏写 1 只释放引脚；外部电阻把它拉高。':'开漏写 1 只释放引脚；没有上拉时高阻悬空，不能把 ODR=1 读作引脚高电平。'):'开漏写 0 时 N-MOS 拉低；有外部上拉时，电阻限制从电源流向地的电流。';
+ if(s.mode==='float')return '浮空输入关掉输出两管和内部上下拉；外部不驱动时引脚电平不确定，IDR 也无法可靠预测。';
+ if(s.mode==='up')return '输入上拉模式通过 ODR=1 接入内部弱上拉；外部接地时 IDR 可读到 0，尽管 ODR 仍是 1。';
+ if(s.mode==='down')return '输入下拉模式通过 ODR=0 接入内部弱下拉；外部驱动高电平时 IDR 可读到 1。';
+ return '模拟输入关闭数字施密特输入通道、输出缓冲器及上下拉；数字 IDR 读 0 不代表实际引脚电压为 0 V。';
+}
+function renderBus(){
+ const low=bus.a===0||bus.b===0;
+ for(const k of ['a','b']){const v=bus[k];setClass('b'+k,'on',v===0);setClass('b'+k,'off',v===1);$('b'+k+'-text').textContent=v===0?'导通':'关断';for(const id of ['b'+k+'1','b'+k+'2'])setLine(id,v===0?'low':null);for(const n of [0,1])$(k+n).setAttribute('aria-pressed',String(v===n))}
+ setLine('bpu1',low?'pull':'high');setLine('bpu2',low?'pull':'high');setLine('bus-line',low?'low':'high');
+ $('bus-pin').setAttribute('class','pin '+(low?'low':'high'));
+ $('bus-voltage').textContent='总线'+(low?'低电平':'高电平');
+ $('bus-result').textContent='A='+bus.a+'，B='+bus.b+' → 总线 '+(low?'低':'高');
+ $('bus-detail').textContent=low?'至少一只 N-MOS 导通，把线拉低。上拉电阻限制电源流向地的电流；释放的一方不会主动顶出高电平。':'两只 N-MOS 都关断，外部上拉电阻把整根线拉高；稳态无负载时没有持续大电流。';
+ $('truth').innerHTML=[[0,0],[0,1],[1,0],[1,1]].map(([a,b])=>'<tr class="'+(a===bus.a&&b===bus.b?'active':'')+'"><td>'+a+'</td><td>'+b+'</td><td>'+(a&&b?'高':'低')+'</td><td>'+(a===0&&b===0?'A、B':a===0?'A':b===0?'B':'无')+'</td></tr>').join('');
+ const branches=[];if(bus.a===0)branches.push({route:'bus-a',path:'M450 52 V188 H270 V335'});if(bus.b===0)branches.push({route:'bus-b',path:'M450 52 V188 H630 V335'});
+ drawCurrent('bus-current',branches);
+ if(bus.a===0&&bus.b===0)$('bus-detail').textContent='A、B 的 N-MOS 都导通，上拉电流分流到两条接地支路，两支路均显示黄点。动画只表示通路，不表示实际分流比例。';
+}
+function selectView(v){stop();view=v;$('one').hidden=v!=='one';$('bus').hidden=v!=='bus';$('tab-one').setAttribute('aria-selected',String(v==='one'));$('tab-bus').setAttribute('aria-selected',String(v==='bus'));if(v==='bus')renderBus()}
+function play(){if(timer){stop();return}if(index<0||index===lessons.length-1){index=0;state={...lessons[0]};syncControls();render()}$('play').textContent='暂停';timer=setInterval(()=>{if(index<lessons.length-1){index++;state={...lessons[index]};syncControls();render()}else stop()},3400)}
+$('prev').onclick=()=>setStep(index<0?0:index-1);$('next').onclick=()=>setStep(index<0?0:index+1);$('reset').onclick=()=>setStep(0);$('play').onclick=play;
+$('tab-one').onclick=()=>selectView('one');$('tab-bus').onclick=()=>selectView('bus');
+$('mode').onchange=()=>{state.mode=$('mode').value;state.source='none';state.pull=state.mode==='od';if(state.mode==='up')state.odr=1;if(state.mode==='down'||state.mode==='analog')state.odr=0;syncControls();freeEdit()};
+for(const bit of [0,1])$('write'+bit).onclick=()=>{state.odr=bit;syncControls();freeEdit()};
+$('external-pull').onchange=()=>{state.pull=$('external-pull').checked;freeEdit()};
+$('external-source').onchange=()=>{state.source=$('external-source').value;freeEdit()};
+for(const k of ['a','b'])for(const bit of [0,1])$(k+bit).onclick=()=>{bus[k]=bit;renderBus()};
+document.addEventListener('keydown',ev=>{if(view!=='one'||ev.altKey||ev.ctrlKey||ev.metaKey||ev.isComposing)return;const tag=ev.target.tagName;if(['INPUT','SELECT','TEXTAREA'].includes(tag)||ev.target.isContentEditable)return;if(ev.code==='ArrowRight'){ev.preventDefault();setStep(index<0?0:index+1)}else if(ev.code==='ArrowLeft'){ev.preventDefault();setStep(index<0?0:index-1)}else if(ev.code==='Space'&&tag!=='BUTTON'){ev.preventDefault();play()}});
+window.gpioLab={model,getState:()=>({...state}),getStep:()=>index,setStep,selectView,getBus:()=>({...bus})};
+syncControls();render();renderBus();
+</script>
+<footer id="course-credit" style="box-sizing:border-box;position:static;max-width:1480px;margin:24px auto 0;padding:22px 26px 28px;border-top:1px solid #dce4e8;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;font:13px/1.7 -apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif;color:#617785;text-align:left;background:transparent"><a href="./index.html" style="color:#176b58;text-decoration:none">← 返回课程目录</a><span>Designed By Xianyu Wu</span></footer>
+</body></html>

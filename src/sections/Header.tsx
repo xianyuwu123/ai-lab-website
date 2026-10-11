@@ -8,6 +8,7 @@ const getNavItems = (lang: 'zh' | 'en') => [
   { label: lang === 'zh' ? '研究方向' : 'Research', href: '#research' },
   { label: lang === 'zh' ? '学术成果' : 'Publications', href: '#publications' },
   { label: lang === 'zh' ? '开源项目' : 'Open Source', href: '#opensource' },
+  { label: lang === 'zh' ? '教学资源' : 'Teaching', href: `${import.meta.env.BASE_URL}courses/index.html` },
   { label: lang === 'zh' ? '联系我们' : 'Contact', href: '#contact' },
 ]
 
@@ -36,9 +37,11 @@ export default function Header() {
   }, [])
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault()
     setMobileOpen(false)
-    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
+    if (href.startsWith('#')) {
+      e.preventDefault()
+      document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
+    }
   }
 
   const toggleLang = () => setLang(lang === 'zh' ? 'en' : 'zh')
@@ -80,7 +83,7 @@ export default function Header() {
         </a>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-7">
+        <nav className="hidden lg:flex items-center gap-6">
           {navItems.map((item) => (
             <a
               key={item.href}
@@ -105,7 +108,7 @@ export default function Header() {
         </nav>
 
         {/* Mobile Hamburger */}
-        <button className="md:hidden p-2 -mr-2" onClick={() => setMobileOpen(!mobileOpen)}>
+        <button aria-label={mobileOpen ? '关闭导航' : '打开导航'} aria-expanded={mobileOpen} className="lg:hidden p-2 -mr-2" onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <X size={20} color="#1d1d1f" /> : <Menu size={20} color="#1d1d1f" />}
         </button>
       </div>
@@ -113,7 +116,7 @@ export default function Header() {
       {/* Mobile Menu */}
       {mobileOpen && (
         <div
-          className="md:hidden absolute top-[52px] left-0 right-0"
+          className="lg:hidden absolute top-[52px] left-0 right-0"
           style={{
             backgroundColor: 'rgba(255,255,255,0.92)',
             backdropFilter: 'blur(20px) saturate(180%)',
