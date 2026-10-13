@@ -13,7 +13,11 @@ const lessons = await Promise.all(files.map(async filename => {
   const original = await readFile(resolve(source, filename), 'utf8')
   if (!/<\/body\s*>/i.test(original)) throw new Error(`Missing closing body: ${filename}`)
   if (original.includes('id="course-credit"')) throw new Error(`Source already contains imported footer: ${filename}`)
-  return [filename, original.replace(/<\/body\s*>/i, `${credit}</body>`)]
+  // Keep the published lesson's navigation aligned with the current catalogue.
+  const published = filename === 'stm32-gpio-register-map.html'
+    ? original.replace('<a href="stm32-gpio-registers.html">LED 简明版</a> · <a href="stm32-gpio-registers-advanced.html">原完整版本</a>', '<a href="stm32-gpio-lab.html">GPIO 内部结构</a> · <a href="index.html">课程目录</a>')
+    : original
+  return [filename, published.replace(/<\/body\s*>/i, `${credit}</body>`)]
 }))
 await mkdir(destination, { recursive: true })
 for (const [filename, html] of lessons) await writeFile(resolve(destination, filename), html, 'utf8')
