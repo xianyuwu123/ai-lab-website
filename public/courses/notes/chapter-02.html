@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>第2章 · Cortex-M3 处理器 | 微机原理知识点</title><meta name="description" content="从流水线和寄存器，到工作模式、堆栈与异常，认识处理器内核。"><link rel="stylesheet" href="../courses.css"><link rel="stylesheet" href="../knowledge.css"><script src="../notes.js" defer></script></head>
+<body class="reader-page"><a class="skip" href="#chapter-content">跳到正文</a>
+<header class="site-header"><div class="header-inner"><a class="brand" href="../index.html"><span class="brand-dot"></span>AOCI Lab<span class="brand-divider">/</span><span class="brand-sub">章节知识点</span></a><nav class="reader-header-nav" aria-label="阅读页导航"><a href="../index.html#knowledge">← 课程目录</a><a href="../index.html#catalogue">互动课堂</a></nav></div><div class="progress-track" aria-hidden="true"><span class="progress-fill"></span></div></header>
+<main class="reader-shell"><aside class="chapter-sidebar"><p class="sidebar-label">COURSE CHAPTERS · 章节</p><nav class="chapter-links" aria-label="全部章节"><a href="chapter-01.html"><span>01</span>微型计算机基础知识</a>
+<a href="chapter-02.html" aria-current="page"><span>02</span>Cortex-M3 处理器</a>
+<a href="chapter-03.html"><span>03</span>STM32F1 系列微控制器</a>
+<a href="chapter-04.html"><span>04</span>汇编语言及其程序设计</a>
+<a href="chapter-05.html"><span>05</span>ARM 微控制器开发</a>
+<a href="chapter-06.html"><span>06</span>GPIO 通用输入输出接口</a>
+<a href="chapter-07.html"><span>07</span>EXTI 中断模块与基本应用</a>
+<a href="chapter-08.html"><span>08</span>定时器与脉宽调制</a>
+<a href="chapter-09.html"><span>09</span>串行通信</a>
+<a href="chapter-10.html"><span>10</span>模拟量模块</a></nav><a class="sidebar-return" href="../index.html#knowledge">← 返回课程资源</a></aside>
+<div class="reading-column"><header class="chapter-heading"><p class="eyebrow">CHAPTER 02 / 10 · 微机原理与接口技术</p><h1>Cortex-M3 处理器</h1><p class="chapter-deck">从流水线和寄存器，到工作模式、堆栈与异常，认识处理器内核。</p><div class="chapter-meta"><span>章节知识点整理</span><span>9 个阅读主题</span></div></header>
+<details class="chapter-mobile"><summary>切换章节 · 第2章</summary><nav class="chapter-links" aria-label="手机端全部章节"><a href="chapter-01.html"><span>01</span>微型计算机基础知识</a>
+<a href="chapter-02.html" aria-current="page"><span>02</span>Cortex-M3 处理器</a>
+<a href="chapter-03.html"><span>03</span>STM32F1 系列微控制器</a>
+<a href="chapter-04.html"><span>04</span>汇编语言及其程序设计</a>
+<a href="chapter-05.html"><span>05</span>ARM 微控制器开发</a>
+<a href="chapter-06.html"><span>06</span>GPIO 通用输入输出接口</a>
+<a href="chapter-07.html"><span>07</span>EXTI 中断模块与基本应用</a>
+<a href="chapter-08.html"><span>08</span>定时器与脉宽调制</a>
+<a href="chapter-09.html"><span>09</span>串行通信</a>
+<a href="chapter-10.html"><span>10</span>模拟量模块</a></nav></details><details class="toc-mobile"><summary>本章目录 · 9 个主题</summary><nav aria-label="展开本章目录"><a href="#一cortex-m3-处理器简介及其组件">一、Cortex-M3 处理器简介及其组件</a>
+<a href="#二三级流水线">二、三级流水线</a>
+<a href="#三寄存器组织">三、寄存器组织</a>
+<a href="#四工作模式与工作等级">四、工作模式与工作等级</a>
+<a href="#五堆栈机制">五、堆栈机制</a>
+<a href="#六存储器管理">六、存储器管理</a>
+<a href="#七异常与中断">七、异常与中断</a>
+<a href="#八复位序列">八、复位序列</a>
+<a href="#本章小结与思考题">本章小结与思考题</a></nav></details>
+<section class="related-labs" aria-label="配套互动课堂"><h2>读懂之后，动手验证</h2><div class="related-labs-links"><a href="../stm32-interrupt-lab.html">中断现场与双堆栈 ↗</a></div></section><article class="prose" id="chapter-content" aria-label="第2章知识点正文"><blockquote>
+<p>本文整理自福州大学《微机原理与接口技术》吴衔誉教授第二章课件，系统讲解 Cortex-M3 的内核架构、三级流水线、寄存器组织、工作模式、堆栈机制、存储器管理、异常与中断、复位序列八大板块。</p>
+</blockquote>
+<hr>
+<h2 id="一cortex-m3-处理器简介及其组件">一、Cortex-M3 处理器简介及其组件</h2>
+<h3 id="11-一句话定位">1.1 一句话定位</h3>
+<p>Cortex-M3 内核基于<strong>哈佛结构的三级流水线</strong>，采用 <strong>ARMv7-M</strong> 架构，使用 <strong>Thumb-2 指令集</strong>，集成了分支预测、单周期乘法、硬件除法等功能。它包含内核和调试系统，再配上时钟、存储器、外设与 I/O 组件，构成一颗低功耗、门数少、中断延迟短、支持多级嵌套的 32 位处理器。</p>
+<h3 id="12-冯诺依曼结构-vs-哈佛结构">1.2 冯·诺依曼结构 vs 哈佛结构</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>冯·诺依曼结构</th>
+<th>哈佛结构</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>存储器</td>
+<td>程序与数据<strong>合并</strong>在一起</td>
+<td>程序与数据<strong>分开</strong>存放、独立编址</td>
+</tr>
+<tr>
+<td>总线</td>
+<td>指令与数据共用一条总线</td>
+<td>指令、数据总线各自独立（4 条总线）</td>
+</tr>
+<tr>
+<td>取指与访存</td>
+<td>串行，存在「冯·诺依曼瓶颈」</td>
+<td>可并行读取，吞吐率更高</td>
+</tr>
+<tr>
+<td>典型应用</td>
+<td>PC 处理器（i3/i5/i7）</td>
+<td>嵌入式 / DSP</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>关键辨析（考试高频）</strong>：</p>
+<ul>
+<li>冯·诺依曼结构：指令与数据<strong>共用一条数据总线</strong>，取指与读数不能完全并行。</li>
+<li>哈佛结构：程序和数据<strong>分存两个独立存储器</strong>，有各自的地址总线和数据总线，取指和读数据可并行。</li>
+</ul>
+<h3 id="13-改良哈佛cortex-m3-的真实身份">1.3 改良哈佛：Cortex-M3 的真实身份</h3>
+<p>Cortex-M3 引出 <strong>I-Code（取指）</strong> 和 <strong>D-Code（读数据）</strong> 两条独立总线，内核侧取指与访数可以并行；但从外部看，它仍然是<strong>统一的 4GB 线性地址空间</strong>（Flash 与 SRAM 统一编址）。因此它被称为「改良哈佛」或「哈佛总线架构」——<strong>哈佛式总线 + 统一编址</strong>，两种说法指同一件事，考试写哪个都不算错。</p>
+<blockquote>
+<p><strong>为什么 I-Code 和 D-Code 都连到代码区？</strong>
+架构（指令/数据存哪）和总线（工程通路）是两件事。纯哈佛要求物理分开，纯冯氏只有一条总线。Cortex-M3 走中间路线：内核侧通路分开（可并行），但地址统一编址。所以 D-Code 能直接读 Flash 里的常量与查表数据，无需额外拷贝；在 SRAM 里跑程序时取指也可走系统总线。</p>
+</blockquote>
+<h3 id="14-三条总线--总线矩阵">1.4 三条总线 + 总线矩阵</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>总线</th>
+<th>用途</th>
+<th>默认映射地址</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>I-Code（指令）</strong></td>
+<td>从代码区取指令、取中断向量，只读</td>
+<td>0x00000000 ~ 0x1FFFFFFF（代码区）</td>
+</tr>
+<tr>
+<td><strong>D-Code（数据）</strong></td>
+<td>读写代码区的数据、调试访问</td>
+<td>同上（代码区）</td>
+</tr>
+<tr>
+<td><strong>系统总线（System）</strong></td>
+<td>访问 SRAM、片上外设、片外设备，经总线矩阵仲裁</td>
+<td>0x20000000 ~ 0xDFFFFFFF 等</td>
+</tr>
+<tr>
+<td><strong>外设总线（PPB）</strong></td>
+<td>访问专用外设（调试 / 系统控制部件）</td>
+<td>0xE0040000 ~ 0xE00FFFFF</td>
+</tr>
+</tbody></table>
+</div>
+<p>三条都是 <strong>32 位 AHB-Lite 总线</strong>，可并行工作。中间有一组**总线矩阵（Bus Matrix）**作为交叉开关：不同主设备访问不同从设备时可并行；访问同一从设备时按优先级仲裁（建议 D-Code 高于 I-Code，System 内部数据 &gt; 取指 &gt; 调试）。此外还有 <strong>APB 外设总线</strong>通过 AHB-APB 桥连接低速外设。</p>
+<h3 id="15-两大核心组件">1.5 两大核心组件</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>组件</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>NVIC（嵌套向量中断控制器）</strong></td>
+<td>与 CPU 紧耦合；中断发生时<strong>自动从向量表取入口地址并直接调用</strong>，大幅缩短中断延迟</td>
+</tr>
+<tr>
+<td><strong>SysTick（系统节拍定时器）</strong></td>
+<td>24 位倒计时计数器，产生定时中断；睡眠模式下也能工作，可作为系统时钟基准</td>
+</tr>
+</tbody></table>
+</div>
+<h3 id="16-cortex-m-家族横向对比m0--m0--m1--m3--m4">1.6 Cortex-M 家族横向对比（M0 / M0+ / M1 / M3 / M4）</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>特性</th>
+<th>M0</th>
+<th>M0+</th>
+<th>M1</th>
+<th>M3</th>
+<th>M4</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ARM 架构</td>
+<td>v6-M</td>
+<td>v6-M</td>
+<td>v6-M</td>
+<td>v7-M</td>
+<td>v7E-M</td>
+</tr>
+<tr>
+<td>总线</td>
+<td>冯氏</td>
+<td>冯氏</td>
+<td>冯氏</td>
+<td><strong>哈佛</strong></td>
+<td><strong>哈佛</strong></td>
+</tr>
+<tr>
+<td>流水线</td>
+<td>3 层</td>
+<td>2 层</td>
+<td>3 层</td>
+<td>3 层</td>
+<td>3 层</td>
+</tr>
+<tr>
+<td>Thumb-2</td>
+<td>部分</td>
+<td>部分</td>
+<td>部分</td>
+<td><strong>全部</strong></td>
+<td><strong>全部</strong></td>
+</tr>
+<tr>
+<td>32×32 乘法（64 位结果）</td>
+<td>否</td>
+<td>否</td>
+<td>否</td>
+<td><strong>是</strong></td>
+<td><strong>是</strong></td>
+</tr>
+<tr>
+<td>除法</td>
+<td>否</td>
+<td>否</td>
+<td>否</td>
+<td><strong>是</strong></td>
+<td><strong>是</strong></td>
+</tr>
+<tr>
+<td>DSP 指令</td>
+<td>否</td>
+<td>否</td>
+<td>否</td>
+<td>否</td>
+<td><strong>是</strong></td>
+</tr>
+<tr>
+<td>单精度浮点</td>
+<td>否</td>
+<td>否</td>
+<td>否</td>
+<td>否</td>
+<td>可选</td>
+</tr>
+</tbody></table>
+</div>
+<blockquote>
+<p><strong>记忆点</strong>：Cortex-M3 是第一个采用 ARMv7-M + 哈佛总线 + 完整 Thumb-2 + 硬件除法的主流 M 系列内核。</p>
+</blockquote>
+<hr>
+<h2 id="二三级流水线">二、三级流水线</h2>
+<p>Cortex-M3 执行指令时采用<strong>三级流水线</strong>：取指（Fetch）→ 译码（Decode）→ 执行（Execute）。</p>
+<ul>
+<li><strong>流水线充满后</strong>，取指、译码、执行并行推进，平均<strong>每个周期完成一条指令</strong>。</li>
+<li><strong>16 位指令居多时</strong>：Cortex-M3 一次取 32 位（2 条 16 位指令），因此会<strong>每隔一个周期取一次指</strong>，总线接口可歇一拍。</li>
+<li><strong>流水线清洗（Flush）</strong>：遇到分支、异常或断点时，已取指 / 译码但尚未执行的指令被<strong>丢弃</strong>，跳转到目标地址重新取指，这个过程叫流水线的清洗。</li>
+<li><strong>分支预测</strong>：带分支预测时，遇到分支指令能自动预测跳转方向，从预测方向取指，保证性能不骤降。</li>
+</ul>
+<blockquote>
+<p><strong>辨析题</strong>：遇到分支 / 异常丢弃已取指结果的动作叫「流水线清洗（Pipeline Flush）」，不是阻塞（Stall）。阻塞是流水线暂停等待，清洗是丢弃并重启。</p>
+</blockquote>
+<hr>
+<h2 id="三寄存器组织">三、寄存器组织</h2>
+<h3 id="31-通用寄存器r0r15">3.1 通用寄存器（R0–R15）</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>寄存器</th>
+<th>名称</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R0–R7</td>
+<td>低组寄存器</td>
+<td>所有指令均可访问，32 位，复位后初值随机</td>
+</tr>
+<tr>
+<td>R8–R12</td>
+<td>高组寄存器</td>
+<td>只有少数 16 位 Thumb 指令能访问，32 位指令不受限</td>
+</tr>
+<tr>
+<td>R13</td>
+<td>SP（堆栈指针）</td>
+<td>逻辑上只有一个 R13，但有 <strong>MSP / PSP</strong> 两个物理寄存器</td>
+</tr>
+<tr>
+<td>R14</td>
+<td>LR（链接寄存器）</td>
+<td>调用子程序时<strong>硬件自动保存返回地址</strong>；返回时把 LR 复制到 PC</td>
+</tr>
+<tr>
+<td>R15</td>
+<td>PC（程序计数器）</td>
+<td>指向下一条要执行的指令；读 PC 返回「当前指令地址 + 4」</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>LR 工作机制</strong>：</p>
+<div class="code-block"><div class="code-header"><span>asm</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>main
+    …
+    BL  function1     ; PC = function1，同时 LR = main 中下一条指令地址
+function1
+    …
+    BX  LR            ; 函数返回</code></pre></div>
+<p><strong>PC 要点</strong>：</p>
+<ul>
+<li>向 PC 写数据会引起程序跳转，<strong>但不更新 LR</strong>。</li>
+<li>PC 的第 0 位（LSB）指示 ARM/Thumb 状态：Cortex-M3 指令属 Thumb-2，至少半字对齐，<strong>LSB 恒读回 0</strong>；写 PC 必须保证 LSB = 1（表明 Thumb 状态），写 0 会试图进入 ARM 模式并触发 Fault。</li>
+</ul>
+<h3 id="32-特殊功能寄存器只能用-mrs--msr-访问">3.2 特殊功能寄存器（只能用 MRS / MSR 访问）</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>名称</th>
+<th>符号</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>程序状态寄存器</td>
+<td>xPSR</td>
+<td>记录 ALU 标志、执行状态、当前服务的中断号</td>
+</tr>
+<tr>
+<td>中断屏蔽</td>
+<td>PRIMASK</td>
+<td>置 1 关闭所有可屏蔽中断（只剩 NMI 和硬 Fault）</td>
+</tr>
+<tr>
+<td>中断屏蔽</td>
+<td>FAULTMASK</td>
+<td>置 1 关闭所有 Fault（只剩 NMI）</td>
+</tr>
+<tr>
+<td>中断屏蔽</td>
+<td>BASEPRI</td>
+<td>屏蔽优先级<strong>不高于</strong>某阈值的中断</td>
+</tr>
+<tr>
+<td>控制寄存器</td>
+<td>CONTROL</td>
+<td>定义特权级别、选择使用哪个堆栈指针</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>xPSR 的三位段</strong>：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>子寄存器</th>
+<th>关键位</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>APSR</td>
+<td>N/Z/C/V/Q</td>
+<td>运算结果标志：负数、零、进位/借位、溢出、粘着饱和</td>
+</tr>
+<tr>
+<td>IPSR</td>
+<td>异常号（位 4:0）</td>
+<td>当前正在服务的异常编号</td>
+</tr>
+<tr>
+<td>EPSR</td>
+<td>T（位 24）、ICI/IT（26:25、15:10）</td>
+<td>T 位恒为 1（仅支持 Thumb）；ICI/IT 用于可中断-可继续指令与 If-Then 状态</td>
+</tr>
+</tbody></table>
+</div>
+<blockquote>
+<p><strong>ICI/IT 重叠注意</strong>：EPSR 的 ICI 区与 IT 区<strong>共用同一组位</strong>。IT 块内的多寄存器 LDM/STM <strong>不可中断-可继续</strong>（IT 优先）。</p>
+</blockquote>
+<p><strong>中断屏蔽三件套</strong>：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>寄存器</th>
+<th>作用</th>
+<th>默认</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PRIMASK</td>
+<td>1 位；置 1 关所有可屏蔽中断，只剩 NMI + 硬 Fault</td>
+<td>0（允许）</td>
+</tr>
+<tr>
+<td>FAULTMASK</td>
+<td>1 位；置 1 仅 NMI 可响应，其余全禁</td>
+<td>0（允许）</td>
+</tr>
+<tr>
+<td>BASEPRI</td>
+<td>最多 9 位；优先级 ≥ 该值的中断被关闭；0 表示不关闭</td>
+<td>0</td>
+</tr>
+</tbody></table>
+</div>
+<p>快速开关中断专用指令：<strong>CPSID I</strong>（关中断）/ <strong>CPSIE I</strong>（开中断）/ <strong>CPSID F</strong>（关 Fault）/ <strong>CPSIE F</strong>（开 Fault）。</p>
+<p><strong>MRS / MSR 对照</strong>：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>全称</th>
+<th>方向</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MRS</td>
+<td>Move to Register from Special register</td>
+<td>特殊寄存器 → 通用寄存器（读取）</td>
+</tr>
+<tr>
+<td>MSR</td>
+<td>Move to Special register from Register</td>
+<td>通用寄存器 → 特殊寄存器（写入）</td>
+</tr>
+</tbody></table>
+</div>
+<hr>
+<h2 id="四工作模式与工作等级">四、工作模式与工作等级</h2>
+<p>Cortex-M3 支持<strong>两种工作模式</strong>和<strong>两个工作等级</strong>：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>运行时段</th>
+<th>特权级</th>
+<th>用户级</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>处理（Handler）模式（异常服务例程）</td>
+<td>处理模式</td>
+<td>错误用法</td>
+</tr>
+<tr>
+<td>线程（Thread）模式（主程序）</td>
+<td>线程模式</td>
+<td>线程模式</td>
+</tr>
+</tbody></table>
+</div>
+<ul>
+<li>复位后默认进入<strong>线程模式、特权级</strong>，可访问所有存储器、执行所有指令。</li>
+<li><strong>特权级 → 用户级</strong>：置位 <code>CONTROL[0] = 1</code>。</li>
+<li><strong>用户级不能再改回特权级</strong>（用户级写 <code>CONTROL[0]</code> 是非法的，会触发 Fault）。</li>
+<li>触发异常 → 进入处理模式（特权级）；异常返回 → 回到线程模式。</li>
+</ul>
+<p><strong>为什么要分两级？</strong> 硬件层面限制不受信任、未调试好的程序随意配置要害寄存器（NVIC、MPU、SCB、STK 等），提高系统可靠性。某段用户代码出错时，也不会破坏系统其他部分。</p>
+<hr>
+<h2 id="五堆栈机制">五、堆栈机制</h2>
+<h3 id="51-向下生长的满栈">5.1 向下生长的满栈</h3>
+<ul>
+<li>堆栈由连续内存 + 栈顶指针（SP）组成，满足<strong>先进后出（FIFO→FILO）</strong>。</li>
+<li>Cortex-M3 使用**「向下生长的满栈」<strong>：SP 总是指向</strong>最后一个已压入的 32 位值**；地址向低处增长。</li>
+<li>按字（32 位）操作，每次 PUSH/POP 都自增 / 自减 <strong>4</strong>。</li>
+<li><strong>PUSH</strong>：SP 先减 4，再存入数据。</li>
+<li><strong>POP</strong>：先读出 SP 所指数据，SP 再增 4。</li>
+<li>PUSH/POP 必须成对使用，注意进出栈顺序。</li>
+</ul>
+<h3 id="52-双堆栈指针msp--psp">5.2 双堆栈指针（MSP / PSP）</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>指针</th>
+<th>全称</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MSP</td>
+<td>Main Stack Pointer</td>
+<td>系统内核、异常服务例程、需特权访问的代码使用（<strong>复位默认</strong>）</td>
+</tr>
+<tr>
+<td>PSP</td>
+<td>Process Stack Pointer</td>
+<td>常规用户应用程序代码使用</td>
+</tr>
+</tbody></table>
+</div>
+<blockquote>
+<p><strong>一个公司两张办公桌的比喻</strong>：内核（系统核心团队）和用户程序（普通项目组）若共用一张桌子（一个堆栈），用户程序弄乱堆栈就会拖垮整个系统。于是给内核专用的 MSP、给用户程序的 PSP 两张独立桌子。CONTROL[1] 决定用户用哪张桌子。</p>
+</blockquote>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>配置</th>
+<th>适用场景</th>
+<th>线程模式堆栈</th>
+<th>异常模式堆栈</th>
+<th>安全性</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CONTROL[1]=0</td>
+<td>简单裸机 / 前后台</td>
+<td>MSP</td>
+<td>MSP</td>
+<td>低（共享）</td>
+</tr>
+<tr>
+<td>CONTROL[1]=1</td>
+<td>RTOS 多任务</td>
+<td><strong>PSP</strong></td>
+<td><strong>MSP</strong></td>
+<td>高（任务隔离）</td>
+</tr>
+</tbody></table>
+</div>
+<ul>
+<li>进入异常时硬件<strong>自动从 PSP 切到 MSP</strong>，返回时切回 PSP。</li>
+<li>RTOS 可为每个任务分配独立 PSP，实现任务隔离；一个任务崩溃不影响其他任务。</li>
+<li>R13 最低两位被硬件接 0，堆栈操作 4 字节对齐。</li>
+</ul>
+<hr>
+<h2 id="六存储器管理">六、存储器管理</h2>
+<h3 id="61-4gb-统一存储器映射">6.1 4GB 统一存储器映射</h3>
+<p>Cortex-M3 支持访问 <strong>4GB</strong> 空间，映射预定义、固定，保证不同 M3 芯片间代码可移植。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>地址区间</th>
+<th>大小</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x00000000 ~ 0x1FFFFFFF</td>
+<td>512 MB</td>
+<td>代码（Flash / ROM）</td>
+</tr>
+<tr>
+<td>0x20000000 ~ 0x3FFFFFFF</td>
+<td>512 MB</td>
+<td>片上 SRAM</td>
+</tr>
+<tr>
+<td>0x40000000 ~ 0x5FFFFFFF</td>
+<td>512 MB</td>
+<td>片上外设</td>
+</tr>
+<tr>
+<td>0x60000000 ~ 0x9FFFFFFF</td>
+<td>1.0 GB</td>
+<td>片外 RAM</td>
+</tr>
+<tr>
+<td>0xA0000000 ~ 0xDFFFFFFF</td>
+<td>1.0 GB</td>
+<td>片外外设</td>
+</tr>
+<tr>
+<td>0xE0000000 ~ 0xFFFFFFFF</td>
+<td>—</td>
+<td>系统级（Cortex-M3 内部 AHB/APB 私有外设）</td>
+</tr>
+</tbody></table>
+</div>
+<p>特点：预定义映射、支持位带、支持非对齐访问与互斥访问、支持大小端。</p>
+<h3 id="62-位带操作bit-banding">6.2 位带操作（Bit Banding）</h3>
+<p>位带让你用<strong>普通 LDR/STR 指令对单一比特做原子读写</strong>，无需「读-改-写」组合。</p>
+<ul>
+<li><strong>位带区</strong>：支持位带操作的地址区（SRAM 0x20000000~0x200FFFFF；外设 0x40000000~0x400FFFFF）。</li>
+<li><strong>位带别名区</strong>：位带区中每个位映射到别名区的一个<strong>字（32 位）</strong>，该字<strong>只有最低位有效</strong>。</li>
+<li>膨胀关系：1 MB 位带区 → 32 MB 别名区。</li>
+</ul>
+<p><strong>别名地址公式</strong>：</p>
+<ul>
+<li>SRAM 区：<code>AliasAddr = 0x22000000 + ((A - 0x20000000) × 32) + (n × 4)</code></li>
+<li>外设区：<code>AliasAddr = 0x42000000 + ((A - 0x40000000) × 32) + (n × 4)</code></li>
+</ul>
+<p>（A 为字节地址，n 为位序号 0～7）</p>
+<blockquote>
+<p>例：0x20000004 的 bit2 → 别名 = 0x22000000 + (4×32) + (2×4) = 0x22000084 ✓</p>
+</blockquote>
+<p><strong>传统 vs 位带（写 bit2 置 1）</strong>：</p>
+<div class="code-block"><div class="code-header"><span>asm</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>; 传统：3 条指令 + 读-改-写，非原子
+LDR   R0, =0x20000000
+LDR   R1, [R0]
+ORR.W R1, #0x4
+STR   R1, [R0]
+
+; 位带：1 条 STR，原子操作
+LDR   R0, =0x22000008
+MOV   R1, #1
+STR   R1, [R0]</code></pre></div>
+<p><strong>位带价值</strong>：原子操作不受外部事件干扰；可直接控制 GPIO 每盏 LED；可把多个布尔量打包进一个字却像普通内存一样独立访问；多任务中可实现共享资源的<strong>互锁</strong>访问。</p>
+<blockquote>
+<p><strong>互锁</strong>：多任务 / 主程序+中断同时想访问同一共享资源时，同一时刻只允许一个任务成功访问，其余等待。位带的原子性天然支持这一点。</p>
+</blockquote>
+<h3 id="63-端模式大小端">6.3 端模式（大小端）</h3>
+<p>Cortex-M3 同时支持小端和大端，<strong>绝大多数芯片用小端</strong>（高位字节存高地址）。</p>
+<ul>
+<li>0x12345678 存于 0x4000 起：<ul>
+<li>小端：0x4000=78, 0x4001=56, 0x4002=34, 0x4003=12</li>
+<li>大端：0x4000=12, 0x4001=34, 0x4002=56, 0x4003=78</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="七异常与中断">七、异常与中断</h2>
+<h3 id="71-基本概念">7.1 基本概念</h3>
+<ul>
+<li><strong>中断</strong>：程序执行中遇突发事件需立即处理，CPU 暂停当前程序转去处理，处理完返回。</li>
+<li><strong>异常</strong>：打断程序顺序执行的事件（外部中断、SVC、Reset 等都算异常，<strong>中断只是异常的一种</strong>）。</li>
+<li><strong>中断与调子程序的区别</strong>：中断发生时刻<strong>随机</strong>且既保护断点又保护现场，入口地址由硬件确定；调子程序是事先安排、可只保护断点、入口由程序编排。</li>
+<li><strong>中断技术意义</strong>：及时处理随机事件、解决快慢设备矛盾（CPU 与外设并行）、具备故障处理能力。</li>
+</ul>
+<h3 id="72-nvic-功能">7.2 NVIC 功能</h3>
+<ul>
+<li>支持<strong>256 种异常和中断</strong>：编号 1–15 为<strong>系统异常</strong>，≥16 为<strong>外部中断</strong>。</li>
+<li>向量中断：响应时自动从向量表按中断号取 ISR 入口地址。</li>
+<li>支持动态优先级调整、可嵌套、中断可屏蔽、延迟短。</li>
+</ul>
+<h3 id="73-异常编号与优先级">7.3 异常编号与优先级</h3>
+<p><strong>系统异常清单（节选）</strong>：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>编号</th>
+<th>类型</th>
+<th>优先级</th>
+<th>简介</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>无</td>
+<td>—</td>
+<td>正常状态</td>
+</tr>
+<tr>
+<td>1</td>
+<td>复位</td>
+<td><strong>-3（最高）</strong></td>
+<td>复位</td>
+</tr>
+<tr>
+<td>2</td>
+<td>NMI</td>
+<td>-2</td>
+<td>不可屏蔽中断</td>
+</tr>
+<tr>
+<td>3</td>
+<td>硬 Fault</td>
+<td>-1</td>
+<td>所有被除能 Fault 上访处</td>
+</tr>
+<tr>
+<td>4</td>
+<td>MemManage</td>
+<td>可编程</td>
+<td>MPU / 非法访问</td>
+</tr>
+<tr>
+<td>5</td>
+<td>总线 Fault</td>
+<td>可编程</td>
+<td>总线错误响应</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Usage Fault</td>
+<td>可编程</td>
+<td>程序错误</td>
+</tr>
+<tr>
+<td>11</td>
+<td>SVCall</td>
+<td>可编程</td>
+<td>系统服务调用</td>
+</tr>
+<tr>
+<td>14</td>
+<td>PendSV</td>
+<td>可编程</td>
+<td>可悬挂请求（用于上下文切换）</td>
+</tr>
+<tr>
+<td>15</td>
+<td>SysTick</td>
+<td>可编程</td>
+<td>系统节拍定时器</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>优先级规则</strong>：</p>
+<ul>
+<li><strong>数值越小优先级越高</strong>；高优先级可抢占低优先级。</li>
+<li>复位 / NMI / 硬 Fault 三个系统异常有<strong>固定负优先级</strong>，高于一切可编程异常。</li>
+<li>原则上支持 3 个固定高级优先级 + 最多 256 级可编程、128 级抢占；但多数芯片会裁掉低端有效位，实际支持的级数更少（如只用 3 位 → 8 级）。</li>
+<li><strong>优先级分组</strong>：分为<strong>抢占优先级</strong>和<strong>副优先级</strong>，副优先级至少 1 位，抢占最多 7 位。例：3 位中 2 位做抢占 → 4 级抢占，每级内 2 个副优先级。</li>
+</ul>
+<h3 id="74-向量表">7.4 向量表</h3>
+<ul>
+<li>向量表用于在中断响应时查出对应 ISR 入口地址。</li>
+<li><strong>起始地址对齐规则</strong>：向量数向上取 2 的整数次幂，起始地址对齐到「次幂 × 4」边界。<ul>
+<li>例：32 个中断 → 共 48 个向量 → 上取到 64 → 起始地址须被 64×4 = 256 整除（如 0x0、0x100、0x200…）。</li>
+</ul>
+</li>
+</ul>
+<h3 id="75-中断挂起pending机制">7.5 中断挂起（Pending）机制</h3>
+<ul>
+<li>当前中断优先级较低（CPU 正处理更高优先级或可屏蔽）时，该中断被置 <strong>Pending</strong> 标记排队等待。</li>
+<li><strong>即使中断源撤销了请求信号</strong>，只要 Pending 未清除且它成为最高等待者，仍会被响应（防止短脉冲中断丢失）。</li>
+<li>响应前若软件清除 Pending，则本次请求被撤销。</li>
+<li>服务例程开始执行时，Pending 被硬件自动清除；服务中可自我重新挂起。</li>
+<li><strong>多个脉冲视为一次</strong>：响应前以多个脉冲呈现，只算一次请求，多余脉冲忽略。</li>
+</ul>
+<h3 id="76-中断的具体行为硬件自动完成">7.6 中断的具体行为（硬件自动完成）</h3>
+<p>响应中断时，Cortex-M3 <strong>硬件自动压栈 8 个寄存器</strong>：xPSR、PC、LR、R12、R3、R2、R1、R0。若当前用 PSP 则压入 PSP，进入服务例程后一律用 MSP。</p>
+<p>完整流程：</p>
+<ol>
+<li><strong>取向量</strong>：从向量表取 ISR 入口（与入栈并行）。</li>
+<li><strong>更新寄存器</strong>：选 SP、更新 SP/LR/PC。</li>
+<li><strong>自动入栈</strong>：保存 8 个寄存器现场。</li>
+<li><strong>执行 ISR</strong>。</li>
+<li><strong>异常返回</strong>：出栈恢复寄存器，NVIC 活动位清除。</li>
+</ol>
+<p><strong>触发返回指令</strong>：<code>BX LR</code>（LR = EXC_RETURN 时）、<code>POP [PC]</code>、<code>LDR</code>/<code>LDM</code> 把 PC 作目的寄存器。</p>
+<h3 id="77-中断嵌套控制">7.7 中断嵌套控制</h3>
+<ul>
+<li>通过优先级实施嵌套；自动入/出栈保护寄存器，嵌套时不损坏现场。</li>
+<li><strong>相同异常的不可重入性</strong>：异常处理期间，同级或低优先级被阻塞；同一异常须上次服务完才能响应新请求。</li>
+</ul>
+<h3 id="78-高级中断技术">7.8 高级中断技术</h3>
+<ul>
+<li><strong>咬尾（Tail-chaining）</strong>：连续异常处理时，复用上一次已 PUSH 的现场，本次完成才统一恢复，前后只做一次入/出栈。</li>
+<li><strong>迟来（Late arrival）</strong>：入栈阶段尚未执行 ISR 时收到更高优先级请求，则本次入栈转为高优先级中断所用，先执行高优先级 ISR。</li>
+</ul>
+<h3 id="79-异常返回值exc_return">7.9 异常返回值（EXC_RETURN）</h3>
+<p>进入异常后，LR 被自动设为特殊值 <strong>EXC_RETURN</strong>：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0xFFFFFFF1</td>
+<td>返回处理模式，使用 MSP</td>
+</tr>
+<tr>
+<td>0xFFFFFFF9</td>
+<td>返回线程模式，使用 MSP</td>
+</tr>
+<tr>
+<td>0xFFFFFFFD</td>
+<td>返回线程模式，使用 PSP</td>
+</tr>
+</tbody></table>
+</div>
+<blockquote>
+<p>0xFFFFFFF0 ~ 0xFFFFFFFF 被标记为「非可执行区域」，不能作返回地址。</p>
+</blockquote>
+<h3 id="710-fault-类异常">7.10 Fault 类异常</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Fault</th>
+<th>诱因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>总线 Fault</td>
+<td>AHB 接口传送时收到错误响应</td>
+</tr>
+<tr>
+<td>存储器管理 Fault</td>
+<td>违反 MPU 保护策略等</td>
+</tr>
+<tr>
+<td>用法 Fault</td>
+<td>未定义指令、试图进 ARM 状态、无效中断返回、未对齐访问等</td>
+</tr>
+<tr>
+<td>硬 Fault</td>
+<td>上述三类 Fault 上访的结果</td>
+</tr>
+</tbody></table>
+</div>
+<p>应对：复位 / 恢复问题 / 中止任务。各 FSR 状态寄存器<strong>写 1 清除</strong>，处理后务必清除，否则下次误判。</p>
+<hr>
+<h2 id="八复位序列">八、复位序列</h2>
+<ul>
+<li>程序映像从 <strong>0x00000000</strong> 开始，<strong>开头就是向量表</strong>。</li>
+<li>向量表头 4 字节存 <strong>MSP 初始值</strong>；地址 0x00000004 存<strong>复位向量（PC 初始值，LSB 必须为 1）</strong>。</li>
+<li><strong>复位流程</strong>：上电离开复位 → 从 0x0 取 MSP 初值 → 从 0x4 取复位向量（Thumb 状态，LSB=1）→ 从该地址取指执行。</li>
+<li><strong>与多数架构不同</strong>：传统单片机 0 地址放一条跳转指令；Cortex-M3 的 0 地址放 MSP 初值，紧跟着向量表（向量是 32 位地址，不是跳转指令）。</li>
+</ul>
+<blockquote>
+<p>例：0x00000004 存 0x00000101 → 因 LSB=1 表示 Thumb，实际入口地址为 <strong>0x00000100</strong>。</p>
+</blockquote>
+<hr>
+<h2 id="本章小结与思考题">本章小结与思考题</h2>
+<p><strong>核心知识地图</strong>：</p>
+<ol>
+<li>Cortex-M3 架构（哈佛总线 + 统一编址、ARMv7-M、Thumb-2、三大总线 + 矩阵）；</li>
+<li>三级流水线（取指/译码/执行、清洗、分支预测）；</li>
+<li>寄存器（R0–R15、MSP/PSP、xPSR 三段、PRIMASK/FAULTMASK/BASEPRI、CONTROL、MRS/MSR）；</li>
+<li>工作模式与等级（Handler/Thread、特权/用户、切换规则）；</li>
+<li>堆栈（向下满栈、双堆栈保护、PUSH/POP）；</li>
+<li>存储器管理（4GB 映射、位带原子操作与公式、大小端）；</li>
+<li>异常与中断（NVIC、256 异常、优先级分组、Pending、自动压栈 8 寄存器、咬尾/迟来、EXC_RETURN）；</li>
+<li>复位序列（向量表、MSP/PC 初始化）。</li>
+</ol>
+<p><strong>思考练习题（覆盖考点）</strong>：</p>
+<ol>
+<li>试画出 Cortex-M3 处理器内部结构。</li>
+<li>简述 Cortex-M3 主要有哪几种总线，各自作用与区别。</li>
+<li>简述 Cortex-M3 有哪些特殊功能寄存器，功能分别是什么。</li>
+<li>Cortex-M3 的工作模式与工作等级有几种组合，如何切换？</li>
+<li>简述 Cortex-M3 的进栈与出栈过程。</li>
+<li>简述 Cortex-M3 预定义的存储器映射。</li>
+<li>简述位带操作原理与作用，并计算位带区 <code>0x2000 000X.Y</code> 位对应的位带别名地址（X=学号倒数第二位，Y=学号末位，&gt;7 按 7 处理）。</li>
+<li>简述咬尾技术与迟来中断的工作过程。</li>
+<li>异常返回值的合法值有哪些？各代表什么？</li>
+<li>简述 Cortex-M3 的复位流程，与其他微处理器 / 单片机架构有何不同？</li>
+</ol>
+<hr>
+<blockquote>
+<p>本文由课程课件与讲稿整理，供学习交流使用。如需转载或用于教学，请注明出处。</p>
+</blockquote>
+</article>
+<nav class="chapter-pagination" aria-label="前后章节"><a href="chapter-01.html"><small>← 上一章 · 第1章</small>微型计算机基础知识</a><a class="next" href="chapter-03.html"><small>下一章 · 第3章 →</small>STM32F1 系列微控制器</a></nav><footer class="reader-credit">Designed By Xianyu Wu</footer></div>
+<aside class="toc-sidebar"><p class="sidebar-label">ON THIS PAGE · 本章目录</p><nav aria-label="本章目录"><a href="#一cortex-m3-处理器简介及其组件">一、Cortex-M3 处理器简介及其组件</a>
+<a href="#二三级流水线">二、三级流水线</a>
+<a href="#三寄存器组织">三、寄存器组织</a>
+<a href="#四工作模式与工作等级">四、工作模式与工作等级</a>
+<a href="#五堆栈机制">五、堆栈机制</a>
+<a href="#六存储器管理">六、存储器管理</a>
+<a href="#七异常与中断">七、异常与中断</a>
+<a href="#八复位序列">八、复位序列</a>
+<a href="#本章小结与思考题">本章小结与思考题</a></nav></aside></main></body></html>

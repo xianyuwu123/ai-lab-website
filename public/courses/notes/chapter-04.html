@@ -1,0 +1,720 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>第4章 · 汇编语言及其程序设计 | 微机原理知识点</title><meta name="description" content="理解指令格式、寻址方式与条件执行，读懂汇编程序的控制流程。"><link rel="stylesheet" href="../courses.css"><link rel="stylesheet" href="../knowledge.css"><script src="../notes.js" defer></script></head>
+<body class="reader-page"><a class="skip" href="#chapter-content">跳到正文</a>
+<header class="site-header"><div class="header-inner"><a class="brand" href="../index.html"><span class="brand-dot"></span>AOCI Lab<span class="brand-divider">/</span><span class="brand-sub">章节知识点</span></a><nav class="reader-header-nav" aria-label="阅读页导航"><a href="../index.html#knowledge">← 课程目录</a><a href="../index.html#catalogue">互动课堂</a></nav></div><div class="progress-track" aria-hidden="true"><span class="progress-fill"></span></div></header>
+<main class="reader-shell"><aside class="chapter-sidebar"><p class="sidebar-label">COURSE CHAPTERS · 章节</p><nav class="chapter-links" aria-label="全部章节"><a href="chapter-01.html"><span>01</span>微型计算机基础知识</a>
+<a href="chapter-02.html"><span>02</span>Cortex-M3 处理器</a>
+<a href="chapter-03.html"><span>03</span>STM32F1 系列微控制器</a>
+<a href="chapter-04.html" aria-current="page"><span>04</span>汇编语言及其程序设计</a>
+<a href="chapter-05.html"><span>05</span>ARM 微控制器开发</a>
+<a href="chapter-06.html"><span>06</span>GPIO 通用输入输出接口</a>
+<a href="chapter-07.html"><span>07</span>EXTI 中断模块与基本应用</a>
+<a href="chapter-08.html"><span>08</span>定时器与脉宽调制</a>
+<a href="chapter-09.html"><span>09</span>串行通信</a>
+<a href="chapter-10.html"><span>10</span>模拟量模块</a></nav><a class="sidebar-return" href="../index.html#knowledge">← 返回课程资源</a></aside>
+<div class="reading-column"><header class="chapter-heading"><p class="eyebrow">CHAPTER 04 / 10 · 微机原理与接口技术</p><h1>汇编语言及其程序设计</h1><p class="chapter-deck">理解指令格式、寻址方式与条件执行，读懂汇编程序的控制流程。</p><div class="chapter-meta"><span>章节知识点整理</span><span>6 个阅读主题</span></div></header>
+<details class="chapter-mobile"><summary>切换章节 · 第4章</summary><nav class="chapter-links" aria-label="手机端全部章节"><a href="chapter-01.html"><span>01</span>微型计算机基础知识</a>
+<a href="chapter-02.html"><span>02</span>Cortex-M3 处理器</a>
+<a href="chapter-03.html"><span>03</span>STM32F1 系列微控制器</a>
+<a href="chapter-04.html" aria-current="page"><span>04</span>汇编语言及其程序设计</a>
+<a href="chapter-05.html"><span>05</span>ARM 微控制器开发</a>
+<a href="chapter-06.html"><span>06</span>GPIO 通用输入输出接口</a>
+<a href="chapter-07.html"><span>07</span>EXTI 中断模块与基本应用</a>
+<a href="chapter-08.html"><span>08</span>定时器与脉宽调制</a>
+<a href="chapter-09.html"><span>09</span>串行通信</a>
+<a href="chapter-10.html"><span>10</span>模拟量模块</a></nav></details><details class="toc-mobile"><summary>本章目录 · 6 个主题</summary><nav aria-label="展开本章目录"><a href="#一汇编语言简介">一、汇编语言简介</a>
+<a href="#二指令分类条件域和指令格式">二、指令分类、条件域和指令格式</a>
+<a href="#三寻址方式">三、寻址方式</a>
+<a href="#四cortex-m3-指令集">四、Cortex-M3 指令集</a>
+<a href="#五汇编程序设计">五、汇编程序设计</a>
+<a href="#本章小结与思考题">本章小结与思考题</a></nav></details>
+<section class="related-labs" aria-label="配套互动课堂"><h2>读懂之后，动手验证</h2><div class="related-labs-links"><a href="../stm32-assembly-foundations-lab.html">汇编语句与程序生成 ↗</a><a href="../stm32-addressing-modes-lab.html">寻址方式 ↗</a><a href="../stm32-branch-it-lab.html">分支与 IT 指令 ↗</a></div></section><article class="prose" id="chapter-content" aria-label="第4章知识点正文"><blockquote>
+<p>本文整理自福州大学《微机原理与接口技术》吴衔誉教授第四章课件，系统讲解汇编语言简介、指令分类与条件域、寻址方式、Cortex-M3 指令集（数据传送 / 数据处理 / 跳转 / 其他）以及汇编程序设计五大板块。</p>
+</blockquote>
+<hr>
+<h2 id="一汇编语言简介">一、汇编语言简介</h2>
+<h3 id="11-三种层次的计算机语言">1.1 三种层次的计算机语言</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>语言</th>
+<th>特点</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>机器语言</strong></td>
+<td>二进制代码，CPU 唯一直接识别执行</td>
+<td>直接执行、速度快、资源占用少</td>
+<td>可读性/可移植差、编程繁杂</td>
+</tr>
+<tr>
+<td><strong>汇编语言</strong></td>
+<td>助记符书写，地址/数据可用符号表示</td>
+<td>编写/阅读/修改方便、不易出错</td>
+<td>须「翻译」成机器语言才能执行</td>
+</tr>
+<tr>
+<td><strong>高级语言</strong>（C/C++、Java）</td>
+<td>接近英语，不需了解硬件结构</td>
+<td>易读写、结构简洁</td>
+<td>须「编译」成机器语言</td>
+</tr>
+</tbody></table>
+</div>
+<blockquote>
+<p><strong>指令与程序</strong>：指令是计算机能识别执行的操作命令；指令的集合叫<strong>指令系统</strong>（不同 CPU 不同）；同一指令系统的同一条指令有<strong>汇编指令</strong>与<strong>机器指令</strong>两种形式。把汇编翻译成机器语言叫<strong>汇编（assemble）</strong>，反方向叫<strong>反汇编</strong>。</p>
+</blockquote>
+<h3 id="12-助记符与指令格式">1.2 助记符与指令格式</h3>
+<ul>
+<li>操作码用缩写英文字母（助记符）表示，如 <code>MOV</code>（传送）、<code>ADD</code>（相加）、<code>AND</code>（逻辑与），每个助记符对应一个机器码。</li>
+<li>指令通常由<strong>操作码</strong>和<strong>操作数</strong>组成：操作码指出做什么操作；操作数指出对什么数操作、结果放何处。</li>
+<li><strong>立即数</strong>：指令中直接用 <code>#</code> 前缀表示的数据，如 <code>MOV R1, #0x1245</code> 把 0x1245 送入 R1（十六进制加 <code>0x</code> 前缀，十进制直接写）。</li>
+</ul>
+<h3 id="13-cortex-m3-支持的指令集">1.3 Cortex-M3 支持的指令集</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>指令集</th>
+<th>位宽</th>
+<th>特点</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ARM</td>
+<td>32 位</td>
+<td>性能高、代码密度低</td>
+<td>性能优先、32 位存储系统</td>
+</tr>
+<tr>
+<td>Thumb</td>
+<td>16 位</td>
+<td>代码密度高、性能较低</td>
+<td>成本/功耗优先、16 位存储系统</td>
+</tr>
+<tr>
+<td><strong>Thumb-2</strong></td>
+<td>16/32 混合</td>
+<td>既高性能又高代码密度</td>
+<td>同时追求两者，无需状态切换</td>
+</tr>
+</tbody></table>
+</div>
+<blockquote>
+<p><strong>关键结论</strong>：Cortex-M3 <strong>只支持 Thumb-2 指令集，不兼容传统 ARM 指令集</strong>（不向后兼容）。Thumb-2 是 Thumb 的超集，含 16 位与 32 位指令，编程时<strong>无需在 Thumb 与 ARM 状态间切换</strong>。相较传统 ARM 的优点：① 不切换状态、省时省空间；② 不必分别写 ARM/Thumb 源文件、开发与维护更简单；③ 易得最优效率与性能。</p>
+</blockquote>
+<hr>
+<h2 id="二指令分类条件域和指令格式">二、指令分类、条件域和指令格式</h2>
+<h3 id="21-cortex-m3-指令分类">2.1 Cortex-M3 指令分类</h3>
+<p>Cortex-M3 是**加载/存储型（load-store）**架构：指令仅处理寄存器中的数据，结果放回寄存器，访存须经专门的加载/存储指令。分为五大类：</p>
+<ol>
+<li>数据传送指令（MOV、LDR、STR…）</li>
+<li>数据处理指令（ADD、AND、CMP…）</li>
+<li>跳转指令（B、BL、BX…）</li>
+<li>程序状态寄存器处理指令（MRS、MSR）</li>
+<li>异常处理指令</li>
+</ol>
+<blockquote>
+<p>带后缀 <strong>S</strong> 的指令会影响标志位；带阴影的（课本表 4-1）为不常用指令。</p>
+</blockquote>
+<h3 id="22-条件域条件执行">2.2 条件域（条件执行）</h3>
+<p>Cortex-M3 几乎所有指令均可根据 <strong>xPSR</strong> 中的条件码<strong>有条件执行</strong>：条件满足才执行，否则忽略。每条指令含 4 位条件码，位于指令最高 4 位 [31:28]，共 16 种，两个字符添加在助记符后。</p>
+<p><strong>条件码判断依赖 APSR 四个标志位</strong>：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>标志</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>N（Negative）</td>
+<td>结果为负数时置 1</td>
+</tr>
+<tr>
+<td>Z（Zero）</td>
+<td>结果为 0 时置 1</td>
+</tr>
+<tr>
+<td>C（Carry）</td>
+<td>无符号运算：加法进位 / 减法借位（减法则 C=0 表示借位）</td>
+</tr>
+<tr>
+<td>V（oVerflow）</td>
+<td>有符号运算溢出时置 1</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>16 种条件码</strong>：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>助记符</th>
+<th>含义</th>
+<th>标志条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>EQ</td>
+<td>相等</td>
+<td>Z=1</td>
+</tr>
+<tr>
+<td>NE</td>
+<td>不相等</td>
+<td>Z=0</td>
+</tr>
+<tr>
+<td>CS/HS</td>
+<td>进位置位 / 无符号≥</td>
+<td>C=1</td>
+</tr>
+<tr>
+<td>CC/LO</td>
+<td>进位清 / 无符号&lt;</td>
+<td>C=0</td>
+</tr>
+<tr>
+<td>MI</td>
+<td>负数</td>
+<td>N=1</td>
+</tr>
+<tr>
+<td>PL</td>
+<td>正数或零</td>
+<td>N=0</td>
+</tr>
+<tr>
+<td>VS</td>
+<td>溢出</td>
+<td>V=1</td>
+</tr>
+<tr>
+<td>VC</td>
+<td>未溢出</td>
+<td>V=0</td>
+</tr>
+<tr>
+<td>HI</td>
+<td>无符号高于</td>
+<td>C=1 且 Z=0</td>
+</tr>
+<tr>
+<td>LS</td>
+<td>无符号≤</td>
+<td>C=0 或 Z=1</td>
+</tr>
+<tr>
+<td>GE</td>
+<td>有符号≥</td>
+<td>N=V</td>
+</tr>
+<tr>
+<td>LT</td>
+<td>有符号&lt;</td>
+<td>N≠V</td>
+</tr>
+<tr>
+<td>GT</td>
+<td>有符号&gt;</td>
+<td>Z=0 且 N=V</td>
+</tr>
+<tr>
+<td>LE</td>
+<td>有符号≤</td>
+<td>Z=1 或 N≠V</td>
+</tr>
+<tr>
+<td>AL</td>
+<td>无条件</td>
+<td>默认（不写条件码即为 AL）</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>应用示例</strong>：</p>
+<div class="code-block"><div class="code-header"><span>asm</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>CMP  R0, R1       ; R0 - R1，影响 APSR 标志
+BGT  Label        ; 若 R0 &gt; R1（有符号），跳转到 Label
+CMP  R0, #10
+ADDGT R1, R2, #5  ; 仅当 R0 &gt; 10 才执行 R1 = R2 + 5</code></pre></div>
+<blockquote>
+<p><strong>核心优势</strong>：减少分支指令数量（提升代码密度）；避免分支预测失败导致流水线清空（提升执行效率）。</p>
+</blockquote>
+<h3 id="23-指令格式与伪指令">2.3 指令格式与伪指令</h3>
+<p><strong>助记符格式</strong>：</p>
+<div class="code-block"><div class="code-header"><span>示例</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>{Label}  &lt;opcode&gt;  {S}  {cond}  &lt;operand1&gt;, &lt;operand2&gt;  {, operand3}  {;注释}</code></pre></div>
+<ul>
+<li><strong>标号（Label）</strong>：指令所在地址的名字，顶格写，后接指令须有前导空格；便于跳转与调试；长度 ≤31 字符，不与助记符重名。</li>
+<li><strong>操作码（opcode）</strong>：即助记符，前面至少一个空格。</li>
+<li><strong>后缀 S</strong>：执行后根据结果更新 APSR 标志；<strong>后缀 cond</strong>：条件执行（忽略时为 AL）。</li>
+<li><strong>操作数</strong>：operand1 一般为目的寄存器；operand2 可为寄存器；operand3 可为寄存器或立即数。</li>
+<li><strong>注释</strong>：以分号 <code>;</code> 开头，不影响执行。</li>
+</ul>
+<p><strong>S 后缀示例</strong>：</p>
+<div class="code-block"><div class="code-header"><span>asm</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>ADD   R3, R4      ; 不修改 APSR 的 C 标志
+ADDS  R3, R4      ; 修改 APSR 的 C 标志</code></pre></div>
+<p><strong>机器中指令的 5 个域</strong>（32 位）：[31:28] 条件域 / [27:21] 操作码+特征+可选后缀 / [20] 是否影响标志 / [19:16] 基址寄存器 / [15:12] 目的或源寄存器 / [11:0] 偏移或操作数。</p>
+<p><strong>统一汇编语言（UAL）</strong>：为支持 Thumb-2，汇编器引入 UAL——16 位与 32 位指令可统一用 32 位语法书写，由汇编器决定用哪种；可用 <code>.N</code>（窄，16 位）或 <code>.W</code>（宽，32 位）手工指定。注意：传统 Thumb 语法默认更新 APSR，UAL 下须显式加 S。</p>
+<div class="code-block"><div class="code-header"><span>asm</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>AND   R0, R1          ; 传统 Thumb 语法
+ANDS  R0, R0, R1      ; 等效 UAL（必须有 S）
+ADDS.N R0, #1         ; 指定 16 位
+ADDS.W R0, #1         ; 指定 32 位</code></pre></div>
+<p><strong>常用伪指令（不产生机器码）</strong>：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>伪指令</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>AREA</code></td>
+<td>定义段（CODE/DATA/READONLY/READWRITE…）</td>
+</tr>
+<tr>
+<td><code>ENTRY</code></td>
+<td>指定程序入口（一个源文件最多一个）</td>
+</tr>
+<tr>
+<td><code>END</code></td>
+<td>源文件结束</td>
+</tr>
+<tr>
+<td><code>EQU</code></td>
+<td>定义数值常量（如 <code>Test EQU 10</code>）</td>
+</tr>
+<tr>
+<td><code>DCB/DCW/DCD/DCFS/DCFD/SPACE</code></td>
+<td>数据定义（字节/半字/字/单精/双精/留空）</td>
+</tr>
+<tr>
+<td><code>LDR</code>（伪）/<code>ADR</code></td>
+<td>大范围/小范围地址读取（注意 <code>LDR Rd,=const</code> 与 <code>LDR Rd,label</code> 区别）</td>
+</tr>
+<tr>
+<td><code>EXPORT</code></td>
+<td>声明全局标号（可被其他文件引用，WEAK 表示同名优先）</td>
+</tr>
+<tr>
+<td><code>IMPORT</code></td>
+<td>引用其他文件的全局标号（WEAK 表示找不到也不报错）</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>基本汇编源程序框架</strong>：</p>
+<div class="code-block"><div class="code-header"><span>asm</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>STACK_TOP  EQU  0x20002000
+          AREA  RESET, CODE, READONLY
+          DCD   STACK_TOP      ; 栈顶
+          DCD   START          ; 复位向量
+          ENTRY
+START
+          LDR   R0, =0x20002000
+          MOV   R1, #0x5A
+          STR   R1, [R0]
+DEADLOOP
+          B     DEADLOOP
+          END</code></pre></div>
+<hr>
+<h2 id="三寻址方式">三、寻址方式</h2>
+<p><strong>寻址方式</strong>：根据指令中的地址信息寻找操作数物理地址的方式。Cortex-M3 主要寻址方式：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>方式</th>
+<th>说明</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>立即寻址</td>
+<td>操作数就在指令中（立即数）</td>
+<td><code>MOV R0, #0xFF000</code></td>
+</tr>
+<tr>
+<td>寄存器寻址</td>
+<td>操作数在寄存器中</td>
+<td><code>MOV R1, R2</code></td>
+</tr>
+<tr>
+<td>寄存器间接寻址</td>
+<td>寄存器的值为操作数地址</td>
+<td><code>LDR R1, [R2]</code></td>
+</tr>
+<tr>
+<td>寄存器移位寻址</td>
+<td>寄存器寻址后再移位</td>
+<td><code>MOV R0, R2, LSL #3</code>（R0=R2×8）</td>
+</tr>
+<tr>
+<td>基址变址寻址</td>
+<td>基址寄存器 + 偏移量</td>
+<td><code>[Rn,#off]</code>、<code>[Rn,#off]!</code>（预索引）、<code>[Rn],#off</code>（后索引）、<code>[Rn,Rm,LSL #n]</code></td>
+</tr>
+<tr>
+<td>多寄存器寻址</td>
+<td>一条指令传送多个寄存器</td>
+<td><code>LDMIA R0, {R1,R2,R3,R4}</code>（IA：每读一字 R0 自增）</td>
+</tr>
+<tr>
+<td>相对寻址</td>
+<td>以 PC 当前值为基址 + 偏移</td>
+<td><code>B Label</code>（偏移由汇编器计算）</td>
+</tr>
+</tbody></table>
+</div>
+<blockquote>
+<p><strong>经典考题</strong>：<code>MOV R1, #45</code> 采用的寻址方式是<strong>寄存器寻址 + 立即寻址</strong>（R1 为寄存器，45 为立即数）。注意立即数不能作为目的操作数、存储器之间不能直接传送数据。</p>
+</blockquote>
+<hr>
+<h2 id="四cortex-m3-指令集">四、Cortex-M3 指令集</h2>
+<h3 id="41-数据传送类指令">4.1 数据传送类指令</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>MOV</code></td>
+<td>寄存器间或立即数→寄存器（<code>MOV R1,#0x5A</code>、<code>MOV R0,R1</code>、<code>MOV R3,R1,LSL#3</code>）</td>
+</tr>
+<tr>
+<td><code>MVN</code></td>
+<td>取反后传送（<code>MVN R1,#8</code> → R1 = -9，因为按位取反再求补码）</td>
+</tr>
+<tr>
+<td><code>MOVW</code> / <code>MOVT</code></td>
+<td>16 位立即数→低 16 位（高 16 清零）/ 高 16 位（低 16 不变）</td>
+</tr>
+<tr>
+<td><code>LDR</code> / <code>LDRB</code> / <code>LDRH</code> / <code>LDRD</code></td>
+<td>存储器→寄存器（字/字节/半字/双字），B/H 加载时高位清零</td>
+</tr>
+<tr>
+<td><code>STR</code> / <code>STRB</code> / <code>STRH</code> / <code>STRD</code></td>
+<td>寄存器→存储器（字/字节/半字/双字）</td>
+</tr>
+<tr>
+<td><code>LDM</code> / <code>STM</code></td>
+<td>批量加载/存储（如 <code>LDMIA R0!,{R2-R9}</code>）</td>
+</tr>
+<tr>
+<td><code>MRS</code> / <code>MSR</code></td>
+<td>特殊功能寄存器 ↔ 通用寄存器</td>
+</tr>
+<tr>
+<td><code>PUSH</code> / <code>POP</code></td>
+<td>堆栈入栈/出栈（满递减堆栈；<code>PUSH {R0,R4-R7,LR}</code> / <code>POP {R0,R4-R7,PC}</code>）</td>
+</tr>
+</tbody></table>
+</div>
+<blockquote>
+<p><strong>满递减堆栈</strong>：SP 指向最后一个入栈数据，向地址减小方向增长（Cortex-M3 是满递减，对应 LDMFD/STMFD）。
+<strong>LDR vs STR</strong>：LDR 内存→寄存器（Load），STR 寄存器→内存（Store）。</p>
+</blockquote>
+<h3 id="42-数据处理类指令">4.2 数据处理类指令</h3>
+<p><strong>（A）算术运算</strong></p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>功能</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ADD</code></td>
+<td>不带进位加法</td>
+<td><code>ADD R0,R1,R2</code>（R0=R1+R2）</td>
+</tr>
+<tr>
+<td><code>ADC</code></td>
+<td>带进位加法（C 参与），用于 &gt;32 位加法</td>
+<td>96 位加法：<code>ADDS R0,R3,R6</code>→<code>ADCS R1,R4,R7</code>→<code>ADCS R2,R5,R8</code></td>
+</tr>
+<tr>
+<td><code>SUB</code></td>
+<td>不带进位减法</td>
+<td><code>SUB R0,R1,R2</code></td>
+</tr>
+<tr>
+<td><code>SBC</code></td>
+<td>带进位减法（减去 !C）</td>
+<td>96 位减法配 SUBS/SBCS</td>
+</tr>
+<tr>
+<td><code>RSB</code> / <code>RSC</code></td>
+<td>逆向减法（R2-R1）/ 带进位逆向减法</td>
+<td><code>RSB R0,R1,#112</code>（112-R1）</td>
+</tr>
+<tr>
+<td><code>MUL</code> / <code>MLA</code></td>
+<td>32 位乘法 / 乘加</td>
+<td><code>MLA R0,R1,R2,R3</code>（R0=R1×R2+R3）</td>
+</tr>
+<tr>
+<td><code>SMULL</code>/<code>SMLAL</code></td>
+<td>64 位有符号乘 / 乘加</td>
+<td>结果低 32 位在 Low、高 32 位在 High</td>
+</tr>
+<tr>
+<td><code>UMULL</code>/<code>UMLAL</code></td>
+<td>64 位无符号乘 / 乘加</td>
+<td>同上</td>
+</tr>
+<tr>
+<td><code>MLS</code></td>
+<td>32 位乘减（R0=R1×R2-R3）</td>
+<td></td>
+</tr>
+<tr>
+<td><code>UDIV.W</code> / <code>SDIV.W</code></td>
+<td>无符号/有符号除法（Rd=Rn/Rm，丢弃余数）</td>
+<td>除零触发用法 Fault（若 NVIC 的 DIVBYZERO 置位）</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>（B）逻辑运算</strong></p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>AND</code></td>
+<td>逻辑与（<code>AND R0,R0,#0x03</code> → 取低 2 位）</td>
+</tr>
+<tr>
+<td><code>ORR</code></td>
+<td>逻辑或（<code>ORR R0,R0,#0x03</code> → 置位低 2 位）</td>
+</tr>
+<tr>
+<td><code>ORN</code></td>
+<td>逻辑或非（立即数取反后或）</td>
+</tr>
+<tr>
+<td><code>EOR</code></td>
+<td>逻辑异或（<code>EOR R0,R0,#0x03</code> → 反转低 2 位）</td>
+</tr>
+<tr>
+<td><code>BIC</code></td>
+<td>位清除（<code>BIC R0,R0,#0x0b</code> → 清位 0/1/3）</td>
+</tr>
+<tr>
+<td><code>NEG</code></td>
+<td>求补（Rd = 0 - Rm = ~Rm + 1）</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>（C）比较指令</strong>（只更新标志，不存结果）</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>CMP</code></td>
+<td>比较（Rn - op2，设标志）</td>
+</tr>
+<tr>
+<td><code>CMN</code></td>
+<td>反值比较（Rn + op2，设标志）</td>
+</tr>
+<tr>
+<td><code>TST</code></td>
+<td>按位与测试（检测特定位）</td>
+</tr>
+<tr>
+<td><code>TEQ</code></td>
+<td>按位异或测试（判断是否相等）</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>（D）移位指令</strong>（桶型移位器支持 6 种）</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>移位</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>LSL</code>/<code>ASL</code></td>
+<td>逻辑/算术左移（低位补 0，等价可互换）</td>
+</tr>
+<tr>
+<td><code>LSR</code></td>
+<td>逻辑右移（左端补 0）</td>
+</tr>
+<tr>
+<td><code>ASR</code></td>
+<td>算术右移（左端补第 31 位，保留符号）</td>
+</tr>
+<tr>
+<td><code>ROR</code></td>
+<td>循环右移（左端用右端移出位补）</td>
+</tr>
+<tr>
+<td><code>RRX</code></td>
+<td>带扩展循环右移（右移 1 位，高端用原 C 标志补）</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>其他数据处理</strong>：数据翻转、数据扩展、位段处理、饱和运算指令（课本 E 类）。</p>
+<h3 id="43-跳转指令">4.3 跳转指令</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>全称</th>
+<th>功能</th>
+<th>保存返回地址</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>B</code></td>
+<td>Branch</td>
+<td>基本跳转（相对，前后约 32 MB）</td>
+<td>否</td>
+</tr>
+<tr>
+<td><code>BL</code></td>
+<td>Branch with Link</td>
+<td>跳转前把 PC 存入 LR（R14）</td>
+<td>是（子程序调用）</td>
+</tr>
+<tr>
+<td><code>BX</code></td>
+<td>Branch and eXchange</td>
+<td>跳到寄存器地址，更新 T 位；<code>BX LR</code> 用于函数返回</td>
+<td>可选</td>
+</tr>
+<tr>
+<td><code>BLX</code></td>
+<td>Branch with Link and eXchange</td>
+<td>BL + BX 结合</td>
+<td>是</td>
+</tr>
+<tr>
+<td><code>CBZ</code>/<code>CBNZ</code></td>
+<td>Compare and Branch if Zero/Non-zero</td>
+<td>比较为零/非0即跳转，仅前向（范围 4~130），不更新标志</td>
+<td>否</td>
+</tr>
+<tr>
+<td><code>TBB</code>/<code>TBH</code></td>
+<td>Table Branch Byte/Halfword</td>
+<td>查表转移（字节/半字为单位的前向跳转）</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>IT</code></td>
+<td>If-Then</td>
+<td>围起 1~4 条可条件执行指令块</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>NOP</code></td>
+<td>No Operation</td>
+<td>无操作，常用于延时</td>
+<td>—</td>
+</tr>
+</tbody></table>
+</div>
+<blockquote>
+<p><strong>B 指令 32 MB 范围由来</strong>：26 位偏移可表示 2²⁶ = 67,108,864 字节 = 64 MB，故前后各 32 MB。
+<strong>CBZ = CMP Rn,#0 + BEQ</strong>：合二为一，减少代码尺寸、提高效率。
+<strong>IT 块规则</strong>：最多 4 条，含 T（条件成立执行）/ E（否则执行）；T 对应指令用相同条件，E 对应用相反条件；IT 不可嵌套；块内不可含 CBZ/CBNZ/CPSID/CPSIE；改 PC 的指令须在块内最后或块外；除带条件 B 外的所有条件指令须在块内。</p>
+</blockquote>
+<div class="code-block"><div class="code-header"><span>asm</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>; if (R0==R1) { R3=R4+R5; R3=R3*2; } else { R3=R6+R7; R3=R3/2; }
+CMP    R0, R1
+ITTEE  EQ
+ADDEQ  R3, R4, R5
+LSLEQ  R3, R3, #1
+ADDNE  R3, R6, R7
+ASRNE  R3, R3, #1</code></pre></div>
+<h3 id="44-其他指令">4.4 其他指令</h3>
+<p><code>SWI</code>（软件中断）、<code>BKPT</code>（断点）、<code>SEV</code>（发送事件）、<code>WFE</code>（休眠待事件唤醒）、<code>WFI</code>（休眠待中断唤醒）、<code>ISB</code>（指令同步隔离）、<code>DSB</code>（数据同步隔离）、<code>DMB</code>（数据存储隔离）。</p>
+<hr>
+<h2 id="五汇编程序设计">五、汇编程序设计</h2>
+<h3 id="51-分支程序多执行路径">5.1 分支程序（多执行路径）</h3>
+<ul>
+<li><strong>条件指令实现</strong>：<code>CMP R5,#10</code> → <code>MOVNE R0,R5</code> / <code>MOVEQ R1,R5</code></li>
+<li><strong>条件跳转实现</strong>：<code>CMP R5,#10</code> → <code>BEQ R5EQ10</code> → <code>MOV R0,R5</code> → <code>B CMPEND</code>；<code>R5EQ10: MOV R1,R5</code></li>
+<li><strong>多分支跳转表</strong>：把各分支首地址依次放入跳转地址表，分支点用 <code>LDR PC,[R5,R0,LSL #2]</code> 取地址送 PC。</li>
+</ul>
+<div class="code-block"><div class="code-header"><span>asm</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>MOV   R0, N
+ADR   R5, JPTAB
+LDR   PC, [R5, R0, LSL #2]
+JPTAB
+DCD   FUNC0
+DCD   FUNC1
+DCD   FUNC2</code></pre></div>
+<h3 id="52-循环程序重复执行循环体">5.2 循环程序（重复执行循环体）</h3>
+<ul>
+<li>满足条件重复即为循环；被重复段为循环体；while 先判后执行，do-while 先执行后判。</li>
+<li><strong>示例（复制 80 个字）</strong>：用 <code>LDMIA</code>/<code>STMIA</code> 每次搬 8 字，循环 10 次。</li>
+</ul>
+<div class="code-block"><div class="code-header"><span>asm</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>LDR   R1, =DATA_SRC
+LDR   R0, =DATA_DST
+MOV   R10, #10
+LOOP
+LDMIA R1!, {R2-R9}
+STMIA R0!, {R2-R9}
+SUBS  R10, R10, #1
+BNE   LOOP</code></pre></div>
+<h3 id="53-子程序的调用与返回">5.3 子程序的调用与返回</h3>
+<ul>
+<li>子程序可多次调用；首条指令前须有标号（子程序名）；主程序用 <code>BL</code> 调用。</li>
+<li>子程序末尾用 <code>MOV PC,LR</code> 或 <code>BX LR</code> 将返回地址送回 PC。</li>
+</ul>
+<div class="code-block"><div class="code-header"><span>asm</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>STACK_TOP  EQU  0x20002000
+          AREA  RESET, CODE, READONLY
+          DCD   STACK_TOP
+          DCD   START
+          ENTRY
+START
+          MOV   R1, #0x59
+          MOV   R0, #0x28
+          BL    FUNC1
+          B     .
+FUNC1
+          ADDS  R2, R1, R0
+          MOV   PC, LR
+          END</code></pre></div>
+<hr>
+<h2 id="本章小结与思考题">本章小结与思考题</h2>
+<p><strong>核心知识地图</strong>：</p>
+<ol>
+<li>汇编语言简介（机器/汇编/高级三层、助记符、Thumb-2 仅支持）</li>
+<li>指令分类（五大类）、条件域（N/Z/C/V + 16 种条件码）、指令格式与 UAL、伪指令</li>
+<li>七种寻址方式（立即/寄存器/间接/移位/基址变址/多寄存器/相对）</li>
+<li>Cortex-M3 指令集（数据传送 MOV/MVN/LDR/STR/批量/堆栈；数据处理 算术/逻辑/比较/移位；跳转 B/BL/BX/CBZ/IT；其他隔离指令）</li>
+<li>汇编程序设计（分支/循环/子程序调用与返回）</li>
+</ol>
+<p><strong>思考练习题（覆盖考点）</strong>：</p>
+<ol>
+<li>利用汇编语言编程实现指定算式。</li>
+<li>利用汇编语言编程实现另一算式。</li>
+<li>什么是寻址方式？Cortex-M3 有哪些寻址方式，各自工作方式？</li>
+<li>分别说明 <code>MVN R1,#8</code> 与 <code>MVN R1,#-8</code> 的工作过程，执行后 R1 的机器码和真实值。</li>
+<li>简述 ARM 微控制器各移位指令的工作过程。</li>
+</ol>
+<hr>
+<blockquote>
+<p>本文由课程课件与讲稿整理，供学习交流使用。如需转载或用于教学，请注明出处。</p>
+</blockquote>
+</article>
+<nav class="chapter-pagination" aria-label="前后章节"><a href="chapter-03.html"><small>← 上一章 · 第3章</small>STM32F1 系列微控制器</a><a class="next" href="chapter-05.html"><small>下一章 · 第5章 →</small>ARM 微控制器开发</a></nav><footer class="reader-credit">Designed By Xianyu Wu</footer></div>
+<aside class="toc-sidebar"><p class="sidebar-label">ON THIS PAGE · 本章目录</p><nav aria-label="本章目录"><a href="#一汇编语言简介">一、汇编语言简介</a>
+<a href="#二指令分类条件域和指令格式">二、指令分类、条件域和指令格式</a>
+<a href="#三寻址方式">三、寻址方式</a>
+<a href="#四cortex-m3-指令集">四、Cortex-M3 指令集</a>
+<a href="#五汇编程序设计">五、汇编程序设计</a>
+<a href="#本章小结与思考题">本章小结与思考题</a></nav></aside></main></body></html>

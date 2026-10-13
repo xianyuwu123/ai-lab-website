@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>第1章 · 微型计算机基础知识 | 微机原理知识点</title><meta name="description" content="数制与编码、微机组成、嵌入式系统：建立整门课程的基础。"><link rel="stylesheet" href="../courses.css"><link rel="stylesheet" href="../knowledge.css"><script src="../notes.js" defer></script></head>
+<body class="reader-page"><a class="skip" href="#chapter-content">跳到正文</a>
+<header class="site-header"><div class="header-inner"><a class="brand" href="../index.html"><span class="brand-dot"></span>AOCI Lab<span class="brand-divider">/</span><span class="brand-sub">章节知识点</span></a><nav class="reader-header-nav" aria-label="阅读页导航"><a href="../index.html#knowledge">← 课程目录</a><a href="../index.html#catalogue">互动课堂</a></nav></div><div class="progress-track" aria-hidden="true"><span class="progress-fill"></span></div></header>
+<main class="reader-shell"><aside class="chapter-sidebar"><p class="sidebar-label">COURSE CHAPTERS · 章节</p><nav class="chapter-links" aria-label="全部章节"><a href="chapter-01.html" aria-current="page"><span>01</span>微型计算机基础知识</a>
+<a href="chapter-02.html"><span>02</span>Cortex-M3 处理器</a>
+<a href="chapter-03.html"><span>03</span>STM32F1 系列微控制器</a>
+<a href="chapter-04.html"><span>04</span>汇编语言及其程序设计</a>
+<a href="chapter-05.html"><span>05</span>ARM 微控制器开发</a>
+<a href="chapter-06.html"><span>06</span>GPIO 通用输入输出接口</a>
+<a href="chapter-07.html"><span>07</span>EXTI 中断模块与基本应用</a>
+<a href="chapter-08.html"><span>08</span>定时器与脉宽调制</a>
+<a href="chapter-09.html"><span>09</span>串行通信</a>
+<a href="chapter-10.html"><span>10</span>模拟量模块</a></nav><a class="sidebar-return" href="../index.html#knowledge">← 返回课程资源</a></aside>
+<div class="reading-column"><header class="chapter-heading"><p class="eyebrow">CHAPTER 01 / 10 · 微机原理与接口技术</p><h1>微型计算机基础知识</h1><p class="chapter-deck">数制与编码、微机组成、嵌入式系统：建立整门课程的基础。</p><div class="chapter-meta"><span>章节知识点整理</span><span>9 个阅读主题</span></div></header>
+<details class="chapter-mobile"><summary>切换章节 · 第1章</summary><nav class="chapter-links" aria-label="手机端全部章节"><a href="chapter-01.html" aria-current="page"><span>01</span>微型计算机基础知识</a>
+<a href="chapter-02.html"><span>02</span>Cortex-M3 处理器</a>
+<a href="chapter-03.html"><span>03</span>STM32F1 系列微控制器</a>
+<a href="chapter-04.html"><span>04</span>汇编语言及其程序设计</a>
+<a href="chapter-05.html"><span>05</span>ARM 微控制器开发</a>
+<a href="chapter-06.html"><span>06</span>GPIO 通用输入输出接口</a>
+<a href="chapter-07.html"><span>07</span>EXTI 中断模块与基本应用</a>
+<a href="chapter-08.html"><span>08</span>定时器与脉宽调制</a>
+<a href="chapter-09.html"><span>09</span>串行通信</a>
+<a href="chapter-10.html"><span>10</span>模拟量模块</a></nav></details><details class="toc-mobile"><summary>本章目录 · 9 个主题</summary><nav aria-label="展开本章目录"><a href="#一微型计算机和嵌入式系统的发展">一、微型计算机和嵌入式系统的发展</a>
+<a href="#二计算机中的数制及数的转换">二、计算机中的数制及数的转换</a>
+<a href="#三计算机中二进制数的运算">三、计算机中二进制数的运算</a>
+<a href="#四计算机中有符号数的表示方法">四、计算机中有符号数的表示方法</a>
+<a href="#五计算机中的字符编码">五、计算机中的字符编码</a>
+<a href="#六微型计算机组成原理">六、微型计算机组成原理</a>
+<a href="#七嵌入式操作系统">七、嵌入式操作系统</a>
+<a href="#八微型计算机领域常用单位及术语">八、微型计算机领域常用单位及术语</a>
+<a href="#本章小结与思考题">本章小结与思考题</a></nav></details>
+<article class="prose" id="chapter-content" aria-label="第1章知识点正文"><blockquote>
+<p>本文整理自福州大学《微机原理与接口技术》吴衔誉教授第一章课件，覆盖微型计算机发展史、数制与转换、二进制运算、有符号数表示、字符编码、微机组成原理、嵌入式操作系统与常用术语八大板块。</p>
+</blockquote>
+<hr>
+<h2 id="一微型计算机和嵌入式系统的发展">一、微型计算机和嵌入式系统的发展</h2>
+<h3 id="111-电子计算机的发展按元器件分代">1.1.1 电子计算机的发展（按元器件分代）</h3>
+<p>自 1946 年世界上第一台电子计算机 ENIAC 问世以来，计算机的发展历经五代，前四代以<strong>逻辑元件</strong>划分：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>代际</th>
+<th>逻辑元件</th>
+<th>代表 / 特征</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第一代（1946–1958）</td>
+<td>电子管</td>
+<td>ENIAC，17468 个电子管，重 30 吨；内存用水银延迟线，仅机器语言、汇编语言</td>
+</tr>
+<tr>
+<td>第二代（1958–1965）</td>
+<td>晶体管</td>
+<td>体积缩至衣橱大小；内存用磁芯，开始出现高级语言</td>
+</tr>
+<tr>
+<td>第三代（1965–1970）</td>
+<td>中小规模集成电路</td>
+<td>IBM 360——首款使用集成电路的计算机，用于银行交易系统、登月计划</td>
+</tr>
+<tr>
+<td>第四代（1971–至今）</td>
+<td>大规模、超大规模集成电路</td>
+<td>Intel 4004（世界首款商用微处理器，1971）诞生，半导体存储器普及</td>
+</tr>
+<tr>
+<td>第五代（20 世纪 80 年代中–至今）</td>
+<td>智能计算机</td>
+<td>具备感知、推理、学习能力，AI 方向由此延伸</td>
+</tr>
+</tbody></table>
+</div>
+<blockquote>
+<p><strong>记忆要点</strong>：前四代的关键词依次是「电子管 → 晶体管 → 集成电路 → 大规模集成电路」。</p>
+</blockquote>
+<h3 id="112-微型计算机的发展按微处理器字长分代">1.1.2 微型计算机的发展（按微处理器字长分代）</h3>
+<p>注意：<strong>微型计算机的「代」与前面计算机的四代不是一回事</strong>，它是以微处理器为核心的。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>代际</th>
+<th>大致时期</th>
+<th>典型产品</th>
+<th>字长 / 特征</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第一代</td>
+<td>1971–1973</td>
+<td>Intel 4004、8008</td>
+<td>4 位 / 低档 8 位（10 μm 工艺）</td>
+</tr>
+<tr>
+<td>第二代</td>
+<td>1974–1977</td>
+<td>Intel 8080、Z80、MC6800</td>
+<td>中高档 8 位（6 μm / 3 μm 工艺）</td>
+</tr>
+<tr>
+<td>第三代</td>
+<td>1978–1984</td>
+<td>Intel 8086/8088、80286、MC68000</td>
+<td>16 位（1.5–3 μm 工艺）</td>
+</tr>
+<tr>
+<td>第四代</td>
+<td>1985–2004</td>
+<td>Intel 80386、80486、Pentium</td>
+<td>32 位（800 nm → 90 nm 工艺）</td>
+</tr>
+<tr>
+<td>第五代</td>
+<td>2005–至今</td>
+<td>Core、Ryzen、Apple M 系列</td>
+<td>64 位（65 nm → 3 nm 工艺演进）</td>
+</tr>
+</tbody></table>
+</div>
+<p>里程碑事件：</p>
+<ul>
+<li><strong>1981 年</strong>，IBM 采用 Intel 8086 生产了第一台通用微型计算机 <strong>IBM PC</strong>，个人计算机时代开启。</li>
+<li><strong>80486 = 80386 + 80387（浮点协处理器）+ 8 KB Cache</strong>，一颗芯片解决两大问题。</li>
+<li>2000 年后进入<strong>多核时代</strong>（如 64 位 Itanium 2、四核 Core i7）。</li>
+</ul>
+<blockquote>
+<p><strong>摩尔定律</strong>：集成电路上可容纳的元器件数目约每隔 18–24 个月增加一倍，性能提升一倍（Gordon Moore，1965）。</p>
+</blockquote>
+<h3 id="113-单片机的发展">1.1.3 单片机的发展</h3>
+<p><strong>定义</strong>：将 CPU、ROM、RAM、I/O 接口电路及定时器/计数器等主要部件集成在一块芯片上，称为<strong>单片微型计算机（Single Chip Microcomputer）</strong>，简称单片机。</p>
+<p><strong>五大特点</strong>：性价比高、针对性强（适用于控制）、集成度高（体积小、可靠性高）、功耗小、品种多样。</p>
+<p><strong>发展趋势</strong>：大容量高性能化、小容量低价格化、外围电路内装化、串行扩展技术；以及 CMOS 化、低功耗化、低电压化、低噪声高可靠。</p>
+<blockquote>
+<p>相较传统 51 单片机，**STM32（ARM 架构）**在运算速度、地址空间、片上存储、外设、开发工具和操作系统方面均有明显优势，单片机正向 ARM 架构的高性能方向发展。</p>
+</blockquote>
+<h3 id="114-嵌入式系统的发展">1.1.4 嵌入式系统的发展</h3>
+<p><strong>定义</strong>：以应用为核心、以计算机技术为基础、软硬件可裁剪，适应应用系统对功能、可靠性、成本、体积、功耗等严格要求的<strong>专用计算机系统</strong>。简单说，就是「藏在设备内部的计算机」。一般认为 8 位单片机是较低级嵌入式系统，基于 ARM 的 32 位单片机是较高级嵌入式系统。</p>
+<p><strong>八大特点</strong>：专用性强、体积小型化、实时性好、可裁剪性好、可靠性高、功耗低、自身不具备自我开发能力（须借助通用计算机平台）、采用软硬件协同设计方法。</p>
+<p><strong>三个阶段</strong>：</p>
+<ol>
+<li>早期阶段：以功能简单的专用计算机或单片机为核心的可编程控制器；</li>
+<li>以高端嵌入式 CPU（ARM、PowerPC）和嵌入式操作系统为标志；</li>
+<li>以芯片技术和 Internet 技术为标志，进入快速发展和广泛应用期。</li>
+</ol>
+<hr>
+<h2 id="二计算机中的数制及数的转换">二、计算机中的数制及数的转换</h2>
+<h3 id="121-数制基础">1.2.1 数制基础</h3>
+<ul>
+<li><strong>数制</strong>：用一组固定符号和统一规则表示数值的方法。</li>
+<li><strong>位置表示法</strong>：数码大小不仅取决于数码本身，还取决于所在位置。</li>
+<li><strong>权</strong>：位置表示法中每个数位的位值。</li>
+<li><strong>基数</strong>：相邻两位中高位权与低位权之比（十进制基数为 10，二进制为 2，十六进制为 16）。</li>
+</ul>
+<p>常用进制对照：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>进制</th>
+<th>计数规律</th>
+<th>基数</th>
+<th>系数</th>
+<th>后缀</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>十进制 Decimal</td>
+<td>逢十进一</td>
+<td>10</td>
+<td>0–9</td>
+<td>D（或省略）</td>
+</tr>
+<tr>
+<td>二进制 Binary</td>
+<td>逢二进一</td>
+<td>2</td>
+<td>0, 1</td>
+<td>B</td>
+</tr>
+<tr>
+<td>十六进制 Hexadecimal</td>
+<td>逢十六进一</td>
+<td>16</td>
+<td>0–9, A–F</td>
+<td>H（以 A–F 开头需加前导 0）</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>为什么计算机用二进制？</strong></p>
+<ol>
+<li>电路实现方便（高/低电平两个状态即可表示 0/1）；</li>
+<li>运算规则简单。</li>
+</ol>
+<p><strong>为什么用十六进制？</strong> 因为 2⁴ = 16，4 位二进制恰好对应 1 位十六进制，书写短、阅读方便。</p>
+<h3 id="122-数制间的转换">1.2.2 数制间的转换</h3>
+<p><strong>（1）N 进制 → 十进制：按权展开相加</strong></p>
+<div class="code-block"><div class="code-header"><span>示例</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>1011.110B = 1×2³ + 0×2² + 1×2¹ + 1×2⁰ + 1×2⁻¹ + 1×2⁻² = 11.75D
+3BEF.E6H = 3×16³ + 11×16² + 14×16¹ + 15×16⁰ + 14×16⁻¹ + 6×16⁻² = 15343.8984375D</code></pre></div>
+<p><strong>（2）十进制 → N 进制：整数与小数分开处理</strong></p>
+<ul>
+<li><strong>整数部分：除 N 取余</strong>，从下往上读。<ul>
+<li>例：125 → 二进制：不断除以 2 取余数，得 <code>1111101B</code></li>
+<li>例：15536 → 十六进制：除以 16 取余数，得 <code>3CB0H</code></li>
+</ul>
+</li>
+<li><strong>小数部分：乘 N 取整</strong>，从上往下读。<ul>
+<li>例：0.6875 → 二进制：<code>0.1011B</code></li>
+<li>例：0.78125 → 十六进制：<code>0.C8H</code></li>
+</ul>
+</li>
+</ul>
+<p><strong>（3）二进制 ↔ 十六进制</strong></p>
+<ul>
+<li>二进制 → 十六进制：<strong>四位化一位</strong>，从小数点向两边分组，不足补 0。<ul>
+<li><code>1000110.01B</code> → <code>0100 0110 . 0100</code> → <code>46.4H</code></li>
+</ul>
+</li>
+<li>十六进制 → 二进制：<strong>一位化四位</strong>。<ul>
+<li><code>352.6H</code> → <code>0011 0101 0010 . 0110</code> → <code>1101010010.011B</code></li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><strong>CPU 能直接识别十六进制吗？</strong> 不能，CPU 只认二进制。十六进制只是为了<strong>方便人阅读和书写</strong>。</p>
+</blockquote>
+<p><strong>（4）常用对照表（0–15）</strong></p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>十进制</th>
+<th>二进制</th>
+<th>十六进制</th>
+<th></th>
+<th>十进制</th>
+<th>二进制</th>
+<th>十六进制</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>0000</td>
+<td>0</td>
+<td></td>
+<td>8</td>
+<td>1000</td>
+<td>8</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0001</td>
+<td>1</td>
+<td></td>
+<td>9</td>
+<td>1001</td>
+<td>9</td>
+</tr>
+<tr>
+<td>2</td>
+<td>0010</td>
+<td>2</td>
+<td></td>
+<td>10</td>
+<td>1010</td>
+<td>A</td>
+</tr>
+<tr>
+<td>3</td>
+<td>0011</td>
+<td>3</td>
+<td></td>
+<td>11</td>
+<td>1011</td>
+<td>B</td>
+</tr>
+<tr>
+<td>4</td>
+<td>0100</td>
+<td>4</td>
+<td></td>
+<td>12</td>
+<td>1100</td>
+<td>C</td>
+</tr>
+<tr>
+<td>5</td>
+<td>0101</td>
+<td>5</td>
+<td></td>
+<td>13</td>
+<td>1101</td>
+<td>D</td>
+</tr>
+<tr>
+<td>6</td>
+<td>0110</td>
+<td>6</td>
+<td></td>
+<td>14</td>
+<td>1110</td>
+<td>E</td>
+</tr>
+<tr>
+<td>7</td>
+<td>0111</td>
+<td>7</td>
+<td></td>
+<td>15</td>
+<td>1111</td>
+<td>F</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>转换小结</strong>：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>转换方向</th>
+<th>方法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>N 进制 → 十进制</td>
+<td>按权展开相加</td>
+</tr>
+<tr>
+<td>十进制整数 → N 进制</td>
+<td>除 N 取余（从下往上读）</td>
+</tr>
+<tr>
+<td>十进制小数 → N 进制</td>
+<td>乘 N 取整（从上往下读）</td>
+</tr>
+<tr>
+<td>二进制 ↔ 十六进制</td>
+<td>四位化一位 / 一位化四位</td>
+</tr>
+</tbody></table>
+</div>
+<hr>
+<h2 id="三计算机中二进制数的运算">三、计算机中二进制数的运算</h2>
+<h3 id="131-算术运算">1.3.1 算术运算</h3>
+<p>计数规律：加法「逢二进一」，减法「借一当二」。</p>
+<ul>
+<li><strong>加法</strong>：<code>10110101B + 1011B = 11000000B</code></li>
+<li><strong>减法</strong>：<code>10110101B − 1011B = 10101010B</code></li>
+<li><strong>乘法</strong>：<code>10110101B × 1011B = 11111000111B</code>（逐位相乘、移位相加）</li>
+<li><strong>除法</strong>：<code>10111111B ÷ 1001B → 商 10101B，余数 10B</code>（试商、相乘、相减、下拉）</li>
+</ul>
+<h3 id="132-逻辑运算">1.3.2 逻辑运算</h3>
+<p>常用四种：<strong>与（AND）、或（OR）、异或（XOR）、非（NOT）</strong>。逻辑运算<strong>按位进行，没有进位问题</strong>。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>A</th>
+<th>B</th>
+<th>AND</th>
+<th>OR</th>
+<th>XOR</th>
+<th>NOT A</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td></td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>记忆口诀</strong>：与——全 1 得 1；或——有 1 得 1；异或——相同得 0、不同得 1；非——取反。</p>
+<p>例：<code>10010111B AND 00111000B = 00010000B</code>，<code>OR = 10111111B</code>，<code>XOR = 10101111B</code>。</p>
+<hr>
+<h2 id="四计算机中有符号数的表示方法">四、计算机中有符号数的表示方法</h2>
+<h3 id="141-原码反码和补码">1.4.1 原码、反码和补码</h3>
+<ul>
+<li><strong>无符号数</strong>：不涉及符号问题。</li>
+<li><strong>有符号数</strong>：最高位为符号位（0 正 / 1 负），其余为数值位（如 8 位字长，D7 为符号位）。</li>
+<li><strong>机器数</strong>：数值数据在计算机中的编码；<strong>真值</strong>：机器数所代表的实际数值。</li>
+</ul>
+<p><strong>（1）原码</strong>：最高位表符号，其余表绝对值。</p>
+<ul>
+<li>例：<code>X1=+1010B → [X1]原=00001010B</code>；<code>X2=−1010B → [X2]原=10001010B</code></li>
+<li>缺点：0 的原码不唯一（有 +0、−0 之分），运算不便。</li>
+</ul>
+<p><strong>（2）反码</strong>：正数同原码；负数符号位为 1，数值部分按位取反。</p>
+<ul>
+<li>例：<code>+105 → [X]反=01101001B</code>；<code>−105 → [Y]反=10010110B</code></li>
+</ul>
+<p><strong>（3）补码</strong>：正数同原码；负数符号位为 1，数值部分<strong>取反加 1</strong>。</p>
+<ul>
+<li>例：<code>+52 → [X]补=00110100B</code>；<code>−52 → [Y]补=11001100B</code>（原码 <code>10110100B</code> 取反 <code>11001011B</code> 加 1）</li>
+<li>优点：0 的补码唯一；<code>[[X]补]补 = [X]原</code>（由补码求真值）。</li>
+</ul>
+<p><strong>三种编码范围对照（n 位）</strong>：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>8 位范围</th>
+<th>n 位范围</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>无符号数</td>
+<td>0 ~ 255</td>
+<td>0 ~ (2ⁿ−1)</td>
+</tr>
+<tr>
+<td>原码</td>
+<td>−127 ~ +127</td>
+<td>−(2ⁿ⁻¹−1) ~ +(2ⁿ⁻¹−1)</td>
+</tr>
+<tr>
+<td>反码</td>
+<td>−127 ~ +127</td>
+<td>−(2ⁿ⁻¹−1) ~ +(2ⁿ⁻¹−1)</td>
+</tr>
+<tr>
+<td>补码</td>
+<td>−128 ~ +127</td>
+<td>−2ⁿ⁻¹ ~ +(2ⁿ⁻¹−1)</td>
+</tr>
+</tbody></table>
+</div>
+<blockquote>
+<p><strong>三条说明</strong>：① 只有有符号数才有原/反/补码；② 正数的原、反、补码都相同；③ <strong>计算机中未特别说明，有符号数一律采用补码表示</strong>。</p>
+</blockquote>
+<p><strong>补码为什么好用（四大优势）</strong>：</p>
+<ol>
+<li>解决了符号的表示问题；</li>
+<li>把减法转化为补码加法，简化运算器设计；</li>
+<li>补码与真值、原码之间转换极容易（电子器件实现）；</li>
+<li>统一了符号位和数值位，符号位可直接参与运算。</li>
+</ol>
+<h3 id="142-补码的加减运算与溢出判别">1.4.2 补码的加减运算与溢出判别</h3>
+<p><strong>加法通式</strong>：<code>[X+Y]补 = [X]补 + [Y]补（mod 2ⁿ）</code></p>
+<p>例：<code>X=+52，Y=−7</code> → <code>[X]补=00110100B，[Y]补=11111001B</code>，相加得 <code>00101101B = +45</code> ✓</p>
+<p><strong>减法通式</strong>：<code>[X−Y]补 = [X]补 + [−Y]补（mod 2ⁿ）</code></p>
+<p>例：<code>X=+6，Y=+25</code> → <code>[−Y]补=11100111B</code>，<code>[X]补+[−Y]补=11101101B</code>，求补还原得 <code>−19</code> ✓</p>
+<p><strong>有符号数溢出判别（双进位位法 / OV）</strong>：</p>
+<ul>
+<li><code>Cn-2</code>：最高数值位向符号位的进位；</li>
+<li><code>Cn-1</code>：符号位向进位标志位的进位；</li>
+<li><strong>OV = Cn-2 ⊕ Cn-1</strong>（相同无溢出，不同有溢出）。</li>
+</ul>
+<p>例 1：<code>55 + 66</code> → C7=0、C6=0，OV=0，<strong>无溢出</strong>。
+例 2：<code>(−93) + (−59)</code> → C7=1、C6=0，OV=1，<strong>有溢出</strong>（结果错变为 +104）。</p>
+<blockquote>
+<p>经验规律：<strong>两正相加得负、两负相加得正，必然溢出</strong>。</p>
+</blockquote>
+<p><strong>无符号数溢出判别</strong>：看最高位有无进位/借位——加法有进位、减法有借位即溢出（8 位范围 0–255）。</p>
+<hr>
+<h2 id="五计算机中的字符编码">五、计算机中的字符编码</h2>
+<h3 id="151-bcd-码二十进制编码">1.5.1 BCD 码（二—十进制编码）</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>编码</th>
+<th>权（高→低）</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>8421 BCD</td>
+<td>8, 4, 2, 1</td>
+<td>用 4 位二进制表示 1 位十进制数 0–9</td>
+</tr>
+<tr>
+<td>2421 BCD</td>
+<td>2, 4, 2, 1</td>
+<td>分 (A)、(B) 两种代码</td>
+</tr>
+<tr>
+<td>余 3 码</td>
+<td>—</td>
+<td>比对应十进制数多 3（如 0→0011，1→0100）</td>
+</tr>
+</tbody></table>
+</div>
+<p>例：<code>[37.52]D = [0011 0111 . 0101 0010]8421</code></p>
+<h3 id="152-ascii-码">1.5.2 ASCII 码</h3>
+<p><strong>ASCII（American Standard Code for Information Interchange）</strong> 用 7 位二进制编码，共 128 个符号：96 个图形字符（10 个数码、52 个大小写字母、34 个其他）+ 32 个控制字符。存储时一个字节表示一个字符，<strong>低 7 位为 ASCII 值，最高位通常作奇偶校验位</strong>。</p>
+<p><strong>必记基准值</strong>：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>字符</th>
+<th>ASCII（十六进制）</th>
+<th>十进制</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>0</code></td>
+<td>30H</td>
+<td>48</td>
+</tr>
+<tr>
+<td><code>A</code></td>
+<td>41H</td>
+<td>65</td>
+</tr>
+<tr>
+<td><code>a</code></td>
+<td>61H</td>
+<td>97</td>
+</tr>
+</tbody></table>
+</div>
+<p>规律：数字 30H–39H，大写字母 41H 起，小写比大写大 20H。</p>
+<h3 id="153-汉字字符编码">1.5.3 汉字字符编码</h3>
+<ul>
+<li><strong>GB2312-80（1980）</strong>：收录 7445 个字符（汉字 6763 个），兼容 ASCII，汉字占两字节、最高位为 1。</li>
+<li><strong>GBK（1995）</strong>：兼容 GB2312 / BIG5，收录 21003 个汉字。</li>
+<li><strong>GB18030</strong>：现行强制性国家标准，收录汉字 70000 余个，含多种少数民族文字。</li>
+<li>现代通用的是 <strong>UTF-8</strong>（面向全世界文字、兼容 ASCII）。</li>
+</ul>
+<hr>
+<h2 id="六微型计算机组成原理">六、微型计算机组成原理</h2>
+<h3 id="161-基本组成">1.6.1 基本组成</h3>
+<p><strong>冯·诺依曼体系五大硬件部件</strong>：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>部件</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>运算器</td>
+<td>进行算术运算和逻辑运算</td>
+</tr>
+<tr>
+<td>存储器</td>
+<td>存放程序、数据和中间结果</td>
+</tr>
+<tr>
+<td>控制器</td>
+<td>协调各部件工作，实现程序控制</td>
+</tr>
+<tr>
+<td>输入设备</td>
+<td>把数据和程序输入计算机</td>
+</tr>
+<tr>
+<td>输出设备</td>
+<td>输出结果</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>微型计算机的特点</strong>：把 CPU（微处理器）集成在一块芯片上。</p>
+<ul>
+<li><strong>存储器</strong>：RAM（可读写，断电信息丢失）/ ROM（只读，断电不丢失）。</li>
+<li><strong>I/O 接口</strong>：介于 CPU 与外设之间，起数据缓存与信号变换作用。</li>
+<li><strong>系统总线</strong>分三类：<ul>
+<li><strong>数据总线 DB</strong>：传送数据，双向；</li>
+<li><strong>地址总线 AB</strong>：传送地址，单向（由 CPU 发出）；</li>
+<li><strong>控制总线 CB</strong>：传送控制信号和状态信号。</li>
+</ul>
+</li>
+</ul>
+<p><strong>微型计算机系统 = 硬件系统 + 软件系统</strong></p>
+<ul>
+<li>硬件：构成计算机的物理实体（CPU、内存、主板等）；</li>
+<li>软件：程序与数据的总和，分<strong>系统软件</strong>（如操作系统）和<strong>应用软件</strong>（用户程序）。</li>
+</ul>
+<blockquote>
+<p>关系：<strong>硬件是基础（平台），软件是关键（灵魂）</strong>。两者缺一不可，互相配合。</p>
+</blockquote>
+<p><strong>层次结构</strong>（由底向上）：数字逻辑电路 → 微程序 → 机器语言 → 操作系统 → 汇编语言 → 高级语言 → 应用软件。越往下越接近硬件，越往上越接近用户。</p>
+<p><strong>单片机系统</strong>：简单化、功能专一化的微型计算机系统。
+<strong>嵌入式系统</strong>：一般由嵌入式微处理器、特定外部设备、嵌入式操作系统、用户应用程序四部分组成；<strong>单片机就是典型的嵌入式系统</strong>。</p>
+<h3 id="162-工作原理">1.6.2 工作原理</h3>
+<ul>
+<li><strong>指令</strong>：指挥计算机工作的命令；<strong>程序</strong>：指令和数据的有序集合。</li>
+<li>微机按**「存储程序，程序控制」**方式工作：取指令 → 分析指令 → 执行指令，不断循环。</li>
+</ul>
+<hr>
+<h2 id="七嵌入式操作系统">七、嵌入式操作系统</h2>
+<h3 id="171-概述">1.7.1 概述</h3>
+<p><strong>嵌入式操作系统（EOS）</strong>：用于嵌入式系统的操作系统，包含底层驱动、系统内核、设备驱动接口、通信协议、图形界面等，负责软硬件资源分配与任务调度。</p>
+<h3 id="172-六大特点">1.7.2 六大特点</h3>
+<p><strong>内核小、专用性强、系统精简、高实时性、多任务、需要开发工具和环境</strong>。</p>
+<h3 id="173-六大趋势">1.7.3 六大趋势</h3>
+<p><strong>定制化、节能化、智能化、安全化、网络化、标准化</strong>。</p>
+<h3 id="174-常见嵌入式操作系统">1.7.4 常见嵌入式操作系统</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>系统</th>
+<th>特点 / 定位</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>μC/OS-II</td>
+<td>源码公开、可移植、可裁剪的占先式实时多任务 OS，ANSI C 编写，学习价值高</td>
+</tr>
+<tr>
+<td>μClinux</td>
+<td>完全开源（GNU/GPL），从 Linux 2.0/2.4 派生，微控制器领域中的 Linux</td>
+</tr>
+<tr>
+<td>VxWorks</td>
+<td>美国风河（1983）的 RTOS，航空航天/军事/工控可靠性标杆</td>
+</tr>
+<tr>
+<td>Windows Embedded</td>
+<td>微软组件化嵌入式版本，Windows 生态</td>
+</tr>
+<tr>
+<td>Android</td>
+<td>基于 Linux 的开源移动 OS，由 Google 主导</td>
+</tr>
+<tr>
+<td>iOS</td>
+<td>苹果移动 OS，类 Unix 商业系统，封闭生态</td>
+</tr>
+<tr>
+<td>Symbian</td>
+<td>诺基亚旧主力，2013 年落幕</td>
+</tr>
+<tr>
+<td>华为 HarmonyOS（鸿蒙）</td>
+<td>2019 年发布，面向万物互联的分布式 OS，国产自主可控代表</td>
+</tr>
+</tbody></table>
+</div>
+<hr>
+<h2 id="八微型计算机领域常用单位及术语">八、微型计算机领域常用单位及术语</h2>
+<h3 id="81-基本存储单位">8.1 基本存储单位</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>单位</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>位 bit</td>
+<td>最小数字单位，一位只有 0/1 两种状态</td>
+</tr>
+<tr>
+<td>字节 Byte</td>
+<td>8 位 = 1 字节，内存基本单位（记作 B）</td>
+</tr>
+<tr>
+<td>字 Word</td>
+<td>16 位二进制数 = 2 字节</td>
+</tr>
+<tr>
+<td>字长</td>
+<td>一次并行处理的数据位数（= 数据线条数），常与 CPU 寄存器/总线宽度一致；如 8 位、16 位、32 位 CPU</td>
+</tr>
+</tbody></table>
+</div>
+<h3 id="82-数量单位1024-进制">8.2 数量单位（1024 进制）</h3>
+<p><code>1K = 1024</code>、<code>1M = 1K×1K</code>、<code>1G = 1K×1M</code>、<code>1T = 1K×1G</code>、<code>1P = 1K×1T</code>、<code>1E = 1K×1P</code>。</p>
+<p><strong>MIPS</strong>：每秒处理百万条机器语言指令数，衡量 CPU 速度。例：ARM7 系列 S3C44B0X 约 59.4 MIPS，而 51 单片机仅 0.2–0.5 MIPS，差距显著。</p>
+<h3 id="83-地址与访问">8.3 地址与访问</h3>
+<ul>
+<li><strong>地址</strong>：存储单元编号，通常 8 bit 一个单元；容量由地址线数决定——16 条地址线 → 64 KB（0000H–FFFFH），20 条 → 1 MB（00000H–FFFFFH）。</li>
+<li><strong>访问</strong>：把数据存入叫「写」，从存储/接口取到 CPU 叫「读」，两者统称访问。</li>
+</ul>
+<h3 id="84-三种指令语言">8.4 三种指令语言</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>机器指令</th>
+<th>汇编指令</th>
+<th>高级语言</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>本质</td>
+<td>二进制 0/1</td>
+<td>助记符</td>
+<td>接近人类语言</td>
+</tr>
+<tr>
+<td>使用者</td>
+<td>CPU 直接执行</td>
+<td>程序员</td>
+<td>程序员</td>
+</tr>
+<tr>
+<td>可读性</td>
+<td>极差</td>
+<td>较差</td>
+<td>极好</td>
+</tr>
+<tr>
+<td>抽象级别</td>
+<td>最低</td>
+<td>低</td>
+<td>高</td>
+</tr>
+<tr>
+<td>依赖性</td>
+<td>依赖特定 CPU</td>
+<td>依赖特定 CPU</td>
+<td>跨平台</td>
+</tr>
+<tr>
+<td>执行方式</td>
+<td>CPU 直接执行</td>
+<td>汇编器翻译</td>
+<td>编译器/解释器翻译</td>
+</tr>
+</tbody></table>
+</div>
+<ul>
+<li><strong>汇编</strong>：汇编源程序 → 机器语言；<strong>反汇编</strong>：机器语言 → 汇编源程序。</li>
+<li>例：<code>MOV R1, #0x1245</code> 是汇编指令，对应机器码 <code>00001111 00100100 00010010 01000101</code>。</li>
+</ul>
+<h3 id="85-常见技术扩展">8.5 常见技术（扩展）</h3>
+<ul>
+<li><strong>Cache（高速缓冲存储器）</strong>：位于 CPU 与内存之间的小容量高速存储器，缓解「存储墙」瓶颈。分级：<strong>L1</strong>（核心独享，32–128 KB，1–3 周期）/ <strong>L2</strong>（约 256 KB–1 MB）/ <strong>L3</strong>（多核共享，8–64 MB）。</li>
+<li><strong>流水线（Pipeline）</strong>：多条指令重叠操作的准并行技术，提升吞吐率（如取指、译码、执行、写回并行）。</li>
+<li><strong>CISC vs RISC</strong>：<ul>
+<li><strong>CISC</strong>（复杂指令集）：指令多而复杂、硬件复杂，代表 x86；</li>
+<li><strong>RISC</strong>（精简指令集）：指令少而简单、长度固定、单周期执行，代表 ARM；现代处理器多融合两者优点。</li>
+</ul>
+</li>
+<li><strong>ARM vs x86</strong>：ARM 低功耗、高能效，主导移动/嵌入式；x86 性能强、生态成熟，主导桌面/服务器。</li>
+</ul>
+<hr>
+<h2 id="本章小结与思考题">本章小结与思考题</h2>
+<p><strong>核心知识地图</strong>：</p>
+<ol>
+<li>计算机与微型计算机发展史（微处理器按字长分代）；</li>
+<li>数制及其转换（按权展开 / 除 N 取余 / 乘 N 取整 / 四位化一位）；</li>
+<li>二进制算术与逻辑运算；</li>
+<li>有符号数的原码、反码、补码（重点：补码）；</li>
+<li>字符编码（BCD / ASCII / 汉字编码）；</li>
+<li>微机组成原理（冯·诺依曼五大部分 + 总线 + 软硬件关系）；</li>
+<li>嵌入式操作系统；</li>
+<li>常用单位与术语。</li>
+</ol>
+<p><strong>思考练习题（覆盖考点）</strong>：</p>
+<ol>
+<li>将二进制数 <code>0011 0100B</code>、<code>1010 1011B</code> 转换为十进制和十六进制。</li>
+<li>将十进制 <code>29</code>、<code>53</code>、<code>35.75</code>、<code>47.5</code> 转换为十六进制。</li>
+<li>已知原码，写出其反码和补码：<code>[X]原=0101 1001</code>、<code>1101 1011</code>、<code>0011 1110</code>、<code>1111 1100</code>。</li>
+<li>什么是微型计算机？什么是嵌入式系统？有何异同？</li>
+<li>嵌入式系统主要用在哪些方面？举生活中例子。</li>
+<li>将下列数分别看作无符号数和补码，求对应十进制数 / 真值：<code>1000 1110</code>、<code>1011 0000</code>、<code>0001 0001</code>、<code>0111 0101</code>。</li>
+<li>将十进制 <code>29</code>、<code>83</code>、<code>35.76</code>、学号后 3 位转换为 8421 BCD 码。</li>
+<li>用十六进制写出字符 <code>FB803</code>、<code>STM32F103</code>、姓名拼音的 ASCII 码。</li>
+<li>计算机的硬件结构由哪几部分组成？各自作用是什么？</li>
+<li>简述冯·诺依曼结构与哈佛结构的区别。</li>
+</ol>
+<hr>
+<blockquote>
+<p>本文由课程课件与讲稿整理，供学习交流使用。如需转载或用于教学，请注明出处。</p>
+</blockquote>
+</article>
+<nav class="chapter-pagination" aria-label="前后章节"><a href="../index.html#knowledge"><small>← 返回</small>全部章节目录</a><a class="next" href="chapter-02.html"><small>下一章 · 第2章 →</small>Cortex-M3 处理器</a></nav><footer class="reader-credit">Designed By Xianyu Wu</footer></div>
+<aside class="toc-sidebar"><p class="sidebar-label">ON THIS PAGE · 本章目录</p><nav aria-label="本章目录"><a href="#一微型计算机和嵌入式系统的发展">一、微型计算机和嵌入式系统的发展</a>
+<a href="#二计算机中的数制及数的转换">二、计算机中的数制及数的转换</a>
+<a href="#三计算机中二进制数的运算">三、计算机中二进制数的运算</a>
+<a href="#四计算机中有符号数的表示方法">四、计算机中有符号数的表示方法</a>
+<a href="#五计算机中的字符编码">五、计算机中的字符编码</a>
+<a href="#六微型计算机组成原理">六、微型计算机组成原理</a>
+<a href="#七嵌入式操作系统">七、嵌入式操作系统</a>
+<a href="#八微型计算机领域常用单位及术语">八、微型计算机领域常用单位及术语</a>
+<a href="#本章小结与思考题">本章小结与思考题</a></nav></aside></main></body></html>

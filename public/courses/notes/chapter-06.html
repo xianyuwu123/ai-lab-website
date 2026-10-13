@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>第6章 · GPIO 通用输入输出接口 | 微机原理知识点</title><meta name="description" content="从引脚内部结构到寄存器和固件库，用 LED 案例贯通输入输出。"><link rel="stylesheet" href="../courses.css"><link rel="stylesheet" href="../knowledge.css"><script src="../notes.js" defer></script></head>
+<body class="reader-page"><a class="skip" href="#chapter-content">跳到正文</a>
+<header class="site-header"><div class="header-inner"><a class="brand" href="../index.html"><span class="brand-dot"></span>AOCI Lab<span class="brand-divider">/</span><span class="brand-sub">章节知识点</span></a><nav class="reader-header-nav" aria-label="阅读页导航"><a href="../index.html#knowledge">← 课程目录</a><a href="../index.html#catalogue">互动课堂</a></nav></div><div class="progress-track" aria-hidden="true"><span class="progress-fill"></span></div></header>
+<main class="reader-shell"><aside class="chapter-sidebar"><p class="sidebar-label">COURSE CHAPTERS · 章节</p><nav class="chapter-links" aria-label="全部章节"><a href="chapter-01.html"><span>01</span>微型计算机基础知识</a>
+<a href="chapter-02.html"><span>02</span>Cortex-M3 处理器</a>
+<a href="chapter-03.html"><span>03</span>STM32F1 系列微控制器</a>
+<a href="chapter-04.html"><span>04</span>汇编语言及其程序设计</a>
+<a href="chapter-05.html"><span>05</span>ARM 微控制器开发</a>
+<a href="chapter-06.html" aria-current="page"><span>06</span>GPIO 通用输入输出接口</a>
+<a href="chapter-07.html"><span>07</span>EXTI 中断模块与基本应用</a>
+<a href="chapter-08.html"><span>08</span>定时器与脉宽调制</a>
+<a href="chapter-09.html"><span>09</span>串行通信</a>
+<a href="chapter-10.html"><span>10</span>模拟量模块</a></nav><a class="sidebar-return" href="../index.html#knowledge">← 返回课程资源</a></aside>
+<div class="reading-column"><header class="chapter-heading"><p class="eyebrow">CHAPTER 06 / 10 · 微机原理与接口技术</p><h1>GPIO 通用输入输出接口</h1><p class="chapter-deck">从引脚内部结构到寄存器和固件库，用 LED 案例贯通输入输出。</p><div class="chapter-meta"><span>章节知识点整理</span><span>7 个阅读主题</span></div></header>
+<details class="chapter-mobile"><summary>切换章节 · 第6章</summary><nav class="chapter-links" aria-label="手机端全部章节"><a href="chapter-01.html"><span>01</span>微型计算机基础知识</a>
+<a href="chapter-02.html"><span>02</span>Cortex-M3 处理器</a>
+<a href="chapter-03.html"><span>03</span>STM32F1 系列微控制器</a>
+<a href="chapter-04.html"><span>04</span>汇编语言及其程序设计</a>
+<a href="chapter-05.html"><span>05</span>ARM 微控制器开发</a>
+<a href="chapter-06.html" aria-current="page"><span>06</span>GPIO 通用输入输出接口</a>
+<a href="chapter-07.html"><span>07</span>EXTI 中断模块与基本应用</a>
+<a href="chapter-08.html"><span>08</span>定时器与脉宽调制</a>
+<a href="chapter-09.html"><span>09</span>串行通信</a>
+<a href="chapter-10.html"><span>10</span>模拟量模块</a></nav></details><details class="toc-mobile"><summary>本章目录 · 7 个主题</summary><nav aria-label="展开本章目录"><a href="#一gpio-概述及引脚命名">一、GPIO 概述及引脚命名</a>
+<a href="#二内部结构及工作模式">二、内部结构及工作模式</a>
+<a href="#三gpio-的寄存器">三、GPIO 的寄存器</a>
+<a href="#四rcc-时钟模块">四、RCC 时钟模块</a>
+<a href="#五gpio-固件库函数">五、GPIO 固件库函数</a>
+<a href="#六gpio-的使用">六、GPIO 的使用</a>
+<a href="#本章小结与思考题">本章小结与思考题</a></nav></details>
+<section class="related-labs" aria-label="配套互动课堂"><h2>读懂之后，动手验证</h2><div class="related-labs-links"><a href="../stm32-gpio-lab.html">GPIO 内部结构 ↗</a><a href="../stm32-gpio-register-map.html">寄存器与 LED · 路径讲解 ↗</a></div></section><article class="prose" id="chapter-content" aria-label="第6章知识点正文"><blockquote>
+<p>本文整理自福州大学《微机原理与接口技术》吴衔誉教授第六章课件，系统讲解 GPIO 概述与引脚命名、内部结构与工作模式、GPIO 寄存器、RCC 时钟模块、固件库函数以及 GPIO 使用实例六大板块。</p>
+</blockquote>
+<hr>
+<h2 id="一gpio-概述及引脚命名">一、GPIO 概述及引脚命名</h2>
+<h3 id="11-什么是-gpio">1.1 什么是 GPIO</h3>
+<p><strong>GPIO（General-Purpose Input/Output，通用输入 / 输出接口）</strong> 几乎是每个嵌入式系统都绕不开的基础外设。状态指示、报警输出、继电器吸合 / 断开、按钮状态读入、开关量报警输入等等，这些「开关量」的输入和输出，都可以通过 GPIO 实现。</p>
+<h3 id="12-引脚是如何分组的">1.2 引脚是如何分组的</h3>
+<ul>
+<li>STM32F103 系列根据型号不同，最多可提供 <strong>112 个</strong>多功能双向 I/O 引脚。</li>
+<li>以 <strong>STM32F103VET6</strong> 为例，它有 <strong>80 根</strong>能承受 5V 电压的多功能快速 I/O 口线。</li>
+<li>每 <strong>16 根</strong>口线分为一组，分别为 <strong>PA、PB、PC、PD、PE</strong> 五个端口。</li>
+</ul>
+<h3 id="13-每个端口有哪些寄存器">1.3 每个端口有哪些寄存器</h3>
+<p>一个 GPIO 端口由 7 个寄存器组成：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>寄存器</th>
+<th>名称</th>
+<th>位宽</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GPIOx_CRL</code></td>
+<td>端口配置低寄存器</td>
+<td>32 位</td>
+<td>配置 Pin 0~7</td>
+</tr>
+<tr>
+<td><code>GPIOx_CRH</code></td>
+<td>端口配置高寄存器</td>
+<td>32 位</td>
+<td>配置 Pin 8~15</td>
+</tr>
+<tr>
+<td><code>GPIOx_IDR</code></td>
+<td>端口输入数据寄存器</td>
+<td>32 位</td>
+<td>读引脚电平</td>
+</tr>
+<tr>
+<td><code>GPIOx_ODR</code></td>
+<td>端口输出数据寄存器</td>
+<td>32 位</td>
+<td>写引脚电平</td>
+</tr>
+<tr>
+<td><code>GPIOx_BSRR</code></td>
+<td>端口位设置 / 清除寄存器</td>
+<td>32 位</td>
+<td>原子置位 / 清位</td>
+</tr>
+<tr>
+<td><code>GPIOx_BRR</code></td>
+<td>端口位清除寄存器</td>
+<td>16 位</td>
+<td>原子清位</td>
+</tr>
+<tr>
+<td><code>GPIOx_LCKR</code></td>
+<td>端口配置锁定寄存器</td>
+<td>32 位</td>
+<td>冻结配置</td>
+</tr>
+</tbody></table>
+</div>
+<p><code>CRL</code> 和 <code>CRH</code> 是一对功能完全相同、但管理对象不同的「兄弟」寄存器：共同负责把一个端口全部 16 个引脚的工作模式和输出速度配好。<code>CRL</code> 管低 8 位（Pin 0~7），<code>CRH</code> 管高 8 位（Pin 8~15）。</p>
+<p>每个引脚由 4 个位来配置，可配置的模式包括：<strong>模拟输入、浮空输入、上拉 / 下拉输入、推挽输出、开漏输出、复用功能推挽、复用功能开漏</strong>。对于输出模式，还可以配置引脚的最大输出速度。</p>
+<hr>
+<h2 id="二内部结构及工作模式">二、内部结构及工作模式</h2>
+<h3 id="21-内部结构">2.1 内部结构</h3>
+<p>理解 GPIO，先要理解它内部那点「电路」。一个 I/O 引脚的内部可以拆成三块来看。</p>
+<p><strong>输入侧：保护二极管 + 施密特触发器</strong></p>
+<ul>
+<li><p><strong>保护二极管</strong>：靠近引脚处接了两只保护二极管。假设导通压降为 <code>Vd</code>，则输入信号电压被钳位在：</p>
+<div class="code-block"><div class="code-header"><span>示例</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>VSS - Vd &lt; Vin &lt; VDD + Vd</code></pre></div>
+<p>即不会让信号超出电源范围太多，保护内部电路。</p>
+</li>
+<li><p><strong>输入驱动器</strong>：主要由 TTL 肖特基触发器（施密特触发器）、带开关的上拉电阻和带开关的下拉电阻构成。</p>
+</li>
+<li><p><strong>施密特触发器（Schmitt trigger）</strong>：用肖特基管构成的、带正反馈的比较器电路。它能把缓慢变化的模拟信号整形成干净的矩形数字信号。规则是：输入高于正向阈值输出高；低于负向阈值输出低；介于两者之间输出保持不变。这就是为什么浮空输入的引脚读数稳定，不会在临界值附近乱跳。</p>
+</li>
+</ul>
+<p><strong>输出侧：多路选择器 + 输出控制 + 互补 MOS 管</strong></p>
+<ul>
+<li><strong>多路选择器</strong>：决定引脚是普通 GPIO 输出还是复用功能输出。普通输出时信号来自 <code>ODR</code>；复用输出时信号来自片上外设。</li>
+<li><strong>输出控制</strong>：控制一对互补 MOS 管的导通 / 关断，决定输出模式。</li>
+<li><strong>MOS 管</strong>：即 MOSFET（Metal-Oxide-Semiconductor Field-Effect Transistor，金属-氧化物半导体场效应晶体管），分 <strong>NMOS</strong>（N 沟道）和 <strong>PMOS</strong>（P 沟道）。</li>
+</ul>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>特性</th>
+<th>NMOS 管</th>
+<th>PMOS 管</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>全称</td>
+<td>N 沟道金属-氧化物-半导体场效应晶体管</td>
+<td>P 沟道金属-氧化物-半导体场效应晶体管</td>
+</tr>
+<tr>
+<td>核心载流子</td>
+<td>电子（带负电）</td>
+<td>空穴（等效正电荷）</td>
+</tr>
+<tr>
+<td>导通条件</td>
+<td>栅源电压 <code>VGS</code> &gt; 正阈值 <code>Vth</code></td>
+<td>栅源电压 <code>VGS</code> &lt; 负阈值 <code>Vth</code></td>
+</tr>
+<tr>
+<td>通俗理解</td>
+<td>高电平导通</td>
+<td>低电平导通</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>推挽输出（Push-Pull, PP）</strong></p>
+<p>通过一对互补 MOS 管：</p>
+<ul>
+<li>内部输出「1」时，PMOS 导通、NMOS 截止，引脚被拉到 VDD，输出高电平；</li>
+<li>内部输出「0」时，PMOS 截止、NMOS 导通，引脚被拉到 VSS，输出低电平；</li>
+<li>相比普通输出，推挽输出负载能力强、开关速度快，适合在 0V 和 VDD 之间来回切换的场合。</li>
+</ul>
+<p>从 PMOS / NMOS 状态看推挽：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>PMOS</th>
+<th>NMOS</th>
+<th>工作模式</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>导通</td>
+<td>截止</td>
+<td>推挽输出（高电平）</td>
+<td>提供拉电流，快速上拉至 VDD，驱动强</td>
+</tr>
+<tr>
+<td>截止</td>
+<td>导通</td>
+<td>推挽输出（低电平）</td>
+<td>提供灌电流，快速下拉至 GND，驱动强</td>
+</tr>
+<tr>
+<td>导通</td>
+<td>导通</td>
+<td>非法状态（应避免）</td>
+<td>VDD 直通 GND 短路电流，可能烧毁 MOS 管</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>开漏输出（Open-Drain, OD）</strong></p>
+<p>与 VDD 相连的 PMOS 始终截止，只有 NMOS（漏极开路）：</p>
+<ul>
+<li>内部输出「0」时，NMOS 导通，引脚接地，输出低电平；</li>
+<li>内部输出「1」时，NMOS 截止，引脚既不是高也不是低，而是<strong>高阻态（悬空）</strong>。</li>
+</ul>
+<p>开漏输出的关键特征：</p>
+<ol>
+<li>要得到高电平，必须外接上拉电阻；</li>
+<li>通过改上拉电压可以匹配不同电平（电平转换）；</li>
+<li>上升沿有延时，延时由上拉电阻决定；</li>
+<li>多个开漏引脚可接到同一条线，靠一只上拉电阻形成「线与」关系；</li>
+<li>吸收电流能力强，适合电流型驱动。</li>
+</ol>
+<blockquote>
+<p>一句话区分：<strong>推挽能主动输出高和低、驱动强；开漏只能主动拉低、高电平靠外接上拉，适合电平转换和「线与」。</strong></p>
+</blockquote>
+<h3 id="22-八种工作模式">2.2 八种工作模式</h3>
+<p>STM32 的 I/O 引脚共有 8 种工作模式：<strong>4 种输入 + 4 种输出</strong>。</p>
+<p><strong>4 种输入模式</strong></p>
+<ol>
+<li><strong>输入浮空</strong>：引脚既不接高也不接低，电平不确定（可能是 0V、VDD 或中间值）；</li>
+<li><strong>输入上拉</strong>：通过电阻钳位到高电平（如 VDD），电阻兼有限流作用；</li>
+<li><strong>输入下拉</strong>：与上拉原理相似，钳位到低电平（如 GND）；</li>
+<li><strong>模拟输入</strong>：用于把引脚模拟信号送进内部 ADC。此时上拉 / 下拉开关和施密特触发器都关闭。</li>
+</ol>
+<p><strong>4 种输出模式</strong></p>
+<ol>
+<li><strong>开漏输出</strong>：见上，适合电流型驱动、电平匹配；</li>
+<li><strong>开漏复用输出</strong>：在开漏基础上，引脚被用作第二功能（片上外设输出）；</li>
+<li><strong>推挽输出</strong>：可输出高 / 低电平，连接数字器件，导通损耗小、效率高；</li>
+<li><strong>推挽复用输出</strong>：在推挽基础上，引脚被用作第二功能。</li>
+</ol>
+<p><strong>引脚模式怎么选（实用 8 条）</strong></p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>应选模式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>要把引脚信号读入 MCU</td>
+<td>输入模式</td>
+</tr>
+<tr>
+<td>普通 GPIO 输入</td>
+<td>浮空 / 上拉 / 下拉，且关闭该引脚所有复用功能</td>
+</tr>
+<tr>
+<td>内置外设输入</td>
+<td>浮空 / 上拉 / 下拉，且使能对应复用功能模块</td>
+</tr>
+<tr>
+<td>普通模拟输入</td>
+<td>模拟输入模式，关闭所有复用功能</td>
+</tr>
+<tr>
+<td>普通 GPIO 输出</td>
+<td>推挽或开漏，关闭所有复用功能</td>
+</tr>
+<tr>
+<td>内置外设输出</td>
+<td>复用推挽或复用开漏，使能对应复用功能</td>
+</tr>
+<tr>
+<td>输出既要高又要低、且速度高（如 OLED）</td>
+<td>推挽输出</td>
+</tr>
+<tr>
+<td>要求输出电流大、或外部电平不匹配</td>
+<td>开漏输出</td>
+</tr>
+</tbody></table>
+</div>
+<h3 id="23-输出速度">2.3 输出速度</h3>
+<p>这里的「速度」指的是 <strong>I/O 口驱动电路的响应速度</strong>，不是输出信号本身的速度（信号速度由软件决定）。</p>
+<p>STM32F103 输出模式有 <strong>3 档</strong>：<strong>2 MHz、10 MHz、50 MHz</strong>。一般推荐引脚输出速度取输出信号速度的 <strong>5~10 倍</strong>；不需要高频时尽量选低速，有利于降低 EMI（Electromagnetic Interference，电磁干扰）和功耗。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>外设 / 场景</th>
+<th>建议速度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>LED、数码管、蜂鸣器</td>
+<td>2 MHz</td>
+</tr>
+<tr>
+<td>串口（UART，最大 115200 b/s）</td>
+<td>2 MHz</td>
+</tr>
+<tr>
+<td>I2C（400000 b/s，留余量）</td>
+<td>10 MHz</td>
+</tr>
+<tr>
+<td>SPI</td>
+<td>50 MHz</td>
+</tr>
+<tr>
+<td>FSMC 复用连接存储器</td>
+<td>50 MHz</td>
+</tr>
+</tbody></table>
+</div>
+<h3 id="24-gpio-的功能">2.4 GPIO 的功能</h3>
+<ol>
+<li><strong>普通 I/O</strong>：复位期间和刚复位后，复用功能未开启，I/O 被配成浮空输入；写到 <code>ODR</code> 的值输出到引脚；<code>IDR</code> 每个 APB2 时钟捕捉一次引脚数据。</li>
+<li><strong>单独的位设置 / 清除</strong>：不用关中断，通过写 <code>BSRR</code>（或 <code>BRR</code>）的对应位即可只改某些位、不影响其他位。</li>
+<li><strong>外部中断 / 唤醒线</strong>：所有端口都有外部中断能力，但必须配成输入模式才能用。</li>
+<li><strong>复用功能（AF）</strong>：配置成复用输出后，引脚与 <code>ODR</code> 断开、与片上外设输出信号连接；外设未激活时输出不确定。</li>
+<li><strong>软件重映射 I/O 复用功能</strong>：通过配置 AFIO 寄存器，把某些复用功能换到别的引脚上，让不同封装的器件 I/O 数量最优。</li>
+<li><strong>锁定机制</strong>：执行锁定程序后，在下一次复位前不能再改端口位配置。</li>
+<li><strong>输入配置</strong>：输出缓冲器禁止，施密特输入激活，据配置接上拉 / 下拉，每个 APB2 时钟采样到 <code>IDR</code>。</li>
+<li><strong>输出配置</strong>：输出缓冲器激活，施密特输入激活，上拉 / 下拉禁止，读 <code>ODR</code> 得最后一次写的值。</li>
+<li><strong>复用功能配置</strong>：输出缓冲器打开，由内置外设驱动，施密特输入激活。</li>
+<li><strong>模拟输入配置</strong>：输出缓冲器禁止，施密特触发器禁止（零消耗），读 <code>IDR</code> 得到 0。</li>
+</ol>
+<hr>
+<h2 id="三gpio-的寄存器">三、GPIO 的寄存器</h2>
+<p>对外设的操作本质上就是操作寄存器。先要知道每个寄存器的地址。</p>
+<h3 id="31-存储器映射">3.1 存储器映射</h3>
+<p>以 STM32F103VET6 为例：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>端口</th>
+<th>地址范围</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PA</td>
+<td>0x4001 0800 ~ 0x4001 0BFF</td>
+</tr>
+<tr>
+<td>PB</td>
+<td>0x4001 0C00 ~ 0x4001 0FFF</td>
+</tr>
+<tr>
+<td>PC</td>
+<td>0x4001 1000 ~ 0x4001 13FF</td>
+</tr>
+<tr>
+<td>PD</td>
+<td>0x4001 1400 ~ 0x4001 17FF</td>
+</tr>
+<tr>
+<td>PE</td>
+<td>0x4001 1800 ~ 0x4001 1BFF</td>
+</tr>
+</tbody></table>
+</div>
+<p>每个端口第一个地址是首地址；各寄存器地址以<strong>偏移量</strong>给出，物理地址 = 基地址 + 偏移量。</p>
+<h3 id="32-各寄存器速查">3.2 各寄存器速查</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>寄存器</th>
+<th>偏移</th>
+<th>复位值</th>
+<th>要点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GPIOx_CRL</code></td>
+<td>0x00</td>
+<td>0x4444 4444</td>
+<td>配 Pin 0~7，<code>CNFy[1:0]</code> + <code>MODEy[1:0]</code> 各 4 位</td>
+</tr>
+<tr>
+<td><code>GPIOx_CRH</code></td>
+<td>0x04</td>
+<td>0x4444 4444</td>
+<td>配 Pin 8~15，定义同 CRL</td>
+</tr>
+<tr>
+<td><code>GPIOx_IDR</code></td>
+<td>0x08</td>
+<td>0x0000 XXXX</td>
+<td>只读，位 [15:0] 为引脚输入</td>
+</tr>
+<tr>
+<td><code>GPIOx_ODR</code></td>
+<td>0x0C</td>
+<td>0x0000 0000</td>
+<td>可读写，位 [15:0] 为引脚输出</td>
+</tr>
+<tr>
+<td><code>GPIOx_BSRR</code></td>
+<td>0x10</td>
+<td>0x0000 0000</td>
+<td>位 [15:0] 置位（BSy），位 [31:16] 清除（BRy）</td>
+</tr>
+<tr>
+<td><code>GPIOx_BRR</code></td>
+<td>0x14</td>
+<td>0x0000 0000</td>
+<td>位 [15:0] 清除（BRy）</td>
+</tr>
+<tr>
+<td><code>GPIOx_LCKR</code></td>
+<td>0x18</td>
+<td>0x0000 0000</td>
+<td>锁定配置，写序列激活</td>
+</tr>
+</tbody></table>
+</div>
+<p>几个容易考的点：</p>
+<ul>
+<li><strong>复位值 0x4444 4444 意味着浮空输入</strong>：每 4 位 = <code>CNF=01</code>、<code>MODE=00</code>，即浮空输入模式。</li>
+<li><strong>把 PA0 配成推挽输出 50 MHz，其余不变</strong>，则 <code>CRL</code> 值 = <strong>0x4444 4443</strong>（最低 4 位从 0x4 改成 0x3）。</li>
+<li><strong>BSRR 妙处</strong>：写 1 置位、写 1 清除分占高 / 低 16 位，可以「只动某些位」而不影响其他位，且不用关中断。</li>
+<li><strong>LCKR 锁键写入序列</strong>：写 1 → 写 0 → 写 1 → 读 0 → 读 1。执行正确序列后，下次系统复位前端口配置被冻结。</li>
+</ul>
+<hr>
+<h2 id="四rcc-时钟模块">四、RCC 时钟模块</h2>
+<h3 id="41-时钟源">4.1 时钟源</h3>
+<p>STM32 有 <strong>5 个时钟源</strong>：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>时钟源</th>
+<th>全称</th>
+<th>频率</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>HSI</td>
+<td>High Speed Internal，高速内部时钟</td>
+<td>8 MHz</td>
+<td>内部 RC 振荡器</td>
+</tr>
+<tr>
+<td>HSE</td>
+<td>High Speed External，高速外部时钟</td>
+<td>4~16 MHz</td>
+<td>外部晶振</td>
+</tr>
+<tr>
+<td>LSI</td>
+<td>Low Speed Internal，低速内部时钟</td>
+<td>40 kHz</td>
+<td>内部 RC 振荡器</td>
+</tr>
+<tr>
+<td>LSE</td>
+<td>Low Speed External，低速外部时钟</td>
+<td>32.768 kHz</td>
+<td>外部晶振</td>
+</tr>
+<tr>
+<td>PLL</td>
+<td>Phase Locked Loop，锁相环倍频输出</td>
+<td>由 HSE/HSI ×2~×16</td>
+<td>倍频</td>
+</tr>
+</tbody></table>
+</div>
+<p>STM32 时钟配置的总原则：<strong>先倍频作为处理器时钟，再由内向外分频</strong>。要用某个外设，必须先使能它的时钟——这就是 RCC 存在的意义。</p>
+<h3 id="42-rcc-是什么">4.2 RCC 是什么</h3>
+<p><strong>RCC（Reset and Clock Control，复位和时钟控制）</strong> 模块，寄存器首地址 <strong>0x4002 1000</strong>。相关寄存器包括：<code>RCC_CR</code>、<code>RCC_CFGR</code>、<code>RCC_CIR</code>、<code>RCC_APB2RSTR</code>、<code>RCC_APB1RSTR</code>、<code>RCC_AHBENR</code>、<code>RCC_APB2ENR</code>、<code>RCC_APB1ENR</code>、<code>RCC_BDCR</code>、<code>RCC_CSR</code>。</p>
+<h3 id="43-rcc_cr时钟控制寄存器偏移-0x00复位-0x0000-xx83">4.3 RCC_CR（时钟控制寄存器，偏移 0x00，复位 0x0000 XX83）</h3>
+<ul>
+<li><code>HSION</code> / <code>HSIRDY</code>：HSI 使能 / 就绪标志；</li>
+<li><code>HSEON</code> / <code>HSERDY</code>：HSE 使能 / 就绪标志（就绪需几个振荡周期）；</li>
+<li><code>HSEBYP</code>：<strong>HSE 旁路模式</strong>——不用芯片内部时钟驱动组件，直接从外界导入时钟信号（调试时常开）；</li>
+<li><code>CSSON</code>：时钟安全系统使能，监测 HSE 失效；</li>
+<li><code>PLLON</code> / <code>PLLRDY</code>：PLL 使能 / 锁定标志；</li>
+<li><code>HSICAL</code> / <code>HSITRIM</code>：HSI 校准与微调（每步约 40 kHz，调到 8 MHz ±1%）。</li>
+</ul>
+<h3 id="44-rcc_cfgr时钟配置寄存器偏移-0x04复位-0x0000-0000">4.4 RCC_CFGR（时钟配置寄存器，偏移 0x04，复位 0x0000 0000）</h3>
+<p>这是最关键的配置寄存器：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>位域</th>
+<th>名称</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>SW[1:0]</code></td>
+<td>System Clock Switch，系统时钟切换</td>
+<td>选系统时钟源：00 HSI / 01 HSE / 10 PLL</td>
+</tr>
+<tr>
+<td><code>SWS[1:0]</code></td>
+<td>系统时钟切换状态</td>
+<td>硬件反馈当前时钟源</td>
+</tr>
+<tr>
+<td><code>HPRE[3:0]</code></td>
+<td>AHB 预分频</td>
+<td>SYSCLK 分频后给 AHB（2~512 分频）</td>
+</tr>
+<tr>
+<td><code>PPRE1[2:0]</code></td>
+<td>低速 APB 预分频</td>
+<td>给 APB1（须 &lt; 36 MHz）</td>
+</tr>
+<tr>
+<td><code>PPRE2[2:0]</code></td>
+<td>高速 APB 预分频</td>
+<td>给 APB2</td>
+</tr>
+<tr>
+<td><code>ADCPRE[1:0]</code></td>
+<td>ADC 预分频</td>
+<td>给 ADC（2/4/6/8 分频）</td>
+</tr>
+<tr>
+<td><code>PLLSRC</code></td>
+<td>PLL 输入时钟源</td>
+<td>0: HSI/2；1: HSE</td>
+</tr>
+<tr>
+<td><code>PLLXTPRE</code></td>
+<td>HSE 分频器</td>
+<td>0: HSE 不分频；1: HSE 2 分频</td>
+</tr>
+<tr>
+<td><code>PLLMUL[3:0]</code></td>
+<td>PLL 倍频系数</td>
+<td>×2~×16，输出不超过 72 MHz</td>
+</tr>
+<tr>
+<td><code>USBPRE</code></td>
+<td>USB 预分频</td>
+<td>给 USB 时钟</td>
+</tr>
+<tr>
+<td><code>MCO[2:0]</code></td>
+<td>Microcontroller Clock Output</td>
+<td>引脚输出时钟供外部观测</td>
+</tr>
+</tbody></table>
+</div>
+<h3 id="45-rcc_cir时钟中断寄存器偏移-0x08">4.5 RCC_CIR（时钟中断寄存器，偏移 0x08）</h3>
+<p>管理 5 个时钟源（LSI/HSI/LSE/HSE/PLL）的<strong>就绪中断使能（xxRDYIE）、就绪中断标志（xxRDYF）、清除（xxRDYC）</strong>，以及 <code>CSSC</code>（清除时钟安全系统中断）和 <code>CSSF</code>（安全系统中断标志，HSE 失效时硬件置 1）。</p>
+<h3 id="46-外设时钟使能寄存器重点">4.6 外设时钟使能寄存器（重点）</h3>
+<p>GPIO 挂在 <strong>APB2</strong> 总线上，所以要点亮一个 GPIO 端口，<strong>必须先开对应时钟</strong>：</p>
+<ul>
+<li><code>RCC_APB2ENR</code>（偏移 0x18）：含 <code>IOPxEN</code>（IO 端口时钟使能）、<code>AFIOEN</code>（辅助功能 IO 时钟）等；</li>
+<li><code>RCC_APB1ENR</code>（偏移 0x1C）：APB1 外设时钟使能；</li>
+<li><code>RCC_AHBENR</code>（偏移 0x14）：AHB 外设时钟使能（DMA、FSMC、CRC、SRAM 等）；</li>
+<li><code>RCC_APB2RSTR</code> / <code>RCC_APB1RSTR</code>：外设复位寄存器（软件置 1 复位相应外设）。</li>
+</ul>
+<h3 id="47-rcc_bdcr-与-rcc_csr">4.7 RCC_BDCR 与 RCC_CSR</h3>
+<ul>
+<li><code>RCC_BDCR</code>（备份域控制，偏移 0x20）：<code>RTCEN</code>（RTC 时钟使能）、<code>RTCSEL[1:0]</code>（RTC 时钟源选 LSE/LSI/HSE）、<code>LSEON/LSERDY</code>、<code>BDRST</code>（备份域软件复位）；</li>
+<li><code>RCC_CSR</code>（控制 / 状态，偏移 0x24）：各种<strong>复位标志</strong>——<code>LPWRRSTF</code>（低功耗）、<code>WWDGRSTF</code>（窗口看门狗）、<code>IWDGRSTF</code>（独立看门狗）、<code>SFTRSTF</code>（软件）、<code>PORRSTF</code>（上电 / 掉电）、<code>PINRSTF</code>（NRST 引脚），以及 <code>RMVF</code>（清除复位标志）。</li>
+</ul>
+<hr>
+<h2 id="五gpio-固件库函数">五、GPIO 固件库函数</h2>
+<h3 id="51-为什么用固件库">5.1 为什么用固件库</h3>
+<p>直接操作寄存器虽然高效，但要对硬件理解极深、记住所有寄存器名和位定义，写出来的程序可读性也差。ST 提供的 <strong>STM32 标准固件库</strong> 位于寄存器和用户之间：向下直接操作寄存器，向上提供标准化的配置接口，包含引脚设置、位设置 / 清除、锁定、读写等函数，大幅降低开发难度。</p>
+<h3 id="52-gpio-寄存器结构">5.2 GPIO 寄存器结构</h3>
+<div class="code-block"><div class="code-header"><span>c</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>#define vu32 volatile unsigned int   // 防优化
+
+typedef struct {
+    vu32 CRL;    // 端口配置低寄存器
+    vu32 CRH;    // 端口配置高寄存器
+    vu32 IDR;    // 端口输入数据寄存器
+    vu32 ODR;    // 端口输出数据寄存器
+    vu32 BSRR;   // 端口位设置 / 复位寄存器
+    vu32 BRR;    // 端口位复位寄存器
+    vu32 LCKR;   // 端口配置锁定寄存器
+} GPIO_TypeDef;
+
+// 5 个 GPIO 外设声明（基地址挂在 APB2 外设基址上）
+#define GPIOA_BASE (APB2PERIPH_BASE + 0x0800)
+#define GPIOB_BASE (APB2PERIPH_BASE + 0x0C00)
+#define GPIOC_BASE (APB2PERIPH_BASE + 0x1000)
+#define GPIOD_BASE (APB2PERIPH_BASE + 0x1400)
+#define GPIOE_BASE (APB2PERIPH_BASE + 0x1800)</code></pre></div>
+<h3 id="53-常用-gpio-库函数一览">5.3 常用 GPIO 库函数一览</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>函数</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GPIO_DeInit</code></td>
+<td>外设寄存器重设为默认值</td>
+</tr>
+<tr>
+<td><code>GPIO_AFIODeInit</code></td>
+<td>复用功能重设为默认值</td>
+</tr>
+<tr>
+<td><code>GPIO_Init</code></td>
+<td>按结构体参数初始化 GPIOx</td>
+</tr>
+<tr>
+<td><code>GPIO_StructInit</code></td>
+<td>把结构体参数填默认值</td>
+</tr>
+<tr>
+<td><code>GPIO_ReadInputDataBit</code></td>
+<td>读指定引脚输入</td>
+</tr>
+<tr>
+<td><code>GPIO_ReadInputData</code></td>
+<td>读整个端口输入</td>
+</tr>
+<tr>
+<td><code>GPIO_ReadOutputDataBit</code></td>
+<td>读指定引脚输出</td>
+</tr>
+<tr>
+<td><code>GPIO_ReadOutputData</code></td>
+<td>读整个端口输出</td>
+</tr>
+<tr>
+<td><code>GPIO_SetBits</code></td>
+<td>指定位置高电平</td>
+</tr>
+<tr>
+<td><code>GPIO_ResetBits</code></td>
+<td>指定位清低电平</td>
+</tr>
+<tr>
+<td><code>GPIO_WriteBit</code></td>
+<td>指定位置高或低</td>
+</tr>
+<tr>
+<td><code>GPIO_Write</code></td>
+<td>向整个端口写数据</td>
+</tr>
+<tr>
+<td><code>GPIO_PinLockConfig</code></td>
+<td>锁定引脚配置</td>
+</tr>
+<tr>
+<td><code>GPIO_PinRemapConfig</code></td>
+<td>改变引脚映射</td>
+</tr>
+<tr>
+<td><code>GPIO_EXTILineConfig</code></td>
+<td>选引脚作外部中断线</td>
+</tr>
+</tbody></table>
+</div>
+<h3 id="54-gpio_init-与配置示例">5.4 GPIO_Init 与配置示例</h3>
+<p><code>GPIO_Init</code> 原型：</p>
+<div class="code-block"><div class="code-header"><span>c</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>void GPIO_Init(GPIO_TypeDef* GPIOx, GPIO_InitTypeDef* GPIO_InitStruct);</code></pre></div>
+<p>配置结构体只有三个成员：</p>
+<div class="code-block"><div class="code-header"><span>c</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>typedef struct {
+    u16 GPIO_Pin;                  // 选引脚，可用 | 组合多引脚
+    GPIOSpeed_TypeDef GPIO_Speed;  // 速率：2/10/50 MHz
+    GPIOMode_TypeDef  GPIOMode;    // 工作模式
+} GPIO_InitTypeDef;</code></pre></div>
+<p><strong>例：把 PE0 配成推挽输出、50 MHz</strong></p>
+<div class="code-block"><div class="code-header"><span>c</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>GPIO_InitTypeDef GPIO_InitStructure;          // 声明结构体
+GPIO_InitStructure.GPIO_Pin  = GPIO_Pin_0;   // 选 PE0
+GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;  // 推挽输出
+GPIO_Init(GPIOE, &amp;GPIO_InitStructure);        // 生效
+
+GPIO_SetBits(GPIOE, GPIO_Pin_0);             // PE0 输出高
+GPIO_ResetBits(GPIOE, GPIO_Pin_0);           // PE0 输出低</code></pre></div>
+<hr>
+<h2 id="六gpio-的使用">六、GPIO 的使用</h2>
+<h3 id="61-三种开发方式">6.1 三种开发方式</h3>
+<p>课件给出三种开发方式，以「控制 PE0 上的 LED 亮 0.5 秒、灭 0.5 秒」为例：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>方式</th>
+<th>思路</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>汇编直接操作寄存器</strong></td>
+<td>例 6-1：配系统时钟 → 开 GPIOE 时钟 → 设 PE0 模式 → 循环翻转</td>
+</tr>
+<tr>
+<td><strong>C 直接操作寄存器</strong></td>
+<td>例 6-2：用指针直接写 <code>GPIOx</code> 寄存器，配时钟与模式后翻转</td>
+</tr>
+<tr>
+<td><strong>固件库函数</strong></td>
+<td>例 6-3：用 <code>RCC_APB2PeriphClockCmd(...ENABLE)</code> 开时钟，再用 <code>GPIO_Init</code> + <code>GPIO_SetBits/ResetBits</code> 翻转</td>
+</tr>
+</tbody></table>
+</div>
+<p>三种方式本质一样，只是抽象层级不同：<strong>寄存器方式最贴近硬件、最省空间；库函数方式最易读、最好移植</strong>。</p>
+<h3 id="62-通用三步">6.2 通用三步</h3>
+<p>无论哪种方式，都逃不开三步：</p>
+<ol>
+<li>配置系统时钟并打开 GPIO 口的时钟（RCC）；</li>
+<li>设置 GPIO 引脚的工作模式；</li>
+<li>进行输入或输出操作。</li>
+</ol>
+<hr>
+<h2 id="本章小结与思考题">本章小结与思考题</h2>
+<p><strong>核心知识地图</strong>：</p>
+<ol>
+<li>GPIO 概述与引脚命名（112 个 / 80 根 / 16 根一组、PA~PE 五端口、7 个寄存器）；</li>
+<li>内部结构与工作模式（保护二极管 + 施密特触发器 + 互补 MOS 管；推挽 / 开漏；4 输入 + 4 输出共 8 种模式；3 档输出速度；10 项功能）；</li>
+<li>GPIO 寄存器（存储器映射、CRL/CRH/IDR/ODR/BSRR/BRR/LCKR 的偏移与关键位）；</li>
+<li>RCC 时钟模块（5 个时钟源、RCC_CR/CFGR/CIR、外设时钟使能寄存器、BDCR/CSR）；</li>
+<li>固件库函数（<code>GPIO_TypeDef</code>、常用库函数一览、<code>GPIO_Init</code> 与配置示例）；</li>
+<li>GPIO 的使用（汇编 / 寄存器 / 库函数三种方式、通用三步）。</li>
+</ol>
+<p><strong>思考练习题（覆盖考点）</strong>：</p>
+<ol>
+<li><p>简述 STM32F103VET6 微控制器 GPIO 的工作模式和功能。</p>
+</li>
+<li><p>GPIO 相关寄存器有哪些？写出 GPIOE 端口对应各寄存器的首地址。</p>
+</li>
+<li><p>寄存器开发方式与基于库函数的开发方式各有什么特点？</p>
+</li>
+<li><p>分别用汇编和库函数（C 语言）编写程序：设置 PD7 为推挽输出、速度 2 MHz，并输出低电平；若需输出高电平又该如何设置？</p>
+</li>
+<li><p>逐行说明下列程序的工作过程及执行结果：</p>
+<div class="code-block"><div class="code-header"><span>assembly</span><button type="button" class="copy-code" aria-label="复制代码">复制代码</button></div><pre><code>LDR  R1, =0x40021000          ; RCC 基地址
+LDR  R0, [R1]
+LDR  R2, =0x00010000          ; 置位某使能位
+ORR  R0, R2
+STR  R0, [R1]                 ; 写回，打开对应时钟
+WAIT_HSE_RDY
+LDR  R2, =0x00020000          ; HSERDY 标志位
+LDR  R0, [R1]
+ANDS R0, R2
+CMP  R0, #0
+BEQ  WAIT_HSE_RDY             ; 未就绪则等待</code></pre></div>
+</li>
+<li><p>结合所给 C / 库函数程序，说明 LED 闪烁的实现逻辑。</p>
+</li>
+</ol>
+<hr>
+<blockquote>
+<p>本文由课程课件与讲稿整理，供学习交流使用。如需转载或用于教学，请注明出处。</p>
+</blockquote>
+</article>
+<nav class="chapter-pagination" aria-label="前后章节"><a href="chapter-05.html"><small>← 上一章 · 第5章</small>ARM 微控制器开发</a><a class="next" href="chapter-07.html"><small>下一章 · 第7章 →</small>EXTI 中断模块与基本应用</a></nav><footer class="reader-credit">Designed By Xianyu Wu</footer></div>
+<aside class="toc-sidebar"><p class="sidebar-label">ON THIS PAGE · 本章目录</p><nav aria-label="本章目录"><a href="#一gpio-概述及引脚命名">一、GPIO 概述及引脚命名</a>
+<a href="#二内部结构及工作模式">二、内部结构及工作模式</a>
+<a href="#三gpio-的寄存器">三、GPIO 的寄存器</a>
+<a href="#四rcc-时钟模块">四、RCC 时钟模块</a>
+<a href="#五gpio-固件库函数">五、GPIO 固件库函数</a>
+<a href="#六gpio-的使用">六、GPIO 的使用</a>
+<a href="#本章小结与思考题">本章小结与思考题</a></nav></aside></main></body></html>
